@@ -1,0 +1,52 @@
+/* Ensures all cards, charts, and tables have the same height */
+.card {
+  height: 100% !important;
+  border-radius: 10px; /* Adds a modern rounded corner */
+}
+
+/* Makes all chart containers the same size */
+.chart-container {
+  height: 350px !important;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Ensures table container doesn't exceed max height */
+.table-container {
+  max-height: 400px;
+  overflow-y: auto;
+  border-radius: 10px; /* Adds a modern rounded look */
+}
+
+/* Ensures summary cards align properly */
+.summary-card {
+  min-height: 130px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  border-radius: 10px;
+}
+
+/* Adds spacing between sections */
+.mt-3 {
+  margin-top: 20px !important;
+}
+
+.mt-4 {
+  margin-top: 30px !important;
+}
+
+/* Enhances table header readability */
+.table thead th {
+  font-weight: 600;
+  color: #333;
+  background-color: #f8f9fa !important;
+}
+
+/* Makes the View button more visible */
+.btn-sm {
+  font-size: 14px !important;
+  padding: 6px 12px !important;
+  border-radius: 5px;
+}

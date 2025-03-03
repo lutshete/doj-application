@@ -1,0 +1,544 @@
+input[type="text"] {
+    outline: 0 ;
+    border-width: 0 0 2px ;
+    border-color: black ;
+    width: 100% ;
+  }
+   
+  input[type="text"]:focus {
+    border-color: #fff ;
+    outline: 1px dotted #000 ;
+  }
+
+  .under-space{
+    margin-top:20px;
+  }
+
+  .indent{ 
+    padding-left:40px;
+  }
+
+  .a4{
+ display: flex;
+ align-items: center;
+ justify-content: center;
+    min-width: 300px;
+    max-width: 1100px;
+  }
+
+  .btn1{
+    margin-right:20px;
+  }
+
+//   .input-container {
+//     position: relative;
+//     display: inline-block;
+//   }
+  
+//   .input-container::after {
+//     content: 'I';
+//     position: absolute;
+//     top: 50%;
+//     right: 100%;
+//     transform: translateY(-50%);
+//     margin-left: 10px; /* Adjust this to control the space between the input and the text */
+//     color: #333; /* Customize text color */
+//   }
+
+
+.form-container {
+  max-width: 900px;
+  margin: auto;
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+
+h2 {
+  text-align: center;
+  color: #F47F0C; /* Updated color for the title */
+}
+
+label {
+  font-weight: bold;
+  display: block;
+  margin-top: 15px;
+  color: #F47F0C; /* Updated color for labels */
+}
+
+input[type="text"],
+input[type="email"],
+input[type="number"],
+textarea {
+  width: 100%;
+  padding: 10px;
+  margin-top: 5px;
+  border: 1px solid #ccc; /* Change this to a darker shade if desired */
+  border-radius: 4px;
+}
+
+input[type="checkbox"] {
+  margin-right: 10px;
+}
+
+.checkbox-group,
+.radio-group {
+  display: flex;
+  flex-wrap: wrap;
+}
+
+.checkbox-group label,
+.radio-group label {
+  margin-right: 20px;
+  margin-top: 10px;
+  color: #F47F0C; /* Updated color for checkbox and radio labels */
+}
+
+.checkbox-group {
+  display: flex;
+  flex-direction: column; /* Stack checkboxes vertically */
+}
+
+.checkbox-item {
+  display: flex; /* Use flexbox for alignment */
+  align-items: center; /* Center items vertically */
+  margin-bottom: 10px; /* Space between checkbox items */
+}
+
+.section-title {
+  font-size: 1.2em;
+  margin-top: 25px;
+  border-bottom: 2px solid #F47F0C; /* Updated border color */
+}
+
+.section-content {
+  margin-top: 10px;
+}
+
+.form-footer {
+  text-align: center;
+  margin-top: 20px;
+}
+
+button {
+  background-color: #F47F0C; /* Primary button color */
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+button:hover {
+  background-color: #218838; /* Change this to a darker shade if desired */
+}
+
+@media (max-width: 768px) {
+  .checkbox-group,
+  .radio-group {
+    flex-direction: column;
+  }
+}
+
+.form-check .form-check-input.input-primary:checked {
+  border-color: #F47F0C !important;
+  background-color: #F47F0C !important; 
+}
+
+.form-check-input[type=checkbox] {
+  border-radius: 0.25em;
+  border: 1px solid #000 !important;
+}
+
+.form-check-input:checked {
+  background-color: #F47F0C !important;
+  border-color: #F47F0C !important;
+}
+
+.form-check-input[type=radio] {
+  border-radius: 0%;
+  border: 1px solid #000 !important;
+}
+/* Modal container */
+.modal {
+  display: none; /* Hidden by default */
+  position: fixed; /* Stay in place */
+ // z-index: 1050; /* Sit on top */
+  left: 0;
+  top: 0;
+  width: 100%; /* Full width */
+  height: 100%; /* Full height */
+  background-color: rgba(0, 0, 0, 0.5); /* Black with opacity */
+  overflow: auto; /* Enable scroll if needed */
+}
+
+
+/* Modal content */
+.modal-content {
+  background-color: white;
+  margin: 5% auto; /* Center modal */
+  padding: 20px;
+ // width: 80%;
+  max-height: 80vh; /* Limit modal height */
+  overflow-y: auto; /* Scroll inside the modal */
+  border-radius: 8px;
+}
+
+/* Close button */
+.close {
+  color: #aaa;
+  float: right;
+  font-size: 28px;
+  font-weight: bold;
+}
+
+.close:hover,
+.close:focus {
+  color: black;
+  cursor: pointer;
+}
+
+
+
+
+.link-button {
+  background: none;
+  border: none;
+  color: black;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit; /* Inherits font properties from surrounding text */
+}
+
+.link-button:hover {
+  background: none;
+  border: none;
+  color: #218838;
+  text-decoration: underline;
+  cursor: pointer;
+}
+/* Card container */
+/* Card container */
+.progress-card {
+  background-color: white;
+  padding: 30px;
+  border-radius: 16px;
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+  width: 450px;
+  transition: transform 0.3s ease;
+}
+.progress-card:hover {
+  transform: translateY(-5px); /* Hover animation for the card */
+}
+
+/* Progress container */
+.progress-container {
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+.progress-container::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 25px;
+  width: 2px;
+  height: 100%;
+  border-left: 2px dotted #ccc; /* Permanent dotted line */
+  z-index: -1;
+}
+
+/* Individual step */
+.progress-step {
+  display: flex;
+  position: relative;
+  cursor: pointer;
+  width: 100%;
+  margin-bottom: 10px; /* Reduced space between steps */
+  padding: 10px 0; /* Reduced padding for a more compact look */
+}
+.progress-step-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  border: 2px solid transparent;
+  background-color: #fff;
+  width: 100%;
+  padding: 12px; /* Slightly adjusted padding */
+  height: 50px; /* Reduced height to fit the new spacing */
+  box-sizing: border-box;
+  border-radius: 8px;
+  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+}
+.progress-step-wrapper:hover {
+  background-color: #f9f9f9;
+  border-color: #F47F0C;
+  box-shadow: 0 4px 8px rgba(244, 127, 12, 0.2); /* Subtle shadow on hover */
+}
+
+/* Circle (Step number) */
+.progress-step .circle {
+  width: 30px; /* Reduced circle size for consistency */
+  height: 30px;
+  border-radius: 50%;
+  background-color: #ddd;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: white;
+  margin-right: 12px; /* Adjusted margin */
+  flex-shrink: 0;
+  font-size: 14px;
+  transition: background-color 0.3s, transform 0.3s;
+}
+.progress-step.active .circle {
+  background-color: #F47F0C;
+  transform: scale(1.1); /* Slight enlargement for active step */
+}
+.progress-step:hover .circle {
+  background-color: #ffa500;
+}
+
+/* Text styling */
+.progress-step .text {
+  font-size: 13px; /* Reduced font size */
+  color: #333;
+  flex-grow: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  transition: color 0.3s;
+}
+.progress-step:hover .text {
+  color: #F47F0C;
+}
+
+/* Color for completed and upcoming steps */
+.progress-step.active ~ .progress-step .circle {
+  background-color: #ccc;
+}
+.progress-step.active ~ .progress-step .text {
+  color: #999;
+}
+.progress-step:last-child {
+  margin-bottom: 0;
+}
+
+/* Link for steps */
+.progress-step a {
+  text-decoration: none;
+  color: inherit;
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.active-text {
+  font-weight: 800;
+  color: #F47F0C !important;
+}
+
+.edit-text {
+  font-weight: 800;
+  color: #DC3545 !important;
+}
+
+.valid-text {
+  font-weight: 800;
+  color: #28A745 !important;
+}
+
+.active-circle {
+  background-color: #F47F0C !important;
+}
+
+.edit-active-circle {
+  background-color: #DC3545 !important;
+}
+
+.valid-active-circle  {
+  background-color: #28A745 !important;
+  
+}
+
+
+
+
+.error {
+  color: red;
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .row {
+    flex-direction: column;
+  }
+
+  .col-8, .col-4 {
+    width: 100%;
+  }
+
+  .form-container, .progress-card {
+    padding: 15px;
+  }
+
+  .progress-card {
+    width: 100%;
+  }
+
+  button {
+    padding: 8px 16px;
+    font-size: 14px;
+  }
+}
+
+@media (max-width: 576px) {
+  .form-container, .progress-card {
+    padding: 10px;
+  }
+
+  h2, h3 {
+    font-size: 18px;
+  }
+
+  .progress-step .text {
+    font-size: 12px;
+  }
+}
+
+@media (max-width: 768px) {
+  .progress-card {
+    display: none;
+  }
+}
+
+/* Large screens (Desktops and large laptops) */
+@media (min-width: 1200px) {
+  .form-container, .progress-card {
+    max-width: 1100px;
+    padding: 30px;
+  }
+  .progress-step .text {
+    font-size: 16px;
+  }
+}
+
+/* Medium screens (Standard laptops, around 15-inch screens) */
+@media (min-width: 992px) and (max-width: 1199px) {
+  .form-container, .progress-card {
+    max-width: 900px;
+    padding: 25px;
+  }
+  .progress-step .text {
+    font-size: 15px;
+  }
+}
+
+/* Small laptops and large tablets */
+@media (min-width: 768px) and (max-width: 991px) {
+  .form-container, .progress-card {
+    max-width: 700px;
+    padding: 20px;
+  }
+  .progress-step .text {
+    font-size: 14px;
+  }
+}
+
+/* Small screens (Tablets and smaller laptops) */
+@media (max-width: 767px) {
+  /* Hide the progress card on very small screens */
+  .progress-card {
+    display: none;
+  }
+  
+  .form-container {
+    padding: 15px;
+    width: 100%;
+  }
+  .progress-step .text {
+    font-size: 13px;
+  }
+}
+
+.partner-entry {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.partner-entry div {
+  flex: 1;
+  margin-right: 10px;
+}
+
+.icon-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 20px;
+  padding: 0;
+  margin-right: 5px;
+}
+
+
+.add-button {
+  color: green;
+}
+
+.remove-button {
+  color: red;
+}
+
+.icon-button:hover {
+  color: inherit;
+}
+
+.attention-grabber {
+  animation: pulse 1.5s infinite; /* Subtle pulsing effect */
+  font-size: 1.2rem; /* Slightly larger text for emphasis */
+  font-weight: bold; /* Make it bolder for visibility */
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.05); /* Slight zoom effect */
+    opacity: 0.8; /* Slight dimming effect */
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+
+.active-step .circle {
+  border: 3px solid #ff4500;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px #ff4500;
+}
+
+.active-step .text {
+  font-weight: bold;
+  color: #ff4500;
+}
+
+
+
+
+
+
+
+
+
+
+

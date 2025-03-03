@@ -1,0 +1,5 @@
+<app-admin *ngIf="!hideAdminLayout"></app-admin>
+
+<!-- Directly show content when <app-admin> is hidden -->
+<router-outlet *ngIf="hideAdminLayout"></router-outlet>
+

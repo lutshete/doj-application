@@ -1,0 +1,167 @@
+<div class="auth-main">
+  <div class="auth-bg"></div>
+  <div class="auth-wrapper v3">
+    <div class="auth-form">
+      <div class="auth-header text-center mb-3">
+        <a href="javascript:">
+          <img src="assets/images/logo-dark.gif" alt="logo img" />
+        </a>
+      </div>
+      
+      <!-- Alert Section -->
+      <div *ngIf="alertVisible" [ngClass]="{'alert': true, 'alert-success': alertType === 'success', 'alert-danger': alertType === 'danger'}" role="alert">
+        {{ alertMessage }}
+        <button type="button" class="close" aria-label="Close" (click)="closeAlert()">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+
+      <div class="card my-4 shadow-lg rounded-lg border-0">
+        <div class="card-body px-3 py-4">
+          <h3 class="text-center mb-3"><strong>Sign Up</strong></h3>
+
+          <form [formGroup]="signUpForm">
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label class="form-label" for="firstName">First Name*</label>
+                  <input 
+                    type="text" 
+                    formControlName="firstName" 
+                    class="form-control shadow-sm" 
+                    id="firstName" 
+                    placeholder="First Name" 
+                  />
+                  <div *ngIf="f.firstName.invalid && (f.firstName.dirty || f.firstName.touched)">
+                    <small class="error" *ngIf="f.firstName.errors?.['required']">First name is required.</small>
+                    <small class="error" *ngIf="f.firstName.errors?.['minlength']">First name must be at least 2 characters.</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label class="form-label" for="lastName">Last Name*</label>
+                  <input 
+                    type="text" 
+                    formControlName="lastName" 
+                    class="form-control shadow-sm" 
+                    id="lastName" 
+                    placeholder="Last Name" 
+                  />
+                  <div *ngIf="f.lastName.invalid && (f.lastName.dirty || f.lastName.touched)">
+                    <small class="error" *ngIf="f.lastName.errors?.['required']">Last name is required.</small>
+                    <small class="error" *ngIf="f.lastName.errors?.['minlength']">Last name must be at least 2 characters.</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label class="form-label" for="emailAddress">Email Address*</label>
+                  <input 
+                    type="email" 
+                    formControlName="emailAddress" 
+                    class="form-control shadow-sm" 
+                    id="emailAddress" 
+                    placeholder="Email Address" 
+                  />
+                  <div *ngIf="f.emailAddress.invalid && (f.emailAddress.dirty || f.emailAddress.touched)">
+                    <small class="error" *ngIf="f.emailAddress.errors?.['required']">Email is required.</small>
+                    <small class="error" *ngIf="f.emailAddress.errors?.['email']">Enter a valid email address.</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group mb-3">
+                  <label class="form-label" for="role">Role*</label>
+                  <select 
+                    formControlName="role" 
+                    class="form-control shadow-sm" 
+                    id="role" 
+                    [disabled]="!f.emailAddress.valid"
+                  >
+                    <option value="" disabled selected>Select Role</option>
+                    <option value="official">Officials</option>
+                    <option value="liquidator">Liquidators</option>
+                  </select>
+                  <div *ngIf="f.role.invalid && (f.role.dirty || f.role.touched)">
+                    <small class="error">Role is required.</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="row">
+              <div class="col-md-6">
+                <div class="form-group mb-3 position-relative">
+                  <label class="form-label" for="password">Password*</label>
+                  <input 
+                    [type]="showPassword ? 'text' : 'password'" 
+                    formControlName="password" 
+                    class="form-control shadow-sm" 
+                    id="password" 
+                    placeholder="Password" 
+                  />
+                  <i 
+                    class="show-hide-icon" 
+                    [ngClass]="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'" 
+                    (click)="togglePasswordVisibility()"
+                  ></i>
+                  <div *ngIf="f.password.invalid && (f.password.dirty || f.password.touched)">
+                    <small class="error" *ngIf="f.password.errors?.['required']">Password is required.</small>
+                    <small class="error" *ngIf="f.password.errors?.['minlength']">Password must be at least 6 characters long.</small>
+                  </div>
+                </div>
+              </div>
+
+              <div class="col-md-6">
+                <div class="form-group mb-3 position-relative">
+                  <label class="form-label" for="confirmPassword">Confirm Password*</label>
+                  <input 
+                    [type]="showConfirmPassword ? 'text' : 'password'" 
+                    formControlName="confirmPassword" 
+                    class="form-control shadow-sm" 
+                    id="confirmPassword" 
+                    placeholder="Confirm Password" 
+                  />
+                  <i 
+                    class="show-hide-icon" 
+                    [ngClass]="showConfirmPassword ? 'fa fa-eye-slash' : 'fa fa-eye'" 
+                    (click)="toggleConfirmPasswordVisibility()"
+                  ></i>
+                  <div *ngIf="f.confirmPassword.invalid && (f.confirmPassword.dirty || f.confirmPassword.touched)">
+                    <small class="error" *ngIf="f.confirmPassword.errors?.['required']">Confirm password is required.</small>
+                  </div>
+                  <div *ngIf="signUpForm.errors?.['mismatch'] && (f.confirmPassword.dirty || f.confirmPassword.touched)">
+                    <small class="error">Passwords must match.</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <p class="text-sm text-muted text-center mt-3">
+              By signing up, you agree to our
+              <a href="javascript:" class="text-primary">Terms of Service</a>
+              and
+              <a href="javascript:" class="text-primary">Privacy Policy</a>
+              .
+            </p>
+
+            <div class="d-grid mt-3">
+              <button type="submit" class="btn btn-primary shadow" (click)="onSubmit()">Create Account</button>
+            </div>
+
+            <p class="text-center mt-3">
+              Already have an account?
+              <a [routerLink]="['/login']" class="text-primary">Login here</a>
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

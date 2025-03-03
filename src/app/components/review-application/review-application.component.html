@@ -1,0 +1,575 @@
+<div class="container-fluid my-5">
+  <div class="row">
+    <!-- Left Panel: Review Actions and Form with Reduced Width -->
+    <div class="col-md-6">
+      <div class="card shadow p-4 mb-4">
+        <h3 class="text-center">Application Review Form</h3>
+        <form [formGroup]="reviewForm" >
+          <!-- Row 1: Tax Certificate for Private and Business -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="taxClearancePrivate">Tax Certificate (Private)</label>
+              <input
+                type="text"
+                id="taxClearancePrivate"
+                class="form-control"
+                formControlName="taxClearancePrivate"
+                placeholder="Provide a valid date or 'none'"
+              />
+              <div
+                *ngIf="reviewForm.get('taxClearancePrivate')?.errors?.dateOrNone && reviewForm.get('taxClearancePrivate')?.touched"
+                class="text-danger"
+              >
+                Please enter a valid date in YYYY-MM-DD format or 'none'
+              </div>
+              <!-- Conditional comment field for Tax Certificate (Private) -->
+              <div >
+                <textarea
+                  class="form-control mt-2"
+                  placeholder="Provide comments for Private Tax Certificate"
+                  formControlName="taxClearancePrivateComment"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="taxClearanceBusiness">Tax Certificate (Business)</label>
+              <input
+                type="text"
+                id="taxClearanceBusiness"
+                class="form-control"
+                formControlName="taxClearanceBusiness"
+                placeholder="Provide a valid date or 'none'"
+              />
+              <div
+                *ngIf="reviewForm.get('taxClearanceBusiness')?.errors?.dateOrNone && reviewForm.get('taxClearanceBusiness')?.touched"
+                class="text-danger"
+              >
+                Please enter a valid date in YYYY-MM-DD format or 'none'
+              </div>
+              <!-- Conditional comment field for Tax Certificate (Business) -->
+              <div >
+                <textarea
+                  class="form-control mt-2"
+                  placeholder="Provide comments for Business Tax Certificate"
+                  formControlName="taxClearanceBusinessComment"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 2: Bond Facility, Banking Details, and Lease Agreement -->
+          <div class="row mb-3">
+            <div class="col-md-4">
+              <label for="bondFacility">Bond Facility</label>
+              <select id="bondFacility" class="form-select" formControlName="bondFacility">
+                <option value="" disabled>Select Option</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+              <div *ngIf="reviewForm.get('bondFacility')?.invalid && reviewForm.get('bondFacility')?.touched" class="text-danger">
+                Bond Facility selection is required
+              </div>
+              <!-- Conditional comment field for Bond Facility -->
+              <div >
+                <textarea
+                  class="form-control mt-2"
+                  placeholder="Provide comments for Bond Facility"
+                  formControlName="bondFacilityComment"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label for="bankingDetails">Banking Details</label>
+              <select id="bankingDetails" class="form-select" formControlName="bankingDetails">
+                <option value="" disabled>Select Option</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+              <div *ngIf="reviewForm.get('bankingDetails')?.invalid && reviewForm.get('bankingDetails')?.touched" class="text-danger">
+                Banking Details selection is required
+              </div>
+              <!-- Conditional comment field for Banking Details -->
+              <div >
+                <textarea
+                  class="form-control mt-2"
+                  placeholder="Provide comments for Banking Details"
+                  formControlName="bankingDetailsComment"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="col-md-4">
+              <label for="leaseAgreement">Lease Agreement</label>
+              <select id="leaseAgreement" class="form-select" formControlName="leaseAgreement">
+                <option value="" disabled>Select Option</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+              <div *ngIf="reviewForm.get('leaseAgreement')?.invalid && reviewForm.get('leaseAgreement')?.touched" class="text-danger">
+                Lease Agreement selection is required
+              </div>
+              <!-- Conditional comment field for Lease Agreement -->
+              <div >
+                <textarea
+                  class="form-control mt-2"
+                  placeholder="Provide comments for Lease Agreement"
+                  formControlName="leaseAgreementComment"
+                ></textarea>
+              </div>
+            </div>
+          </div>
+
+          <!-- Row 3: ID Document and Review Status -->
+          <div class="row mb-3">
+            <div class="col-md-6">
+              <label for="idDocument">ID Document</label>
+              <select id="idDocument" class="form-select" formControlName="idDocument">
+                <option value="" disabled>Select Option</option>
+                <option value="yes">Yes</option>
+                <option value="no">No</option>
+              </select>
+              <div *ngIf="reviewForm.get('idDocument')?.invalid && reviewForm.get('idDocument')?.touched" class="text-danger">
+                ID Document selection is required
+              </div>
+              <!-- Conditional comment field for ID Document -->
+              <div >
+                <textarea
+                  class="form-control mt-2"
+                  placeholder="Provide comments for ID Document"
+                  formControlName="idDocumentComment"
+                ></textarea>
+              </div>
+            </div>
+
+            <div class="col-md-6">
+              <label for="reviewStatus">Review Status</label>
+              <select id="reviewStatus" class="form-select" formControlName="reviewStatus">
+                <option value="Draft" disabled>Select status</option>
+             
+                <option value="Approved">Approved</option>
+                <option value="Rejected">Rejected</option>
+              </select>
+              <div *ngIf="reviewForm.get('reviewStatus')?.invalid && reviewForm.get('reviewStatus')?.touched" class="text-danger">
+                Review Status is required
+              </div>
+            </div>
+          </div>
+
+          <!-- General comments (always visible) -->
+          <div class="row mb-3">
+            <div class="col-md-12">
+              <label for="comments">Further Comments</label>
+              <textarea id="comments" class="form-control" formControlName="comments" placeholder="Enter general comments here"></textarea>
+            </div>
+          </div>
+
+          <!-- Submit Button -->
+          <div class="form-footer text-center mt-4">
+            <button type="submit" class="btn btn-primary" (click)="UpdateApplicationstatus()">Submit Review</button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Right Panel: Submitted Information View with Scrollable Content -->
+    <div class="col-md-6">
+      <div class="card shadow p-4" style="max-height: 850px; overflow-y: auto">
+        <h3 class="text-center">Submitted Application Details</h3>
+
+        <!-- Key Applicant Details -->
+        <div class="applicant-overview mb-3 p-3 bg-light rounded">
+          <p>
+            <strong>Name:</strong>
+            {{ applicationDetails.personalInformation.fullName }}
+          </p>
+          <p>
+            <strong>ID:</strong>
+            {{ applicationDetails.personalInformation.identityNumber }}
+          </p>
+          <p>
+            <strong>Email:</strong>
+            {{ applicationDetails.contactInformation.email }}
+          </p>
+          <p>
+            <strong>Contact:</strong>
+            {{ applicationDetails.contactInformation.contactNumber }}
+          </p>
+          <p>
+            <strong>Application Status:</strong>
+            {{ applicationDetails.applicationStatus }}
+          </p>
+        </div>
+
+        <!-- Section-Based Submitted Data (Accordion) -->
+        <div class="accordion" id="submitted-info-accordion">
+          <!-- Step 1: Personal Information -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingOne">
+              <button
+                class="accordion-button"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseOne"
+                aria-expanded="true"
+                aria-controls="collapseOne"
+              >
+                Step 1: Personal Information
+              </button>
+            </h2>
+            <div
+              id="collapseOne"
+              class="accordion-collapse collapse show"
+              aria-labelledby="headingOne"
+              data-bs-parent="#submitted-info-accordion"
+            >
+              <div class="accordion-body">
+                <p>
+                  <strong>Full Name:</strong>
+                  {{ applicationDetails.personalInformation.fullName }}
+                </p>
+                <p>
+                  <strong>Identity Number:</strong>
+                  {{ applicationDetails.personalInformation.identityNumber }}
+                </p>
+                <p>
+                  <strong>Race:</strong>
+                  {{ applicationDetails.personalInformation.race }}
+                </p>
+                <p>
+                  <strong>Gender:</strong>
+                  {{ applicationDetails.personalInformation.gender }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 2: Business Information -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingTwo">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseTwo"
+                aria-expanded="false"
+                aria-controls="collapseTwo"
+              >
+                Step 2: Business Information
+              </button>
+            </h2>
+            <div
+              id="collapseTwo"
+              class="accordion-collapse collapse"
+              aria-labelledby="headingTwo"
+              data-bs-parent="#submitted-info-accordion"
+            >
+              <div class="accordion-body">
+                <p>
+                  <strong>Business Type:</strong>
+                  {{ applicationDetails.businessInformation.businessType }}
+                </p>
+                <p>
+                  <strong>Business Status:</strong>
+                  {{ applicationDetails.businessInformation.businessStatus }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 3: Qualifications -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingThree">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseThree"
+                aria-expanded="false"
+                aria-controls="collapseThree"
+              >
+                Step 3: Qualifications & Professional Memberships
+              </button>
+            </h2>
+            <div
+              id="collapseThree"
+              class="accordion-collapse collapse"
+              aria-labelledby="headingThree"
+              data-bs-parent="#submitted-info-accordion"
+            >
+              <div class="accordion-body">
+                <p>
+                  <strong>Qualification:</strong>
+                  {{ applicationDetails.qualifications.qualifications }}
+                  <button
+                    class="pdf-icon-button"
+                    title="View Qualification"
+                    (click)="
+                      generateFileLink(
+                        'Qualifications',
+                        applicationDetails.qualifications.qualification_file,
+                        applicationDetails.qualifications.qualification_file_name
+                      )
+                    "
+                  >
+                    <i class="fas fa-file-pdf"></i>
+                  </button>
+                </p>
+                <p>
+                  <strong>Professional Membership:</strong>
+                  {{ applicationDetails.qualifications.professionalMemberships }}
+                  <button
+                  class="pdf-icon-button"
+                  title="View Qualification"
+                  (click)="
+                    generateFileLink(
+                      'Membership',
+                      applicationDetails.qualifications.qualification_file,
+                      applicationDetails.qualifications.membership_file_name
+                    )
+                  "
+                >
+                  <i class="fas fa-file-pdf"></i>
+                </button>
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 4: Business Infrastructure Details & Office Addresses -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingFour">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseFour"
+                aria-expanded="false"
+                aria-controls="collapseFour"
+              >
+                Step 4: Business Infrastructure Details & Office Addresses
+              </button>
+            </h2>
+            <div
+              id="collapseFour"
+              class="accordion-collapse collapse"
+              aria-labelledby="headingFour"
+              data-bs-parent="#submitted-info-accordion"
+            >
+              <div class="accordion-body">
+                <p>
+                  <strong>Proof of Rental:</strong>
+                  {{ applicationDetails.businessInfrastructure.proofOfRental }}
+                </p>
+                <p>
+                  <strong>Staff Details:</strong>
+                  {{ applicationDetails.businessInfrastructure.staffDetails }}
+                </p>
+                <p>
+                  <strong>Computers in Use:</strong>
+                  {{ applicationDetails.businessInfrastructure.numComputers }}
+                </p>
+                <p>
+                  <strong>Other Equipment:</strong>
+                  {{ applicationDetails.businessInfrastructure.numPrinters }}
+                </p>
+                <p>
+                  <strong>Main Office Address:</strong>
+                  123 Main St, City
+                </p>
+                <p>
+                  <strong>Other Offices:</strong>
+                  Cape Town, Johannesburg
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 5: Qualifications & Professional Memberships -->
+          <!--       <div class="accordion-item">
+              <h2 class="accordion-header" id="headingFive">
+                <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseFive" aria-expanded="false" aria-controls="collapseFive">
+                  Step 5: Qualifications & Professional Memberships
+                </button>
+              </h2>
+              <div id="collapseFive" class="accordion-collapse collapse" aria-labelledby="headingFive" data-bs-parent="#submitted-info-accordion">
+                <div class="accordion-body">
+                  <p><strong>Qualifications:</strong> LLB, Certified Insolvency Practitioner</p>
+                  <p><strong>Professional Memberships:</strong> SAICA, IAC</p>
+                </div>
+              </div>
+            </div> -->
+
+          <!-- Step 6: Disqualification Provision & Relationship Disclosure -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingSix">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseSix"
+                aria-expanded="false"
+                aria-controls="collapseSix"
+              >
+                Step 6: Disqualification Provision & Relationship Disclosure
+              </button>
+            </h2>
+            <div
+              id="collapseSix"
+              class="accordion-collapse collapse"
+              aria-labelledby="headingSix"
+              data-bs-parent="#submitted-info-accordion"
+            >
+              <div class="accordion-body">
+                <p>
+                  <strong>Disqualification Provision:</strong>
+                  {{ applicationDetails.disqualificationRelationship.disqualificationDetails }}
+                </p>
+                <p>
+                  <strong>Relationship Disclosure:</strong>
+                  {{ applicationDetails.disqualificationRelationship.relationshipDisclosure }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 7: Appointment & Employment History -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingSeven">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseSeven"
+                aria-expanded="false"
+                aria-controls="collapseSeven"
+              >
+                Step 7: Appointment & Employment History
+              </button>
+            </h2>
+            <div
+              id="collapseSeven"
+              class="accordion-collapse collapse"
+              aria-labelledby="headingSeven"
+              data-bs-parent="#submitted-info-accordion"
+            >
+              <div class="accordion-body">
+                <p>
+                  <strong>Appointment Locations:</strong>
+                  {{ applicationDetails.appointmentEmploymentHistory.appointmentLocations }}
+                </p>
+                <p>
+                  <strong>Employment History:</strong>
+                  {{ applicationDetails.appointmentEmploymentHistory.employmentHistory }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 8: Tax Clearance, Bond Facility & Bank Account Documentation -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingEight">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseEight"
+                aria-expanded="false"
+                aria-controls="collapseEight"
+              >
+                Step 8: Tax Clearance, Bond Facility & Bank Account Documentation
+              </button>
+            </h2>
+            <div
+              id="collapseEight"
+              class="accordion-collapse collapse"
+              aria-labelledby="headingEight"
+              data-bs-parent="#submitted-info-accordion"
+            >
+              <div class="accordion-body">
+                <p>
+                  <strong>Tax Clearance:</strong>
+                  {{ applicationDetails.taxBondBankDocumentation.taxClearanceCertificate }}
+                </p>
+                <p>
+                  <strong>Bond Facility:</strong>
+                  Applied
+                </p>
+                <p>
+                  <strong>Bank Account Documentation:</strong>
+                  {{ applicationDetails.taxBondBankDocumentation.bankAccountProof }}
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Step 9: Declaration -->
+          <div class="accordion-item">
+            <h2 class="accordion-header" id="headingNine">
+              <button
+                class="accordion-button collapsed"
+                type="button"
+                data-bs-toggle="collapse"
+                data-bs-target="#collapseNine"
+                aria-expanded="false"
+                aria-controls="collapseNine"
+              >
+                Step 9: Declaration
+              </button>
+            </h2>
+            <div
+              id="collapseNine"
+              class="accordion-collapse collapse"
+              aria-labelledby="headingNine"
+              data-bs-parent="#submitted-info-accordion"
+            >
+              <div class="accordion-body">
+                <p>
+                  <strong>Declaration:</strong>
+                  Agreed to all terms and conditions
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal" tabindex="-1" [class.show]="showFileModal" [style.display]="showFileModal ? 'block' : 'none'">
+  <div class="modal-dialog modal-xl">
+    <div class="modal-content" (contextmenu)="$event.preventDefault()">
+      <div class="modal-header">
+        <h5 class="modal-title">File Preview - {{ fileName }}</h5>
+        <button type="button" class="btn-close" (click)="closeFileModal()"></button>
+      </div>
+      <div class="modal-body" (mousedown)="startPanning($event)" (mouseup)="stopPanning()" (mouseleave)="stopPanning()" (mousemove)="pan($event)">
+        <div class="zoom-container" [style.transform]="'scale(' + zoomLevel + ')'" [style.cursor]="isPanning ? 'grabbing' : 'grab'">
+          <!-- Render Image -->
+          <img
+            *ngIf="fileType.startsWith('image/')"
+            [src]="qualificationFileUrl"
+            alt="Preview"
+            class="img-fluid"
+            draggable="true"
+          />
+
+          <!-- Render PDF -->
+          <object
+            *ngIf="fileType === 'application/pdf'"
+            [data]="qualificationFileUrl"
+            type="application/pdf"
+            width="100%"
+            height="700px"
+            style="pointer-events: none; user-select: none;"
+          >
+            <p>Cannot display the PDF file.</p>
+          </object>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+

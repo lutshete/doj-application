@@ -1,0 +1,150 @@
+
+@import '../../../scss/settings/color-variables.scss';
+
+.auth-main {
+  position: relative;
+  height: 100vh; // Full height of the viewport
+  background-color: #f8f9fa; // Background color if needed
+
+  .auth-bg {
+    // Add styles for background if needed
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+  //  background: url('path/to/your/background-image.jpg') no-repeat center center fixed; // Example background image
+    z-index: -1; // Send background behind content
+  }
+
+  .auth-wrapper {
+    display: flex;
+    align-items: center; // Center vertically
+    justify-content: center; // Center horizontally
+    height: 100%; // Full height
+
+    .auth-form {
+      .card {
+        width: 100%;
+        max-width: 495px; // Set a maximum width for the card
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); // Shadow effect
+        margin: 0 auto; // Center the card in the flex container
+
+        .card-body {
+          padding: 2rem; // Adjust padding as needed
+        }
+      }
+
+      .auth-header {
+        text-align: center; // Center the logo
+        margin-bottom: 20px; // Space below the header
+
+        img {
+          width: 270px; // Set width for logo image
+          height: auto; // Maintain aspect ratio
+        }
+      }
+
+      h3 {
+        text-align: center; // Center the heading
+        margin-bottom: 1.5rem; // Space below the heading
+        font-size: 1.5rem; // Adjust font size if necessary
+        font-weight: bold; // Bold font for the heading
+      }
+
+      .form-group {
+        margin-bottom: 1.5rem; // Space between form groups
+
+        label {
+          font-weight: 600; // Bold labels
+        }
+
+        .form-control {
+          border: 1px solid #ced4da; // Standard border color
+          border-radius: 0.375rem; // Rounded corners
+          padding: 0.5rem 0.75rem; // Padding inside the input
+          box-shadow: none; // Remove default shadow
+          transition: border-color 0.2s; // Smooth transition for border color
+          
+          &:focus {
+            border-color: #80bdff; // Focus border color
+            outline: none; // Remove default outline
+            box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25); // Focus shadow effect
+          }
+        }
+      }
+
+      .d-flex {
+        margin-top: 1rem; // Space above the flex container
+
+        .form-check {
+          margin-bottom: 0; // Remove bottom margin
+        }
+
+        .forgot-password {
+          margin-left: 1rem; // Space between checkbox and Forgot Password link
+        }
+      }
+
+      .d-grid {
+        margin-top: 2rem; // Space above the button
+
+        .btn {
+          width: 100%; // Full width button
+          padding: 0.75rem; // Button padding
+          font-size: 1rem; // Button font size
+        }
+      }
+
+      p {
+        text-align: center; // Center align the text
+        margin-top: 1.5rem; // Space above the paragraph
+
+        a {
+          color: #007bff; // Primary color for links
+          text-decoration: none; // Remove underline
+
+          &:hover {
+            text-decoration: underline; // Underline on hover
+          }
+        }
+      }
+    }
+  }
+}
+
+.error {
+  color: red;
+  font-size: 0.9em;
+  margin-top: 5px;
+}
+
+
+
+.alert {
+  padding: 15px;
+  margin-bottom: 20px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+}
+
+.alert-success {
+  color: #155724;
+  background-color: #d4edda;
+  border-color: #c3e6cb;
+}
+
+.alert-danger {
+  color: #721c24;
+  background-color: #f8d7da;
+  border-color: #f5c6cb;
+}
+
+.close {
+  float: right;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: inherit;
+  border: none;
+  background: none;
+}

@@ -1,0 +1,100 @@
+<div class="container-fluid">
+  <div class="row">
+    <!-- Summary Cards -->
+    <div class="col-md-6 col-xl-3" *ngFor="let metric of applicationMetrics">
+      <div class="card border-0 shadow-sm p-3 mb-4 summary-card">
+        <div class="card-body text-center">
+          <h6 class="text-muted">{{ metric.title }}</h6>
+          <h3 class="fw-bold">{{ metric.value }}</h3>
+          <p class="text-muted small mb-0">{{ metric.subtext }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Charts Section -->
+  <div class="row mt-3">
+    <!-- Status Distribution Chart -->
+    <div class="col-md-6 col-xl-6">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <h5 class="mb-3">Application Status Distribution</h5>
+        <div class="chart-container">
+          <canvas id="statusChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Application Trends Chart -->
+    <div class="col-md-6 col-xl-6">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <h5 class="mb-3">Application Trends Over Time</h5>
+        <div class="chart-container">
+          <canvas id="trendChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Recent Applications Table -->
+  <div class="row mt-4">
+    <div class="col-md-12">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <h5 class="mb-3">Recent Liquidator Applications</h5>
+        <div class="table-container">
+          <table class="table table-hover">
+            <thead class="table-dark">
+              <tr>
+                <th>Tracking No.</th>
+                <th>Applicant</th>
+                <th>Status</th>
+                <th>Date Submitted</th>
+                <th class="text-end">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let application of recentApplications">
+                <td>{{ application.trackingNo }}</td>
+                <td>{{ application.applicantName }}</td>
+                <td>
+                  <span class="badge {{ application.statusClass }}">{{ application.status }}</span>
+                </td>
+                <td>{{ application.submissionDate }}</td>
+                <td class="text-end">
+                  <button class="btn btn-primary btn-sm">View</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Reviewer Activity & Approval Rate -->
+  <div class="row mt-4">
+    <!-- Reviewer Activity -->
+    <div class="col-md-12 col-xl-6">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <h5 class="mb-3">Reviewer Activity</h5>
+        <ul class="list-group">
+          <li *ngFor="let review of reviewerActivity" class="list-group-item">
+            <div class="d-flex justify-content-between">
+              <span><strong>{{ review.reviewerName }}</strong> - {{ review.comment }}</span>
+              <span class="badge {{ review.statusClass }}">{{ review.status }}</span>
+            </div>
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <!-- Approval Rate -->
+    <div class="col-md-12 col-xl-6">
+      <div class="card border-0 shadow-sm p-3 h-100">
+        <h5 class="mb-3">Approval Rate</h5>
+        <div class="chart-container">
+          <canvas id="approvalRateChart"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

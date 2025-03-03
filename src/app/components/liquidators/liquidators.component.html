@@ -1,0 +1,1334 @@
+
+
+
+<div class="row">
+  <!--     <div class="row">
+        <div class="col-6">
+            <button class="btn btn-primary btn1" (click)="generatePDF()">Print</button>
+            <label for="file-upload" class="btn btn-primary btn1">Upload Background Check Files</label>
+            <input type="file" id="file-upload" style="display: none;">
+            <button class="btn btn-primary btn1" (click)="submit()">Submit</button>
+        </div>
+    </div> -->
+
+  <p></p>
+
+  <div class="col-8" id="a4">
+    <app-card cardTitle="Affidavit/Liquidators" blockClass="pc-component">
+      <div class="row">
+        <div class="col-4"><img src="assets/images/logo-dark.gif" alt="logo" width="290" /></div>
+        <div class="col-8 shaded-block">
+          AFFIDAVIT PROVIDING REQUIRED INFORMATION FOR PERSONS APPLYING TO BE PLACED ON THE NATIONAL LIST OF LIQUIDATORS
+        </div>
+      </div>
+
+      <!--Step 1-->
+      <div class="form-container">
+        <h2 class="text-center">Declaration Form</h2>
+        <p class="text-center text-danger attention-grabber">
+          <ng-container *ngIf="showHours; else daysTemplate">
+            <strong>Closing In:</strong>
+            {{ remainingHours }} hours
+          </ng-container>
+          <ng-template #daysTemplate>
+            <strong>Closing Date:</strong>
+            {{ closingDate | date: 'longDate' }}
+            <br />
+            <strong>Days Remaining:</strong>
+            {{ daysRemaining }} days
+          </ng-template>
+        </p>
+
+        <form [formGroup]="personalInfoForm">
+          <div class="section" *ngIf="group1Section">
+            <label for="full-name">Full Names and Surname</label>
+            <input type="text" id="full-name" formControlName="fullName" placeholder="Enter full name" />
+            <div *ngIf="personalInfoForm.get('fullName').invalid && personalInfoForm.get('fullName').touched">
+              <small class="error">Full name is required.</small>
+            </div>
+
+            <label for="id-number">Identity Number</label>
+            <input type="text" id="id-number" formControlName="identityNumber" placeholder="Enter identity number" />
+            <div *ngIf="personalInfoForm.get('identityNumber').invalid && personalInfoForm.get('identityNumber').touched">
+              <small class="error" *ngIf="personalInfoForm.get('identityNumber').errors?.required">Identity number is required.</small>
+              <small class="error" *ngIf="personalInfoForm.get('identityNumber').errors?.invalidFormat">
+                Identity number must be a 13-digit number.
+              </small>
+              <small class="error" *ngIf="personalInfoForm.get('identityNumber').errors?.invalidDateOfBirth">
+                Identity number contains an invalid date of birth.
+              </small>
+              <small class="error" *ngIf="personalInfoForm.get('identityNumber').errors?.invalidChecksum">
+                Identity number is invalid.
+              </small>
+            </div>
+
+            <label for="identityDocument">
+              The undersigned, (a certified copy of my Identity Document is attached) declare as follows:
+            </label>
+            <input
+              type="file"
+              id="identityDocument"
+              name="identityDocument"
+              formControlName="identityDocument"
+              (change)="onFileSelected($event)"
+              accept=".pdf, image/*"
+            />
+
+            <div *ngIf="f.identityDocument.invalid && f.identityDocument.touched">
+              <small class="error text-danger">Identity document is required. Please attach a valid copy.</small>
+
+            </div>
+
+            <a *ngIf="idDocumentFileUrl" [href]="fileUrl" target="_blank" rel="noopener noreferrer">
+              {{ section1Details.id_document_file_name }}
+            </a>
+          </div>
+
+          <div class="section" *ngIf="group1Section">
+            <h3 class="section-title">2. Personal Information</h3>
+            <p>All the information herein contained is within my own personal knowledge and belief both true and correct.</p>
+
+            <label for="race">Race</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" formControlName="race" value="African" />
+                African
+              </label>
+              <label>
+                <input type="radio" formControlName="race" value="Coloured" />
+                Coloured
+              </label>
+              <label>
+                <input type="radio" formControlName="race" value="IndianAsian" />
+                Indian/Asian
+              </label>
+              <label>
+                <input type="radio" formControlName="race" value="White" />
+                White
+              </label>
+              <label>
+                <input type="radio" formControlName="race" value="Chinese" />
+                Chinese
+              </label>
+            </div>
+            <div *ngIf="f.race.invalid && f.race.touched">
+              <small class="error">Please select a race to proceed.</small>
+            </div>
+            <p></p>
+            <label for="gender">Gender</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" formControlName="gender" value="Male" />
+                Male
+              </label>
+              <label>
+                <input type="radio" formControlName="gender" value="Female" />
+                Female
+              </label>
+              <label>
+                <input type="radio" formControlName="gender" value="Non-Binary" />
+                Non-Binary
+              </label>
+            </div>
+            <div *ngIf="f.gender.invalid && f.gender.touched">
+              <small class="error">Please select a gender to proceed.</small>
+            </div>
+
+            <p></p>
+            <p>I submit the above information with the understanding that it will assist the Master’s Branch to determine my PDI status.</p>
+
+            <div class="section">
+              <h3 class="section-title">Submission</h3>
+              <p></p>
+              <button type="submit" *ngIf="!section1Details" (click)="PersonalInformationSubmit()">Save / Next</button>
+              <button type="submit" *ngIf="section1Details" (click)="editSection()">Update / Next</button>
+            </div>
+          </div>
+        </form>
+        <!--End of Step 1-->
+
+        <!--Step 2-->
+        <div class="section" *ngIf="group2Section">
+          <h3 class="section-title">3. Verification Consent</h3>
+          <p>
+            I hereby grant the Department of Justice and Constitutional Development and/or the Master of the High Court or any person
+            authorised by him/her authority to verify the information given herein through an investigation.
+          </p>
+        </div>
+
+        <div class="section" *ngIf="group2Section">
+          <h3 class="section-title">4. Business Information</h3>
+          <form [formGroup]="businessForm">
+            <label>I conduct or will conduct my insolvency business as follows (tick the correct box):</label>
+            <div class="radio-group">
+              <label>
+                <input type="radio" formControlName="businessType" value="Sole Proprietorship" />
+                Sole Proprietorship
+              </label>
+              <label>
+                <input type="radio" formControlName="businessType" value="Unincorporated Partnership" />
+                Unincorporated Partnership
+              </label>
+              <label>
+                <input type="radio" formControlName="businessType" value="Close Corporation" />
+                Close Corporation
+              </label>
+              <label>
+                <input type="radio" formControlName="businessType" value="Company" />
+                Company
+              </label>
+              <label>
+                <input type="radio" formControlName="businessType" value="Employed by the above" />
+                Employed by any of the above
+              </label>
+            </div>
+            <div *ngIf="g.businessType.invalid && g.businessType.touched">
+              <small class="error">Please select Business Type to proceed.</small>
+            </div>
+
+            <label for="business-status">If none of the above is applicable, please state the status of your business:</label>
+            <textarea
+              id="business-status"
+              name="businessStatus"
+              formControlName="businessStatus"
+              rows="3"
+              placeholder="State business status"
+            ></textarea>
+            <p></p>
+
+            <div class="row">
+              <div class="col-6">
+                <button type="button" (click)="moveGroupOneSection()">Back</button>
+              </div>
+
+              <div class="col-6" *ngIf="!section2Details">
+                <button type="submit" (click)="businessInfoSubmit()">Save / Next</button>
+              </div>
+              <div class="col-6" *ngIf="section2Details">
+                <button type="submit" (click)="editSection2()">Update / Next</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <!--End of Step 2-->
+
+        <!--Step 3-->
+        <!-- Section 5: Employment Details -->
+        <div class="section" *ngIf="group3Section">
+          <h3 class="section-title">5. Employment Details</h3>
+          <form [formGroup]="empBusTradingForm">
+            <label for="employer-name">I am employed as an insolvency practitioner by:</label>
+            <input type="text" id="employer-name" name="employerName" formControlName="employerName" placeholder="Enter employer's name" />
+            <div *ngIf="empBusTradingForm.get('employerName').invalid && empBusTradingForm.get('employerName').touched">
+              <small class="error">Employer Name is required.</small>
+            </div>
+
+            <label for="business-telephone">Business Telephone Number</label>
+            <input
+              type="text"
+              id="business-telephone"
+              name="businessTelephone"
+              formControlName="businessTelephone"
+              placeholder="Enter business phone number"
+            />
+            <div *ngIf="empBusTradingForm.get('businessTelephone').invalid && empBusTradingForm.get('businessTelephone').touched">
+              <small class="error">Business Telephone is required.</small>
+            </div>
+
+            <label for="business-address">Business Postal Address</label>
+            <textarea
+              id="business-address"
+              name="businessAddress"
+              formControlName="businessAddress"
+              rows="3"
+              placeholder="Enter business postal address"
+            ></textarea>
+            <div *ngIf="empBusTradingForm.get('businessAddress').invalid && empBusTradingForm.get('businessAddress').touched">
+              <small class="error">Business Address is required.</small>
+            </div>
+
+            <p>If employed in a professional partnership or incorporated company, furnish the following details:</p>
+
+            <label for="firm-name">Name of Firm or Company</label>
+            <input type="text" id="firm-name" name="firmName" formControlName="firmName" placeholder="Enter name of firm or company" />
+
+            <label for="partners-or-directors">Full Names of Partners or Directors</label>
+            <textarea
+              id="partners-or-directors"
+              name="partnersOrDirectors"
+              formControlName="partnersOrDirectors"
+              rows="3"
+              placeholder="Enter full names of partners or directors"
+            ></textarea>
+            <div *ngIf="empBusTradingForm.get('partnersOrDirectors').invalid && empBusTradingForm.get('partnersOrDirectors').touched">
+              <small class="error">Full names of Partners or Directors are required.</small>
+            </div>
+          </form>
+          <!-- End of form for Section 5 -->
+        </div>
+
+        <!-- Section 6: Business Trading Details -->
+        <div class="section" *ngIf="group3Section">
+          <h3 class="section-title">6. Business Trading Details</h3>
+
+          <form [formGroup]="empBusTradingForm">
+            <label for="business-name">6.1. My main business trades under the name and style of:</label>
+            <input
+              type="text"
+              id="business-name"
+              name="businessName"
+              formControlName="businessName"
+              placeholder="Enter business name and style"
+            />
+            <div *ngIf="empBusTradingForm.get('businessName').invalid && empBusTradingForm.get('businessName').touched">
+              <small class="error">Business Name is required.</small>
+            </div>
+
+            <label for="business-details">6.2. Provide more details about the business:</label>
+            <textarea
+              id="business-details"
+              name="businessDetails"
+              formControlName="businessDetails"
+              rows="4"
+              placeholder="Provide additional details about the business"
+            ></textarea>
+            <div *ngIf="empBusTradingForm.get('businessDetails').invalid && empBusTradingForm.get('businessDetails').touched">
+              <small class="error">Business Detail is required.</small>
+            </div>
+
+            <p>6.3. If applicable, provide the names and addresses of any trading partners:</p>
+
+            <!-- Checkbox to indicate applicability -->
+            <div>
+              <input
+                type="checkbox"
+                id="hasTradingPartners"
+                formControlName="hasTradingPartners"
+                (change)="toggleTradingPartners($event)"
+              />
+              <label for="hasTradingPartners">Do you have trading partners?</label>
+            </div>
+
+            <!-- FormArray for multiple trading partners -->
+
+            <div *ngIf="hasTradingPartners">
+              <div formArrayName="tradingPartners">
+                <div *ngFor="let partner of tradingPartners.controls; let i = index" [formGroupName]="i">
+                  <div>
+                    <label for="partnerName">Partner Name:</label>
+                    <input id="partnerName" type="text" formControlName="name" placeholder="Enter partner name" />
+                    <small *ngIf="partner.get('name').invalid && partner.get('name').touched" class="error">Name is required.</small>
+                  </div>
+                  <div>
+                    <label for="partnerAddress">Partner Address:</label>
+                    <textarea id="partnerAddress{{ i }}" formControlName="address" rows="2" placeholder="Enter partner address"></textarea>
+                    <small *ngIf="partner.get('address').invalid && partner.get('address').touched" class="error">
+                      Address is required.
+                    </small>
+                  </div>
+                  <!-- Icon button to remove a partner -->
+                  <div class="col-auto d-flex align-items-center">
+                    <button type="button" (click)="addTradingPartner()" class="icon-button add-button">
+                      <i class="fa fa-plus-circle" aria-hidden="true"></i>
+                    </button>
+                    <button type="button" (click)="removeTradingPartner(i)" class="icon-button remove-button ms-3">
+                      <i class="fa fa-trash" aria-hidden="true"></i>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <br />
+            <div class="row">
+              <div class="col-6">
+                <button type="button" (click)="movebackGroupTwoSection()">Back</button>
+              </div>
+
+              <div class="col-6">
+                <button type="submit" (click)="empBusTradingSubmit()" *ngIf="!section3Details">Save / Next</button>
+                <button type="submit" (click)="editSection3()" *ngIf="section3Details">Update / Next</button>
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!--End of Step 3-->
+
+        <!--Step 4-->
+        <!-- Section 7: Business Infrastructure Details -->
+        <div class="section" *ngIf="group4Section">
+          <h3 class="section-title">7. Business Infrastructure Details</h3>
+          <form [formGroup]="businessDetailsOfficeForm">
+            <p>Please address this section by confirming the following information regarding your main business and satellite offices.</p>
+
+            <label for="proof-of-rental">a) Proof of rental or ownership of business premises is attached:</label>
+            <textarea
+              id="proof-of-rental"
+              name="proofOfRental"
+              formControlName="proofOfRental"
+              rows="3"
+              placeholder="Provide details if not the owner/lessee, or your business relationship with the owner."
+            ></textarea>
+            <div *ngIf="businessDetailsOfficeForm.get('proofOfRental').invalid && businessDetailsOfficeForm.get('proofOfRental').touched">
+              <small class="error">Proof of rental is required.</small>
+            </div>
+
+            <label for="staff-details">b) Details of the number of persons employed, duties, and qualifications:</label>
+            <textarea
+              id="staff-details"
+              name="staffDetails"
+              formControlName="staffDetails"
+              rows="4"
+              placeholder="Provide the number of persons employed, their duties, and qualifications. Attach an organogram if necessary."
+            ></textarea>
+            <div *ngIf="businessDetailsOfficeForm.get('staffDetails').invalid && businessDetailsOfficeForm.get('staffDetails').touched">
+              <small class="error">Staff details is required.</small>
+            </div>
+
+            <label for="num-computers">c) Number of desktops/laptops in use at your business:</label>
+            <input
+              type="number"
+              id="num-computers"
+              name="numComputers"
+              formControlName="numComputers"
+              placeholder="Enter number of computers"
+            />
+            <div *ngIf="businessDetailsOfficeForm.get('numComputers').invalid && businessDetailsOfficeForm.get('numComputers').touched">
+              <small class="error">Number of computers is required.</small>
+            </div>
+
+            <label for="num-printers">d) Number of printers, scanners, and fax machines:</label>
+            <input
+              type="number"
+              id="num-printers"
+              name="numPrinters"
+              formControlName="numPrinters"
+              placeholder="Enter number of printers, scanners, and fax machines"
+            />
+            <div *ngIf="businessDetailsOfficeForm.get('numPrinters').invalid && businessDetailsOfficeForm.get('numPrinters').touched">
+              <small class="error">Number of printers is required.</small>
+            </div>
+
+            <label for="additional-info">e) Additional information you would like to bring to the Master's attention:</label>
+            <textarea
+              id="additional-info"
+              name="additionalInfo"
+              formControlName="additionalInfo"
+              rows="4"
+              placeholder="Provide any additional information you feel is relevant."
+            ></textarea>
+            <div *ngIf="businessDetailsOfficeForm.get('additionalInfo').invalid && businessDetailsOfficeForm.get('additionalInfo').touched">
+              <small class="error">additional information is required.</small>
+            </div>
+          </form>
+        </div>
+
+        <!-- Section 8: Office Addresses in Other Provinces -->
+        <div class="section" *ngIf="group4Section">
+          <h3 class="section-title">8. Office Addresses in Other Provinces</h3>
+          <form [formGroup]="businessAdressDetailsForm">
+            <p>
+              Please provide your office addresses in other provinces and include (where applicable) the same information as set out in
+              Section 7 for each office.
+            </p>
+
+            <label for="province-office-address">Office Address (Province 1):</label>
+            <textarea
+              id="province-office-address"
+              name="provinceOfficeAddress1"
+              formControlName="provinceOfficeAddress1"
+              rows="3"
+              placeholder="Enter the office address for the first province"
+            ></textarea>
+            <div
+              *ngIf="
+                businessAdressDetailsForm.get('provinceOfficeAddress1').invalid &&
+                businessAdressDetailsForm.get('provinceOfficeAddress1').touched
+              "
+            >
+              <small class="error">Office address is required.</small>
+            </div>
+
+            <label for="province-details1">Additional Details (e.g., rental proof, staff, infrastructure) for Office (Province 1):</label>
+            <textarea
+              id="province-details1"
+              name="provinceDetails1"
+              formControlName="provinceDetails1"
+              rows="4"
+              placeholder="Provide additional information such as proof of rental, staff, or equipment"
+            ></textarea>
+            <div
+              *ngIf="businessAdressDetailsForm.get('provinceDetails1').invalid && businessAdressDetailsForm.get('provinceDetails1').touched"
+            >
+              <small class="error">Additional details is required.</small>
+            </div>
+
+            <label for="province-office-address2">Office Address (Province 2):</label>
+            <textarea
+              id="province-office-address2"
+              name="provinceOfficeAddress2"
+              formControlName="provinceOfficeAddress2"
+              rows="3"
+              placeholder="Enter the office address for the second province"
+            ></textarea>
+            <div
+              *ngIf="
+                businessAdressDetailsForm.get('provinceOfficeAddress2').invalid &&
+                businessAdressDetailsForm.get('provinceOfficeAddress2').touched
+              "
+            >
+              <small class="error">Office address is required.</small>
+            </div>
+
+            <label for="province-details2">Additional Details (e.g., rental proof, staff, infrastructure) for Office (Province 2):</label>
+            <textarea
+              id="province-details2"
+              name="provinceDetails2"
+              formControlName="provinceDetails2"
+              rows="4"
+              placeholder="Provide additional information for the second province office"
+            ></textarea>
+            <div
+              *ngIf="businessAdressDetailsForm.get('provinceDetails2').invalid && businessAdressDetailsForm.get('provinceDetails2').touched"
+            >
+              <small class="error">Additional Details is required.</small>
+            </div>
+
+            <label for="province-office-address3">Office Address (Province 3):</label>
+            <textarea
+              id="province-office-address3"
+              name="provinceOfficeAddress3"
+              formControlName="provinceOfficeAddress3"
+              rows="3"
+              placeholder="Enter the office address for the third province"
+            ></textarea>
+            <div
+              *ngIf="
+                businessAdressDetailsForm.get('provinceOfficeAddress3').invalid &&
+                businessAdressDetailsForm.get('provinceOfficeAddress3').touched
+              "
+            >
+              <small class="error">Office address is required.</small>
+            </div>
+
+            <label for="province-details3">Additional Details (e.g., rental proof, staff, infrastructure) for Office (Province 3):</label>
+            <textarea
+              id="province-details3"
+              name="provinceDetails3"
+              formControlName="provinceDetails3"
+              rows="4"
+              placeholder="Provide additional information for the third province office"
+            ></textarea>
+            <div
+              *ngIf="businessAdressDetailsForm.get('provinceDetails3').invalid && businessAdressDetailsForm.get('provinceDetails3').touched"
+            >
+              <small class="error">Additional details is required.</small>
+            </div>
+            <p></p>
+            <div class="row">
+              <div class="col-6">
+                <button type="submit" (click)="movebackGroupThreeSection()">Back</button>
+              </div>
+
+              <div class="col-6">
+                <button type="submit" (click)="businessDetailsOfficeSubmit()" *ngIf="!section4Details && !section5Details">
+                  Save / Next
+                </button>
+                <button type="submit" *ngIf="section4Details && section5Details" (click)="editSection4()">Update / Next</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <!--End of Step 4-->
+
+        <!--Step 5-->
+        <!-- Section 9: Relevant Qualifications -->
+        <div class="section" *ngIf="group5Section">
+          <h3 class="section-title">9. Relevant Qualifications</h3>
+          <form [formGroup]="qualProMembershipForm">
+            <p>
+              I have successfully completed the following relevant and required law/accounting qualifications and attach certified copies of
+              all mentioned qualifications:
+            </p>
+
+            <label>Select your qualification:</label>
+            <div class="radio-group">
+              <label *ngFor="let qualification of qualificationsList">
+                <input type="radio" formControlName="qualifications" [value]="qualification.value" />
+                {{ qualification.label }}
+              </label>
+            </div>
+
+            <label for="qualificationFile">Attach Your Current Certificate of Qualification:</label>
+            <input
+              type="file"
+              id="qualificationFile"
+              name="qualificationFile"
+              formControlName="qualificationFile"
+              (change)="onNewFileChange($event, 'qualificationFile')"
+            />
+
+            <div *ngIf="qualProMembershipForm.get('qualifications').invalid && qualProMembershipForm.get('qualifications').touched">
+              <small class="error">Please select a qualification.</small>
+            </div>
+            <br />
+
+            <a *ngIf="qualificationFileUrl" [href]="qualificationFileUrl" target="_blank" rel="noopener noreferrer">
+              {{ section6Details.qualification_file_name }}
+            </a>
+          </form>
+        </div>
+        <br />
+        <!-- Section 10: Professional Memberships -->
+        <div class="section" *ngIf="group5Section">
+          <h3 class="section-title">10. Professional Memberships</h3>
+          <form [formGroup]="qualProMembershipForm">
+            <p>
+              Further to my qualifications above, I am also a member in good standing of the following professional organizations (Legal
+              Practice Council (LPC)/ Institute of Accounting and Commerce (IAC)/ South African Institute of Professional Accountants
+              (SAIPA)/ Chartered Institute for Business Accountants (CIBA)/ South African Institute of Chartered Accountant (SAICA)/ The
+              Association of Chartered Certified Accountants (ACCA). State not applicable if none.
+            </p>
+
+            <label>Professional Memberships:</label>
+            <div class="radio-group">
+              <label *ngFor="let option of professionalMembershipOptions">
+                <input type="radio" formControlName="professionalMemberships" [value]="option.value" />
+                {{ option.label }}
+              </label>
+            </div>
+
+            <div
+              *ngIf="
+                qualProMembershipForm.get('professionalMemberships').invalid && qualProMembershipForm.get('professionalMemberships').touched
+              "
+            >
+              <small class="error">Please select a professional membership.</small>
+            </div>
+
+            <label for="professional-membershipsFile">Attach current certificate/confirmation of good standing:</label>
+            <input
+              type="file"
+              id="professional-membershipsFile"
+              name="professionalMembershipsFile"
+              formControlName="professionalMembershipsFile"
+              (change)="onNewFileChange($event, 'membershipConfirmationFile')"
+            />
+            <br />
+
+            <a *ngIf="membershipFileUrl" [href]="membershipFileUrl" target="_blank" rel="noopener noreferrer">
+              {{ section6Details.membership_file_name }}
+            </a>
+
+            <span *ngIf="membershipConfirmationFileName">{{ membershipConfirmationFileName }}</span>
+            <p></p>
+            <div class="row">
+              <div class="col-6">
+                <button type="submit" (click)="movebackGroupFourSection()">Back</button>
+              </div>
+
+              <div class="col-6">
+                <button type="submit" (click)="qualProMembershipSubmit()" *ngIf="!section6Details">Save / Next</button>
+                <button type="submit" (click)="editSection5()" *ngIf="section6Details">Update / Next</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <!--End of Step 5-->
+
+        <!--Step 6-->
+        <!-- Section 11: Disqualification Provision -->
+        <div class="section" *ngIf="group6Section">
+          <h3 class="section-title">11. Disqualification Provision</h3>
+          <form [formGroup]="disqualRelationshipForm" (ngSubmit)="disqualRelationshipSubmit()">
+            <p>
+              I have perused the disqualification provision of the law attached to this form and have satisfied myself that I am not
+              disqualified on any grounds to take appointments as a trustee or liquidator and to conduct business as an insolvency
+              practitioner. I would like to bring the following to the attention of the Master of the High Court that could impact my
+              appointment. State not applicable if none:
+            </p>
+
+            <textarea
+              name="disqualification"
+              formControlName="disqualification"
+              rows="4"
+              placeholder="Provide details if applicable."
+            ></textarea>
+            <div *ngIf="disqualRelationshipForm.get('disqualification').invalid && disqualRelationshipForm.get('disqualification').touched">
+              <small class="error">Disqualification Provision is required.</small>
+            </div>
+          </form>
+        </div>
+
+        <!-- Section 12: Relationship Disclosure -->
+        <div class="section" *ngIf="group6Section">
+          <h3 class="section-title">12. Relationship Disclosure</h3>
+          <form [formGroup]="disqualRelationshipForm" (ngSubmit)="disqualRelationshipSubmit()">
+            <p>Please tick the applicable box:</p>
+
+            <div>
+              <input
+                type="radio"
+                id="no-relationship"
+                name="relationshipDisclosure"
+                formControlName="relationshipDisclosure"
+                value="not_related"
+                (change)="onRelationshipChange('not_related')"
+              />
+              <label for="no-relationship">
+                I am not related to any official employed at any of the offices of the Master of the High Court by affinity/family/business
+                or partnership.
+              </label>
+            </div>
+
+            <div>
+              <input
+                type="radio"
+                id="has-relationship"
+                name="relationshipDisclosure"
+                formControlName="relationshipDisclosure"
+                value="related"
+                (change)="onRelationshipChange('related')"
+              />
+              <label for="has-relationship">
+                I do have a relationship with an employee of the Master and the nature of this relationship is as follows:
+              </label>
+              <div
+                *ngIf="
+                  disqualRelationshipForm.get('relationshipDisclosure').invalid &&
+                  disqualRelationshipForm.get('relationshipDisclosure').touched
+                "
+              >
+                <small *ngIf="showRelationshipDetails" class="error">Please tick the applicable box.</small>
+              </div>
+            </div>
+            <textarea
+              *ngIf="showRelationshipDetails"
+              name="relationshipDetails"
+              formControlName="relationshipDetails"
+              rows="3"
+              placeholder="Provide relationship details if applicable."
+            ></textarea>
+            <div
+              *ngIf="
+                disqualRelationshipForm.get('relationshipDetails').invalid && disqualRelationshipForm.get('relationshipDetails').touched
+              "
+            >
+              <small class="error">Relationship details is required.</small>
+            </div>
+
+            <label *ngIf="showRelationshipDetails">Please select which office is the persom whom you are related to:</label>
+            <div class="radio-group" *ngIf="showRelationshipDetails">
+              <label *ngFor="let city of citiesList">
+                <input type="radio" formControlName="relationshipCity" [value]="city" />
+                {{ city }}
+              </label>
+            </div>
+
+            <div *ngIf="disqualRelationshipForm.get('relationshipCity').invalid && disqualRelationshipForm.get('relationshipCity').touched">
+              <small class="error">Please select a relative office location.</small>
+            </div>
+            <p></p>
+            <div class="row">
+              <div class="col-6">
+                <button type="submit" (click)="movebackGroupFiveSection()">Back</button>
+              </div>
+
+              <div class="col-6" *ngIf="!section7Details">
+                <button type="submit" (click)="disqualRelationshipSubmit()">Save / Next</button>
+              </div>
+
+              <div class="col-6" *ngIf="section7Details">
+                <button type="submit" (click)="editSection6()">Update / Next</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <!--End of Step 6-->
+
+        <!--Step 7-->
+        <!-- Section 13: Appointment Locations -->
+        <div class="section" *ngIf="group7Section">
+          <h3 class="section-title">13. Appointment Locations</h3>
+          <form [formGroup]="appEmpHistoryForm">
+            <p>
+              I wish to take appointments at the following Master’s Offices. I am aware that I will only be allowed to take up appointments
+              at the offices where I do have an acceptable infrastructure. Please tick the selected offices.
+            </p>
+
+            <div class="checkbox-group">
+              <div *ngFor="let location of citiesList" class="checkbox-item">
+                <input
+                  type="checkbox"
+                  [id]="location"
+                  [value]="location"
+                  formControlName="appointmentLocations"
+                  (change)="onCheckboxChange($event)"
+                />
+                <label [for]="location">{{ location }}</label>
+              </div>
+            </div>
+            <div *ngIf="appEmpHistoryForm.get('appointmentLocations').invalid && appEmpHistoryForm.get('appointmentLocations').touched">
+              <small class="error">Appointment Locations is required.</small>
+            </div>
+          </form>
+        </div>
+
+        <!-- Section 14: Employment History -->
+        <div class="section" *ngIf="group7Section">
+          <h3 class="section-title">14. Employment History</h3>
+          <form [formGroup]="appEmpHistoryForm">
+            <p>
+              My employment or activities for gain or for generating income that I conducted in the last three years are as follows (State
+              not applicable if none):
+            </p>
+
+            <textarea
+              name="employmentHistory"
+              formControlName="employmentHistory"
+              rows="4"
+              placeholder="Provide details of your employment history."
+            ></textarea>
+            <div *ngIf="appEmpHistoryForm.get('employmentHistory').invalid && appEmpHistoryForm.get('employmentHistory').touched">
+              <small class="error">Employment History is required.</small>
+            </div>
+
+            <label for="membership-confirmation">Please attach your current CV (Curriculum Vitae):</label>
+            <input
+              type="file"
+              id="curriculum-vitae"
+              name="CurriculumVitae"
+              formControlName="CurriculumVitae"
+              (change)="onFileSelectedCV($event)"
+            />
+            <p></p>
+            <a *ngIf="curriculumVitaeFileUrl" [href]="curriculumVitaeFileUrl" target="_blank" rel="noopener noreferrer">
+              {{ section8Details.curriculum_vitae_file_name }}
+            </a>
+            <p></p>
+            <div class="row">
+              <div class="col-6">
+                <button type="submit" (click)="movebackGroupSixSection()">Back</button>
+              </div>
+
+              <div class="col-6">
+                <button type="submit" (click)="appEmpHistorySubmit()" *ngIf="!section8Details">Save / Next</button>
+                <button type="submit" (click)="editSection7()" *ngIf="section8Details">Update / Next</button>
+              </div>
+            </div>
+          </form>
+        </div>
+        <!--End of step 7-->
+
+        <!--step 8-->
+        <!-- Section 15: Tax Clearance -->
+        <div class="section" *ngIf="group8Section">
+          <h3 class="section-title">15. Tax Clearance</h3>
+          <form [formGroup]="taxBondBankForm">
+            <p>
+              a) The Master of the High Court, as a constituent body of the government of the Republic of South Africa, has an obligation by
+              all its stakeholders, including insolvency practitioners, to the South African Revenue Services (SARS). I attach a copy of a
+              valid tax clearance certificate for the current financial year (Personal & Business).
+            </p>
+            <p>
+              b) All practitioners need to annually provide a valid tax clearance within three months before expiry of the previous tax
+              clearance. Failure to submit might result in your suspension from the National List of Liquidators.
+            </p>
+
+            <label for="tax-clearance">Attach tax clearance certificate:</label>
+            <input
+              type="file"
+              id="tax-clearance"
+              name="taxClearance"
+              formControlName="taxClearance"
+              (change)="onFileSelectedTaxClearance($event, 'taxClearance')"
+            />
+            <div *ngIf="taxBondBankForm.get('taxClearance').invalid && taxBondBankForm.get('taxClearance').touched">
+              <small class="error">Tax Clearance is required.</small>
+            </div>
+
+            <p></p>
+            <a *ngIf="taxClearanceCertificateFileUrl" [href]="taxClearanceCertificateFileUrl" target="_blank" rel="noopener noreferrer">
+              {{ section9Details.tax_clearance_certificate_file_name }}
+            </a>
+          </form>
+        </div>
+
+        <!-- Section 16: Bond Facility -->
+        <div class="section" *ngIf="group8Section">
+          <h3 class="section-title">16. Bond Facility</h3>
+          <form [formGroup]="taxBondBankForm">
+            <p>
+              I am aware that I will have to apply for a bond facility with one of the approved insurers and confirm that I will apply for
+              such a facility as soon as I have been informed that I was successful in the assessment process. I am aware that I will be
+              required to provide a letter by an approved insurer confirming that a facility has been granted in my favour.
+            </p>
+            <label for="bond-facility">Attach bond facility documentation:</label>
+            <input
+              type="file"
+              id="bond-facility"
+              name="bondFacility"
+              formControlName="bondFacility"
+              (change)="onFileSelectedTaxClearance($event, 'bondFacility')"
+            />
+            <div *ngIf="taxBondBankForm.get('bondFacility').invalid && taxBondBankForm.get('bondFacility').touched">
+              <small class="error">Bond facility Documentation is required.</small>
+            </div>
+
+            <p></p>
+            <a *ngIf="bondFacilityFileUrl" [href]="bondFacilityFileUrl" target="_blank" rel="noopener noreferrer">
+              {{ section9Details.bond_facility_file_name }}
+            </a>
+          </form>
+        </div>
+
+        <!-- Section 17: Bank Account Documentation -->
+        <div class="section" *ngIf="group8Section">
+          <h3 class="section-title">17. Bank Account Documentation</h3>
+          <form [formGroup]="taxBondBankForm">
+            <p>
+              I confirm that I will open a separate bank account for funds received in my capacity as a liquidator/trustee and confirm that
+              the account has to be opened in a bank that is a member of the Association of Bankers of South Africa (ABSA).
+            </p>
+            <label for="bank-account-documentation">Attach proof of bank account:</label>
+            <input
+              type="file"
+              id="bank-account-documentation"
+              name="bankAccountDocumentation"
+              formControlName="bankAccountDocumentation"
+              (change)="onFileSelectedTaxClearance($event, 'bankAccountDocumentation')"
+            />
+            <div *ngIf="taxBondBankForm.get('bankAccountDocumentation').invalid && taxBondBankForm.get('bankAccountDocumentation').touched">
+              <small class="error">Bank Account Documentation is required.</small>
+            </div>
+
+            <p></p>
+            <a *ngIf="bankAccountProofFileUrl" [href]="bankAccountProofFileUrl" target="_blank" rel="noopener noreferrer">
+              {{ section9Details.bank_account_proof_file_name }}
+            </a>
+          </form>
+        </div>
+
+        <!-- Section 18: Declaration -->
+        <div class="section" *ngIf="group8Section">
+          <h3 class="section-title">18. Declaration</h3>
+          <form [formGroup]="taxBondBankForm">
+            <p>
+              I hereby declare that the information given in this declaration is true and correct to the best of my knowledge and belief. I
+              understand that any false or misleading information may result in my disqualification from appointment as a
+              liquidator/trustee.
+            </p>
+
+            <div>
+              <input type="checkbox" id="agree-declaration" name="declaration" formControlName="declaration" required />
+              <div *ngIf="taxBondBankForm.get('declaration').invalid && taxBondBankForm.get('declaration').touched">
+                <small class="error">Declaration is required.</small>
+              </div>
+              <label for="agree-declaration">
+                I agree to the above declaration and the
+                <button type="button" class="link-button" data-bs-toggle="modal" data-bs-target="#termsModal">Terms and Conditions.</button>
+              </label>
+            </div>
+          </form>
+        </div>
+
+        <!-- Final Submission -->
+        <div class="section" *ngIf="group8Section">
+          <h3 class="section-title">Submission</h3>
+          <form [formGroup]="taxBondBankForm">
+            <p></p>
+
+            <div class="row">
+              <div class="col-4">
+                <button type="submit" (click)="movebackGroupEightSection()">Back</button>
+              </div>
+
+              <div class="col-4">
+                <button type="submit" (click)="taxBondBankSubmit()" *ngIf="!section9Details">Save</button>
+                <button type="submit" *ngIf="section9Details" (click)="editSection8()">Update</button>
+              </div>
+              
+              <div class="col-4">
+                <button type="submit" (click)="updateDeclarationStatus()" >Submit Declaration Form</button>
+              </div>
+              <div class="alert alert-danger mt-3" *ngIf="!formIsComplete">
+                <strong>Notice:</strong>
+                Your form has not been submitted yet. Please complete all required sections and click
+                <i>"Submit Declaration Form"</i>
+                .
+              </div>
+            </div>
+          </form>
+        </div>
+
+        <!-- Continue adding sections for paragraphs 6-22 similarly -->
+      </div>
+      <!--End of step 8-->
+
+      <!-- Modal Structure -->
+      <div class="modal" id="termsModal" tabindex="-1" aria-labelledby="termsModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-scrollable">
+          <!-- 'modal-dialog-scrollable' for scrollable content -->
+          <div class="modal-content">
+            <!-- Modal Header -->
+            <div class="modal-header">
+              <h5 class="modal-title" id="termsModalLabel">Terms and Conditions</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              <!-- Close button -->
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="modal-body">
+              <!-- Section 1 -->
+              <h4>1. Purpose</h4>
+              <p>
+                The purpose of these terms and conditions is to outline the obligations and responsibilities of the individual applying for
+                appointment as a liquidator/trustee.
+              </p>
+
+              <!-- Section 2 -->
+              <h4>2. Definitions</h4>
+              <p>
+                This section includes important definitions related to the terms used throughout this document, including "liquidator,"
+                "trustee," and "insolvency."
+              </p>
+
+              <!-- Section 3 -->
+              <h4>3. Eligibility</h4>
+              <p>
+                The individual must meet the eligibility criteria as per Section 55 of the Insolvency Act and other applicable regulations.
+              </p>
+
+              <!-- Section 4 -->
+              <h4>4. Disqualification Criteria</h4>
+              <p>
+                Any person who meets the disqualification criteria as outlined in Section 55 of the Insolvency Act will not be eligible for
+                appointment as a liquidator/trustee. These include:
+              </p>
+              <ul>
+                <li>(a) Any insolvent;</li>
+                <li>(b) A minor or person under legal disability;</li>
+                <li>(c) Individuals with a criminal record related to financial fraud.</li>
+              </ul>
+
+              <!-- Section 5 -->
+              <h4>5. Rights and Responsibilities</h4>
+              <p>This section outlines the rights and responsibilities of the liquidator/trustee in carrying out their duties.</p>
+
+              <!-- Section 6 -->
+              <h4>6. Legal Compliance</h4>
+              <p>
+                The applicant must comply with all relevant laws, regulations, and ethical standards while performing their duties as a
+                liquidator/trustee.
+              </p>
+
+              <!-- Section 7 -->
+              <h4>7. Confidentiality</h4>
+              <p>
+                The liquidator/trustee must maintain confidentiality regarding any sensitive information obtained during their appointment.
+              </p>
+
+              <!-- Section 8 -->
+              <h4>8. Indemnity</h4>
+              <p>
+                The liquidator/trustee agrees to indemnify the relevant authorities against any legal claims resulting from the performance
+                of their duties.
+              </p>
+
+              <!-- Section 9 -->
+              <h4>9. Conflict of Interest</h4>
+              <p>
+                Any conflict of interest must be declared by the liquidator/trustee immediately. Failure to do so may result in
+                disqualification.
+              </p>
+
+              <!-- Section 10 -->
+              <h4>10. Termination</h4>
+              <p>
+                The appointment of the liquidator/trustee may be terminated under the following circumstances: breach of terms, legal
+                disqualification, or gross misconduct.
+              </p>
+
+              <!-- Section 11 -->
+              <h4>11. Compensation</h4>
+              <p>Details regarding compensation, fees, and expenses for the liquidator/trustee are outlined in this section.</p>
+
+              <!-- Section 12 -->
+              <h4>12. Governing Law</h4>
+              <p>These terms and conditions are governed by the laws of the Republic of South Africa.</p>
+
+              <!-- Section 13 -->
+              <h4>13. Dispute Resolution</h4>
+              <p>Any disputes arising from the interpretation or implementation of these terms will be resolved through arbitration.</p>
+
+              <!-- Section 14 -->
+              <h4>14. Amendment</h4>
+              <p>
+                These terms and conditions may be amended from time to time. The liquidator/trustee will be informed of any significant
+                changes.
+              </p>
+
+              <!-- Section 15 -->
+              <h4>15. Communication</h4>
+              <p>
+                All communication between the liquidator/trustee and the relevant authorities will be conducted through the approved
+                channels.
+              </p>
+
+              <!-- Section 16 -->
+              <h4>16. Representation</h4>
+              <p>
+                The liquidator/trustee agrees to represent the interests of the creditors and comply with any directives issued by the court
+                or regulatory body.
+              </p>
+
+              <!-- Section 17 -->
+              <h4>17. Signature</h4>
+              <p>By signing this document, the applicant agrees to the terms and conditions outlined herein.</p>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="modal-footer">
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </app-card>
+  </div>
+  <div class="col-4" id="a4">
+    <div class="card border-danger progress-card">
+        <div class="card-header bg-danger text-white text-center">
+            <strong>Progress Tracker</strong>
+        </div>
+        <div class="card-body progress-container">
+            <!-- Step 1 -->
+            <div
+                class="progress-step"
+                data-step="1"
+                [ngClass]="{ 'active-step': currentStep === 1 }"
+                (click)="moveGroupOneSection()"
+            >
+                <a>
+                    <div class="progress-step-wrapper">
+                        <div
+                            class="circle"
+                            [ngClass]="{
+                                'bg-secondary text-white': !group1SectionValid,
+                                'bg-success text-white': group1SectionValid
+                            }"
+                        >
+                            1
+                        </div>
+                        <div class="text" [ngClass]="{ 'text-muted': !group1SectionValid, 'text-success': group1SectionValid }">
+                            Step 1: Personal Info
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Step 2 -->
+            <div
+                class="progress-step"
+                data-step="2"
+                [ngClass]="{ 'active-step': currentStep === 2 }"
+                (click)="moveGroupTwoSection()"
+            >
+                <a>
+                    <div class="progress-step-wrapper">
+                        <div
+                            class="circle"
+                            [ngClass]="{
+                                'bg-secondary text-white': !group2SectionValid,
+                                'bg-success text-white': group2SectionValid
+                            }"
+                        >
+                            2
+                        </div>
+                        <div class="text" [ngClass]="{ 'text-muted': !group2SectionValid, 'text-success': group2SectionValid }">
+                            Step 2: Verification & Business Info
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Step 3 -->
+            <div
+                class="progress-step"
+                data-step="3"
+                [ngClass]="{ 'active-step': currentStep === 3 }"
+                (click)="onGroupThreeStepClick()"
+            >
+                <a>
+                    <div class="progress-step-wrapper">
+                        <div
+                            class="circle"
+                            [ngClass]="{
+                                'bg-secondary text-white': !group3SectionValid,
+                                'bg-success text-white': group3SectionValid
+                            }"
+                        >
+                            3
+                        </div>
+                        <div class="text" [ngClass]="{ 'text-muted': !group3SectionValid, 'text-success': group3SectionValid }">
+                            Step 3: Employment & Business Trading Details
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Step 4 -->
+            <div
+                class="progress-step"
+                data-step="4"
+                [ngClass]="{ 'active-step': currentStep === 4 }"
+                (click)="onGroupFourStepClick()"
+            >
+                <a>
+                    <div class="progress-step-wrapper">
+                        <div
+                            class="circle"
+                            [ngClass]="{
+                                'bg-secondary text-white': !group4SectionValid,
+                                'bg-success text-white': group4SectionValid
+                            }"
+                        >
+                            4
+                        </div>
+                        <div class="text" [ngClass]="{ 'text-muted': !group4SectionValid, 'text-success': group4SectionValid }">
+                            Step 4: Business Details & Office Addresses
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Step 5 -->
+            <div
+                class="progress-step"
+                data-step="5"
+                [ngClass]="{ 'active-step': currentStep === 5 }"
+                (click)="moveGroupFiveSection()"
+            >
+                <a>
+                    <div class="progress-step-wrapper">
+                        <div
+                            class="circle"
+                            [ngClass]="{
+                                'bg-secondary text-white': !group5SectionValid,
+                                'bg-success text-white': group5SectionValid
+                            }"
+                        >
+                            5
+                        </div>
+                        <div class="text" [ngClass]="{ 'text-muted': !group5SectionValid, 'text-success': group5SectionValid }">
+                            Step 5: Qualifications & Professional Memberships
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Step 6 -->
+            <div
+                class="progress-step"
+                data-step="6"
+                [ngClass]="{ 'active-step': currentStep === 6 }"
+                (click)="moveGroupSixSection()"
+            >
+                <a>
+                    <div class="progress-step-wrapper">
+                        <div
+                            class="circle"
+                            [ngClass]="{
+                                'bg-secondary text-white': !group6SectionValid,
+                                'bg-success text-white': group6SectionValid
+                            }"
+                        >
+                            6
+                        </div>
+                        <div class="text" [ngClass]="{ 'text-muted': !group6SectionValid, 'text-success': group6SectionValid }">
+                            Step 6: Disqualification & Relationship Disclosure
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Step 7 -->
+            <div
+                class="progress-step"
+                data-step="7"
+                [ngClass]="{ 'active-step': currentStep === 7 }"
+                (click)="moveGroupSevenSection()"
+            >
+                <a>
+                    <div class="progress-step-wrapper">
+                        <div
+                            class="circle"
+                            [ngClass]="{
+                                'bg-secondary text-white': !group7SectionValid,
+                                'bg-success text-white': group7SectionValid
+                            }"
+                        >
+                            7
+                        </div>
+                        <div class="text" [ngClass]="{ 'text-muted': !group7SectionValid, 'text-success': group7SectionValid }">
+                            Step 7: Appointment & Employment History
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Step 8 -->
+            <div
+                class="progress-step"
+                data-step="8"
+                [ngClass]="{ 'active-step': currentStep === 8 }"
+                (click)="moveGroupEightSection()"
+            >
+                <a>
+                    <div class="progress-step-wrapper">
+                        <div
+                            class="circle"
+                            [ngClass]="{
+                                'bg-secondary text-white': !group8SectionValid,
+                                'bg-success text-white': group8SectionValid
+                            }"
+                        >
+                            8
+                        </div>
+                        <div class="text" [ngClass]="{ 'text-muted': !group8SectionValid, 'text-success': group8SectionValid }">
+                            Step 8: Tax Clearance, Bond Facility & Bank Account Documentation
+                        </div>
+                    </div>
+                </a>
+            </div>
+
+            <!-- Step 9 -->
+            <div
+                class="progress-step"
+                data-step="9"
+                [ngClass]="{ 'active-step': currentStep === 9 }"
+                (click)="moveGroupNineSection()"
+            >
+                <a>
+                    <div class="progress-step-wrapper">
+                        <div
+                            class="circle"
+                            [ngClass]="{
+                                'bg-secondary text-white': !formIsComplete ,
+                                'bg-success text-white': formIsComplete 
+                            }"
+                        >
+                            9
+                        </div>
+                        <div class="text" [ngClass]="{ 'text-muted': !formIsComplete , 'text-success': formIsComplete  }">
+                            Step 9: Submit Declaration Form
+                        </div>
+                    </div>
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+</div>

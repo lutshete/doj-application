@@ -1,0 +1,76 @@
+/* approval-status.component.css */
+
+html, body {
+    height: 100%;
+    margin: 0;
+    font-family: 'Arial', sans-serif; /* Modern font for better readability */
+  }
+  
+  .container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+ 
+    text-align: center;
+    padding: 40px;
+    max-width: 500px; /* Adjust width for a more compact look */
+    margin: auto; /* Center horizontally */
+    border-radius: 12px; /* Slightly rounded corners */
+    background-color: #ffffff; /* White background for professionalism */
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Softer shadow for depth */
+    position: absolute; /* For vertical centering */
+    top: 50%; /* Move to center */
+    left: 50%; /* Move to center */
+    transform: translate(-50%, -50%); /* Translate to center */
+  }
+  
+  .icon-container {
+    font-size: 80px; /* Large icon */
+    color: #4caf50; /* Green color for success */
+    margin-bottom: 20px; /* Space below icon */
+  }
+  
+  h2 {
+    font-size: 26px; /* Larger heading */
+    font-weight: bold; /* Bold text */
+    color: #333; /* Dark color for contrast */
+    margin-bottom: 10px; /* Space below heading */
+  }
+  
+  .status-message {
+    font-size: 18px; /* Readable message size */
+    color: #666; /* Slightly lighter color for the message */
+    margin: 0; /* Reset margin */
+    padding: 0 15px; /* Padding for small screens */
+  }
+  
+  @media (max-width: 768px) {
+    h2 {
+      font-size: 24px; /* Slightly smaller heading */
+    }
+  
+    .status-message {
+      font-size: 16px; /* Smaller message size */
+    }
+  
+    .icon-container {
+        font-size: 4rem;
+    }
+  }
+  
+  @media (max-width: 480px) {
+    h2 {
+      font-size: 22px; /* Smaller heading for small screens */
+    }
+  
+    .status-message {
+        font-size: 1.2rem;
+    margin: 15px 0;
+    }
+  
+    .icon-container {
+      font-size: 60px; /* Smaller icon for small screens */
+    }
+  }
+  

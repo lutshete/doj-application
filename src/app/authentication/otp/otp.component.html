@@ -1,0 +1,21 @@
+<div class="otp-dialog">
+  <h2 class="otp-title">Enter OTP</h2>
+  <form [formGroup]="otpForm" (ngSubmit)="onSubmit()" class="otp-form">
+    <div class="otp-inputs">
+      <input type="text" maxlength="1" formControlName="otp1" (input)="moveFocus($event, 'otp2')" class="otp-input" autofocus />
+      <input type="text" maxlength="1" formControlName="otp2" (input)="moveFocus($event, 'otp3')" class="otp-input" />
+      <input type="text" maxlength="1" formControlName="otp3" (input)="moveFocus($event, 'otp4')" class="otp-input" />
+      <input type="text" maxlength="1" formControlName="otp4" (input)="moveFocus($event, 'otp5')" class="otp-input" />
+      <input type="text" maxlength="1" formControlName="otp5" (input)="moveFocus($event, 'otp6')" class="otp-input" />
+      <input type="text" maxlength="1" formControlName="otp6" (input)="submitOnComplete()" class="otp-input" />
+    </div>
+    <button type="submit" [disabled]="otpForm.invalid" class="verify-button">Verify OTP</button>
+  </form>
+
+  <div class="resend-otp">
+    <p *ngIf="!isResending">Didn't receive OTP? <a (click)="resendOTP()" class="resend-link">Resend OTP</a></p>
+    <p *ngIf="isResending" class="resending-message">Resending OTP...</p>
+  </div>
+
+  <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
+</div>

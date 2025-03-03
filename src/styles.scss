@@ -1,0 +1,120 @@
+/**======================================================================
+=========================================================================
+Template Name: DashboardKit - Most Complete Bootstrap Admin Template
+Author: Phoenixcoded
+Support: support@phoenixcoded.net
+File: style.css
+=========================================================================
+=================================================================================== */
+
+// main framework
+@import 'node_modules/bootstrap/scss/functions';
+@import 'node_modules/bootstrap/scss/variables';
+@import 'node_modules/bootstrap/scss/variables-dark';
+
+@import 'scss/settings/color-variables';
+@import 'scss/settings/theme-variables';
+@import 'scss/settings/bootstrap-variables';
+
+// bootstrap import
+@import 'scss/bootstrap/bootstrap.scss';
+
+@import 'node_modules/bootstrap/scss/utilities';
+@import 'node_modules/bootstrap/scss/utilities/api';
+
+// main framework
+@import 'scss/themes/generic.scss';
+@import 'scss/themes/general.scss';
+
+@import 'scss/themes/components/components.scss';
+
+// theme
+@import 'scss/themes/layouts/menu/sidebar.scss';
+@import 'scss/themes/layouts/navbar/navbar.scss';
+@import 'scss/themes/layouts/pc-common.scss';
+@import 'scss/themes/layouts/breadcrumb/breadcrumb.scss';
+@import 'scss/themes/layouts/footer/footer.scss';
+
+@import 'scss/themes/preset-style.scss';
+@import '~@angular/material/prebuilt-themes/indigo-pink.css';
+@import 'ngx-toastr/toastr';
+
+
+.btn-primary{
+    background-color: #F47F0C !important; 
+    border-color: #F47F0C !important;
+}
+
+.form-check .form-check-input.input-primary:checked {
+    border-color: #F47F0C !important;
+    background-color: #F47F0C !important; 
+}
+
+.link-primary{
+    color: #F47F0C !important;
+}
+
+.text-primary{
+    color: #F47F0C !important;
+} 
+
+._self{
+   
+}
+ 
+.pc-sidebar .coded-inner-navbar > app-nav-group > app-nav-item li.nav-item.active, .pc-sidebar .coded-inner-navbar > app-nav-group > app-nav-item li.nav-item:focus, .pc-sidebar .coded-inner-navbar > app-nav-group > app-nav-item li.nav-item:hover {
+    background:  #ffc10738 !important;
+    color:#fff !important; 
+
+} 
+.pc-sidebar .navbar-content .coded-inner-navbar li > a {
+    border-radius: 0px !important;
+}
+.pc-sidebar .coded-inner-navbar > app-nav-group > app-nav-item li.nav-item.active > a {
+    color: rgb(201, 103, 4) !important;
+    border-right: 3px solid #F47F0C;
+    border-top-right-radius: 0% !important;
+
+}
+
+.pc-sidebar .coded-inner-navbar > app-nav-group > app-nav-item li.nav-item.active > a .coded-micon {
+    color: rgb(201, 103, 4) !important;
+}
+.shaded-block{
+    background-color: rgb(201, 103, 4) !important;;
+    padding:10px;
+    color:#fff;
+    font-weight: bold;
+    border: 1px solid #000;
+    font-size: 15px;
+    text-align: center;
+    justify-content: center;
+    display: flex;
+    align-items: center;
+}
+
+.number-section{
+    margin-top:30px;
+}
+
+.no{
+    font-weight: bold;
+    font-size:14px;
+    margin-bottom: 5px;;
+}
+
+.form-check-input[type=checkbox] {
+    border-radius: 0.25em;
+    border:1px solid #000 !important;
+}
+.form-check-input:checked {
+    background-color: #F47F0C !important;
+    border-color: #F47F0C !important;
+}
+
+.form-check-input[type=radio] {
+    border-radius: 0%;
+    border:1px solid #000 !important;
+}
+
+

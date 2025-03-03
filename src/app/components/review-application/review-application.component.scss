@@ -1,0 +1,162 @@
+.form-container {
+    max-width: 900px;
+    margin: auto;
+    background-color: #fff;
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+  }
+  
+  h2, h3, h4 {
+    color: #F47F0C; /* Primary title and section heading color */
+    margin-bottom: 20px;
+  }
+  
+  label {
+    font-weight: bold;
+    color: #F47F0C; /* Label color */
+    margin-top: 10px;
+  }
+  
+  input[type="text"],
+  input[type="email"],
+  input[type="date"],
+  input[type="file"],
+  textarea,
+  select {
+    width: 100%;
+    padding: 12px;
+    margin-top: 5px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    background: #f9f9f9;
+    font-size: 16px;
+    transition: border-color 0.3s ease;
+    outline: none;
+  }
+  
+  input:focus,
+  textarea:focus,
+  select:focus {
+    border-color: #F47F0C;
+  }
+  
+  .form-footer button {
+    background-color: #F47F0C;
+    color: white;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s ease;
+  }
+  
+  .form-footer button:hover {
+    background-color: #d6700b;
+  }
+  
+  .progress-bar {
+    background-color: #F47F0C !important;
+  }
+  
+  .error {
+    color: #ff5e5e;
+    font-size: 14px;
+    margin-top: 4px;
+  }
+  
+  .radio-group label,
+  .checkbox-group label {
+    color: #333;
+  }
+  
+  .circle {
+    background-color: #F47F0C;
+    color: white;
+    display: inline-block;
+    width: 40px;
+    height: 40px;
+    line-height: 40px;
+    text-align: center;
+    border-radius: 50%;
+  }
+  
+  .edit-active-circle {
+    background-color: #f2c66e;
+  }
+  
+  .valid-active-circle {
+    background-color: #28a745;
+  }
+  
+  .progress-card .text {
+    color: #333;
+  }
+  
+  @media (max-width: 768px) {
+    .row .col-md-4,
+    .row .col-md-3,
+    .row .col-md-6,
+    .row .col-md-9 {
+      flex: 100%;
+      max-width: 100%;
+    }
+  }
+  
+
+  .pdf-icon-button {
+    border: none;
+    background: none;
+    padding: 0;
+    margin-left: 5px;
+    cursor: pointer;
+  }
+  
+  .pdf-icon-button i {
+    color: #d9534f; /* PDF red color */
+    font-size: 1.2em; /* Adjust size as needed */
+  }
+  
+  .pdf-icon-button:hover i {
+    color: #c9302c; /* Slightly darker red on hover */
+  }
+
+  .modal-xl {
+    max-width: 90%; /* Increase modal width */
+    height: 90%; /* Increase modal height */
+  }
+  
+  .modal-body {
+    position: relative;
+    overflow: hidden;
+    cursor: grab;
+  }
+
+  
+  .zoom-container img,
+  .zoom-container object {
+    max-width: 100%; /* Ensure content is responsive */
+    max-height: 100%; /* Fit within the modal */
+  }
+  
+  .zoom-container {
+    transform-origin: 0 0;
+    transition: transform 0.2s ease; /* Smooth zoom */
+    user-select: none; /* Prevent text selection */
+  }
+  
+  .zoom-container:hover {
+    transform: scale(1.1); /* Slight zoom on hover */
+  }
+
+  img {
+    max-width: 100%;
+    pointer-events: none;
+  }
+  
+  object {
+    pointer-events: none; /* Prevent interaction with PDFs */
+  }
+  
+  
