@@ -60,7 +60,7 @@ export class LoginComponent {
         localStorage.setItem('sessionToken', response.token);
         this.isSuccess = true;
         this.alertMessage = 'Login successful! Redirecting...';
-        setTimeout(() => this.router.navigate(['/dashboard/default']), 3000);
+        setTimeout(() => this.router.navigate(['/home']), 1000);
       },
       (error) => {
         console.log('Login failed', error);
