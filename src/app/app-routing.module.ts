@@ -40,7 +40,7 @@ const routes: Routes = [
   {
     path: 'reset-password',
     component: ResetPasswordComponent,
-    canActivate: [AuthGuard], // Uses AuthGuard to block logged-in users
+   
   },
   {
     path: 'liquidators',
@@ -60,7 +60,7 @@ const routes: Routes = [
   {
     path: 'approval-status',
     component: ApprovalStatusComponent,
-    canActivate: [AuthGuard], // Protected route
+    
   },
 ];
 
