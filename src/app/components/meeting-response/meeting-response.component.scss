@@ -1,0 +1,51 @@
+body {
+    background: linear-gradient(135deg, #007bff, #00c6ff);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 100vh;
+    margin: 0;
+  }
+  
+  /* Meeting Card */
+  .meeting-card {
+    width: 400px;
+    border-radius: 15px;
+    background: #fff;
+    padding: 20px;
+    text-align: center;
+    transition: transform 0.3s ease-in-out;
+  }
+  
+  .meeting-card:hover {
+    transform: scale(1.02);
+  }
+  
+  /* Animated Icon */
+  .animated-icon {
+    font-size: 50px;
+    color: #007bff;
+    animation: bounce 1.5s infinite;
+  }
+  
+  @keyframes bounce {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+  
+  /* Animated Button */
+  .animated-button {
+    background: linear-gradient(135deg, #007bff, #00c6ff);
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    font-size: 16px;
+    border-radius: 25px;
+    transition: all 0.3s ease-in-out;
+  }
+  
+  .animated-button:hover {
+    background: linear-gradient(135deg, #0056b3, #0090ff);
+    transform: scale(1.05);
+  }
+  

@@ -1,0 +1,84 @@
+<div class="container mt-5 d-flex justify-content-center align-items-center vh-100">
+  <div class="card meeting-card shadow-lg p-4">
+    <div class="card-body text-center">
+
+      <!-- 🔄 Loading Indicator -->
+      <div *ngIf="isLoading">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Processing...</span>
+        </div>
+      </div>
+
+      <!-- ✅ Status Icon (Success / Error) -->
+      <div class="icon-container mb-3" *ngIf="!isLoading && !showConfirmation">
+        <i [ngClass]="{
+          'bi bi-calendar-check animated-icon text-success': responseMessage.includes('accepted'),
+          'bi bi-x-circle animated-icon text-danger': responseMessage.includes('declined')
+        }"></i>
+      </div>
+
+      <!-- 📝 Title -->
+      <h4 class="card-title fw-bold" [ngClass]="{
+        'text-primary': responseMessage.includes('accepted'),
+        'text-danger': responseMessage.includes('declined')
+      }">
+        Meeting Response
+      </h4>
+
+      <!-- 📩 Response Message -->
+      <p class="card-text" [ngClass]="{
+        'text-muted': responseMessage.includes('accepted'),
+        'text-danger': responseMessage.includes('declined')
+      }">
+        {{ responseMessage }}
+      </p>
+
+      <!-- ⚠️ Decline Confirmation Section -->
+       
+      <div *ngIf="previousResponse === 'accept' && action === 'decline' && !isLoading">
+      <!--   <p class="text-warning fw-bold">⚠️ You have already accepted this meeting. Are you sure you want to decline?</p> -->
+
+        <!-- 📌 Reason Input -->
+        <textarea class="form-control mb-3" [(ngModel)]="declineReason" placeholder="Please provide a reason (required)" required></textarea>
+
+        <!-- 🚀 Action Buttons -->
+        <div class="d-flex justify-content-center">
+          <button class="btn btn-danger me-2" [disabled]="!declineReason" (click)="confirmDecline()" >
+            Yes, Decline
+          </button>
+          <button class="btn btn-secondary" (click)="cancelDecline()">No, Keep Accepted</button>
+        </div>
+      </div>
+
+      <!-- 🔍 Bootstrap Modal for Decline Confirmation -->
+      <div class="modal fade" id="confirmDeclineModal" tabindex="-1" aria-labelledby="confirmDeclineModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h5 class="modal-title text-danger" id="confirmDeclineModalLabel">Confirm Decline</h5>
+              <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+              <p class="text-warning">⚠️ You have already accepted this meeting. Are you sure you want to decline?</p>
+              <p><strong>Reason:</strong> {{ declineReason }}</p>
+            </div>
+            <div class="modal-footer">
+              <button type="button" class="btn btn-danger" (click)="confirmDecline()" data-bs-dismiss="modal">
+                Yes, Decline
+              </button>
+              <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 🚀 Return to Dashboard Button -->
+      <button *ngIf="!isLoading && !showConfirmation"
+              class="btn btn-primary mt-3 animated-button d-flex align-items-center justify-content-center"
+              (click)="goHome()">
+        <i class="bi bi-house-door-fill me-2"></i> Go to Dashboard
+      </button>
+
+    </div>
+  </div>
+</div>

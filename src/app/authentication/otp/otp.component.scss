@@ -40,12 +40,13 @@
   font-size: 24px;
   border: 2px solid #ccc;
   border-radius: 5px;
-  transition: border-color 0.3s ease;
+  transition: border-color 0.3s ease, transform 0.1s ease;
 }
 
 .otp-input:focus {
   border-color: #007bff;
   outline: none;
+  transform: scale(1.1);
 }
 
 .verify-button {
@@ -80,16 +81,3 @@
   color: #ff0000;
   margin-top: 10px;
 }
-
-
-::ng-deep .cdk-overlay-dark-backdrop {
-  background: rgba(255, 255, 255, 0.9) !important; /* 50% opaque white background */
-}
-
-::ng-deep .otp-dialog-panel {
-  color: white; /* Ensures all text is white */
-  background: rgba(30, 30, 30, 0.9); /* Optional: A slightly lighter dark background for the dialog itself */
-  border-radius: 10px; /* Optional: Rounded corners for a slick look */
-  padding: 20px; /* Optional: Padding inside the dialog */
-}
-

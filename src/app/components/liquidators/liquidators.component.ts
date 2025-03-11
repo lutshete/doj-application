@@ -10,24 +10,33 @@ import {
   OnInit,
   Output,
   SimpleChanges,
-  ViewChild
+  ViewChild,
 } from '@angular/core';
 import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
 // project import
 
-import { AbstractControl, FormArray, FormBuilder, FormGroup, ValidationErrors, ValidatorFn, Validators } from '@angular/forms';
+import {
+  AbstractControl,
+  FormArray,
+  FormBuilder,
+  FormGroup,
+  ValidationErrors,
+  ValidatorFn,
+  Validators,
+} from '@angular/forms';
 import { LiquidatorApplicationService } from 'src/app/services/liquidator-application.service';
 import { AuthService } from 'src/app/services/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { EMPTY, Subscription, interval, switchMap } from 'rxjs';
+import { AdminService } from 'src/app/services/admin.service';
 
 declare const google: any;
 
 @Component({
   selector: 'app-liquidators',
   templateUrl: './liquidators.component.html',
-  styleUrl: './liquidators.component.scss'
+  styleUrl: './liquidators.component.scss',
 })
 export class LiquidatorsComponent implements OnInit, OnChanges {
   personalInfoForm: FormGroup;
@@ -44,13 +53,13 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
 
   qualificationsList = [
     { label: 'LLB', value: 'LLB' },
-    { label: 'BCom', value: 'BCom_Accounting' }
+    { label: 'BCom', value: 'BCom_Accounting' },
   ];
 
   professionalMembershipOptions = [
     { label: 'LPC', value: 'LPC' },
     { label: 'SICA', value: 'SICA' },
-    { label: 'SAIPA', value: 'SAIPA' }
+    { label: 'SAIPA', value: 'SAIPA' },
   ];
 
   citiesList = [
@@ -69,7 +78,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     'Gqebera',
     'Bloemfontein',
     'Makhanda',
-    'Middelburg'
+    'Middelburg',
   ];
 
   selectedAppointmentLocations: string[] = [];
@@ -169,22 +178,35 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   taxClearanceCertificateFileUrl: string;
   bondFacilityFileUrl: string;
   bankAccountProofFileUrl: any;
-  closingDate: Date = new Date('2024-12-01T12:00:00'); // Example closing date and time
+  closingDate: Date;
   daysRemaining: number = 0;
   remainingHours: number = 0;
   showHours: boolean = false;
   private countdownSubscription: Subscription | undefined;
   currentStep: number = 1;
   formIsComplete: boolean = false;
-  application_status
-  current_form_status
+  application_status;
+  current_form_status;
+  loading: boolean = false; // Track loading state
+  currentApplicationDate: any = null;
+  isTermsRead = false;
+  @ViewChild('modalBody') modalBody!: ElementRef;
+
+  openingDate;
+  showOpeningHours: boolean = false;
+  openingRemainingHours: number = 0;
+  openingDaysRemaining: number = 0;
+
+  isBetweenOpeningAndClosing: boolean = false;
+  nextOpeningYear: number | null;
 
   constructor(
     private fb: FormBuilder,
     private liquidatorApplicationService: LiquidatorApplicationService,
     private authService: AuthService,
     private toastr: ToastrService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private adminService: AdminService,
   ) {}
 
   ngOnInit() {
@@ -196,6 +218,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     this.initialiseSection6();
     this.initialiseSection7();
     this.initialiseSection8();
+    this.loadCurrentApplicationDate();
     // Initialize section states and activate the first section
     this.initializeSections();
     this.setActiveSection(1); // Activates group one by default
@@ -229,7 +252,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       this.patchPersonalInfoForm(); // Patch the form with saved data
       this.moveGroupTwoSection();
       this.group2SectionValid = this.businessForm.valid;
-      this.fetchStatus()
+      this.fetchStatus();
     }
 
     if (savedSection2Details) {
@@ -292,11 +315,9 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       this.section9Details = JSON.parse(savedSection9Details);
 
       this.patchTaxBondBank();
-      
+
       this.updateButtonState();
-      this.moveGroupNineSection()
-      
-      
+      this.moveGroupNineSection();
     }
     this.updateCountdown(); // Initialize countdown values
     this.startCountdown(); // Start countdown updates
@@ -305,10 +326,13 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   initialiseSection1() {
     this.personalInfoForm = this.fb.group({
       fullName: ['', Validators.required],
-      identityNumber: ['', [Validators.required, this.southAfricanIdValidator()]],
+      identityNumber: [
+        '',
+        [Validators.required, this.southAfricanIdValidator()],
+      ],
       race: ['', Validators.required],
       gender: ['', Validators.required],
-      identityDocument: ['', Validators.required]
+      identityDocument: ['', Validators.required],
     });
 
     this.personalInfoForm.statusChanges.subscribe(() => {
@@ -316,7 +340,9 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       if (
         this.personalInfoForm.invalid &&
         Object.keys(this.personalInfoForm.controls).some(
-          (key) => this.personalInfoForm.get(key)?.touched || this.personalInfoForm.get(key)?.dirty
+          (key) =>
+            this.personalInfoForm.get(key)?.touched ||
+            this.personalInfoForm.get(key)?.dirty,
         )
       ) {
         this.group1SectionEdit = true; // Show edit icon if form is touched/dirty and invalid
@@ -387,9 +413,14 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     this.businessForm = this.fb.group(
       {
         businessType: ['', [Validators.required]],
-        businessStatus: ['', [Validators.required]]
+        businessStatus: ['', [Validators.required]],
       },
-      { validators: this.mutuallyExclusiveValidator('businessType', 'businessStatus') }
+      {
+        validators: this.mutuallyExclusiveValidator(
+          'businessType',
+          'businessStatus',
+        ),
+      },
     );
 
     // Listen for changes in businessType and clear businessStatus if businessType is filled
@@ -415,7 +446,11 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       // Check if the form is invalid and any control is dirty or touched
       if (
         this.businessForm.invalid &&
-        Object.keys(this.businessForm.controls).some((key) => this.businessForm.get(key)?.touched || this.businessForm.get(key)?.dirty)
+        Object.keys(this.businessForm.controls).some(
+          (key) =>
+            this.businessForm.get(key)?.touched ||
+            this.businessForm.get(key)?.dirty,
+        )
       ) {
         this.group2SectionEdit = true; // Show edit icon if form is touched/dirty and invalid
         this.group2SectionText = 'active edit-text';
@@ -434,7 +469,10 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     });
   }
 
-  mutuallyExclusiveValidator(controlName1: string, controlName2: string): ValidatorFn {
+  mutuallyExclusiveValidator(
+    controlName1: string,
+    controlName2: string,
+  ): ValidatorFn {
     return (formGroup: AbstractControl): ValidationErrors | null => {
       const group = formGroup as FormGroup;
       const control1 = group.controls[controlName1];
@@ -482,7 +520,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       businessName: ['', Validators.required],
       businessDetails: ['', Validators.required],
       hasTradingPartners: [false],
-      tradingPartners: this.fb.array([])
+      tradingPartners: this.fb.array([]),
     });
 
     this.empBusTradingForm.statusChanges.subscribe(() => {
@@ -490,7 +528,9 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       if (
         this.empBusTradingForm.invalid &&
         Object.keys(this.empBusTradingForm.controls).some(
-          (key) => this.empBusTradingForm.get(key)?.touched || this.empBusTradingForm.get(key)?.dirty
+          (key) =>
+            this.empBusTradingForm.get(key)?.touched ||
+            this.empBusTradingForm.get(key)?.dirty,
         )
       ) {
         this.group3SectionEdit = true; // Show edit icon if form is touched/dirty and invalid
@@ -529,7 +569,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   addTradingPartner(): void {
     const partnerGroup = this.fb.group({
       name: ['', Validators.required],
-      address: ['', Validators.required]
+      address: ['', Validators.required],
     });
     this.tradingPartners.push(partnerGroup);
     this.autocompleteInitialized = false;
@@ -546,7 +586,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       staffDetails: ['', Validators.required],
       numComputers: ['', Validators.required],
       numPrinters: ['', Validators.required],
-      additionalInfo: ['', Validators.required]
+      additionalInfo: ['', Validators.required],
     });
 
     this.businessDetailsOfficeForm.statusChanges.subscribe(() => {
@@ -554,7 +594,9 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       if (
         this.businessDetailsOfficeForm.invalid &&
         Object.keys(this.businessDetailsOfficeForm.controls).some(
-          (key) => this.businessDetailsOfficeForm.get(key)?.touched || this.businessDetailsOfficeForm.get(key)?.dirty
+          (key) =>
+            this.businessDetailsOfficeForm.get(key)?.touched ||
+            this.businessDetailsOfficeForm.get(key)?.dirty,
         )
       ) {
         this.group4SectionEdit = true; // Show edit icon if form is touched/dirty and invalid
@@ -579,7 +621,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       provinceOfficeAddress2: [''],
       provinceDetails2: [''],
       provinceOfficeAddress3: [''],
-      provinceDetails3: ['']
+      provinceDetails3: [''],
     });
 
     this.businessAdressDetailsForm.statusChanges.subscribe(() => {
@@ -587,7 +629,9 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       if (
         this.businessAdressDetailsForm.invalid &&
         Object.keys(this.businessAdressDetailsForm.controls).some(
-          (key) => this.businessAdressDetailsForm.get(key)?.touched || this.businessAdressDetailsForm.get(key)?.dirty
+          (key) =>
+            this.businessAdressDetailsForm.get(key)?.touched ||
+            this.businessAdressDetailsForm.get(key)?.dirty,
         )
       ) {
         this.group4SectionEdit = true; // Show edit icon if form is touched/dirty and invalid
@@ -612,7 +656,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       qualifications: ['', Validators.required],
       professionalMemberships: ['', Validators.required],
       professionalMembershipsFile: ['', Validators.required],
-      qualificationFile: ['', Validators.required]
+      qualificationFile: ['', Validators.required],
     });
 
     this.qualProMembershipForm.statusChanges.subscribe(() => {
@@ -620,7 +664,9 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       if (
         this.qualProMembershipForm.invalid &&
         Object.keys(this.qualProMembershipForm.controls).some(
-          (key) => this.qualProMembershipForm.get(key)?.touched || this.qualProMembershipForm.get(key)?.dirty
+          (key) =>
+            this.qualProMembershipForm.get(key)?.touched ||
+            this.qualProMembershipForm.get(key)?.dirty,
         )
       ) {
         this.group5SectionEdit = true; // Show edit icon if form is touched/dirty and invalid
@@ -645,7 +691,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       disqualification: [''],
       relationshipDisclosure: [''],
       relationshipDetails: [''],
-      relationshipCity: ['']
+      relationshipCity: [''],
     });
 
     this.handleRelationshipChange();
@@ -655,7 +701,9 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       if (
         this.disqualRelationshipForm.invalid &&
         Object.keys(this.disqualRelationshipForm.controls).some(
-          (key) => this.disqualRelationshipForm.get(key)?.touched || this.disqualRelationshipForm.get(key)?.dirty
+          (key) =>
+            this.disqualRelationshipForm.get(key)?.touched ||
+            this.disqualRelationshipForm.get(key)?.dirty,
         )
       ) {
         this.group6SectionEdit = true; // Show edit icon if form is touched/dirty and invalid
@@ -676,24 +724,29 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   }
 
   handleRelationshipChange(): void {
-    this.disqualRelationshipForm.get('relationshipDisclosure')?.valueChanges.subscribe((value) => {
-      const relationshipDetailsControl = this.disqualRelationshipForm.get('relationshipDetails');
-      const cityDetailsControl = this.disqualRelationshipForm.get('relationshipCity');
-      if (value === 'related') {
-        // Make relationshipDetails required
-        relationshipDetailsControl?.setValidators([Validators.required]);
-        cityDetailsControl?.setValidators([Validators.required]);
-      } else {
-        // Clear validators if not related
-        relationshipDetailsControl?.clearValidators();
-        relationshipDetailsControl?.reset(); // Optionally reset the field
+    this.disqualRelationshipForm
+      .get('relationshipDisclosure')
+      ?.valueChanges.subscribe((value) => {
+        const relationshipDetailsControl = this.disqualRelationshipForm.get(
+          'relationshipDetails',
+        );
+        const cityDetailsControl =
+          this.disqualRelationshipForm.get('relationshipCity');
+        if (value === 'related') {
+          // Make relationshipDetails required
+          relationshipDetailsControl?.setValidators([Validators.required]);
+          cityDetailsControl?.setValidators([Validators.required]);
+        } else {
+          // Clear validators if not related
+          relationshipDetailsControl?.clearValidators();
+          relationshipDetailsControl?.reset(); // Optionally reset the field
 
-        cityDetailsControl?.clearValidators();
-        cityDetailsControl?.reset(); // Optionally reset the field
-      }
-      relationshipDetailsControl?.updateValueAndValidity(); // Update validation state
-      cityDetailsControl?.updateValueAndValidity(); // Update validation state
-    });
+          cityDetailsControl?.clearValidators();
+          cityDetailsControl?.reset(); // Optionally reset the field
+        }
+        relationshipDetailsControl?.updateValueAndValidity(); // Update validation state
+        cityDetailsControl?.updateValueAndValidity(); // Update validation state
+      });
   }
 
   initialiseSection8() {
@@ -701,14 +754,18 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       taxClearance: ['', Validators.required],
       bankAccountDocumentation: ['', Validators.required],
       declaration: ['', Validators.required],
-      bondFacility: ['', Validators.required]
+      bondFacility: ['', Validators.required],
     });
+
+    this.taxBondBankForm.get('declaration').disable();
 
     this.taxBondBankForm.statusChanges.subscribe(() => {
       if (
         this.taxBondBankForm.invalid &&
         Object.keys(this.taxBondBankForm.controls).some(
-          (key) => this.taxBondBankForm.get(key)?.touched || this.taxBondBankForm.get(key)?.dirty
+          (key) =>
+            this.taxBondBankForm.get(key)?.touched ||
+            this.taxBondBankForm.get(key)?.dirty,
         )
       ) {
         this.group8SectionEdit = true; // Show edit icon if form is touched/dirty and invalid
@@ -732,7 +789,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     this.appEmpHistoryForm = this.fb.group({
       appointmentLocations: ['', Validators.required],
       employmentHistory: ['', Validators.required],
-      CurriculumVitae: ['', Validators.required]
+      CurriculumVitae: ['', Validators.required],
     });
 
     this.appEmpHistoryForm.statusChanges.subscribe(() => {
@@ -740,7 +797,9 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       if (
         this.appEmpHistoryForm.invalid &&
         Object.keys(this.appEmpHistoryForm.controls).some(
-          (key) => this.appEmpHistoryForm.get(key)?.touched || this.appEmpHistoryForm.get(key)?.dirty
+          (key) =>
+            this.appEmpHistoryForm.get(key)?.touched ||
+            this.appEmpHistoryForm.get(key)?.dirty,
         )
       ) {
         this.group7SectionEdit = true; // Show edit icon if form is touched/dirty and invalid
@@ -769,56 +828,81 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   }
 
   getAppication() {
-    this.liquidatorApplicationService.getApplication(this.userRole.userId).subscribe(
-      (application) => {
-        if (application) {
-          this.applicationId = application.application_id;
-          localStorage.setItem('applicationId', JSON.stringify(this.applicationId));
-          this.getSectionDetails();
-          //  this.patchPersonalInfoForm();
+    this.loading = true; // Start loading indicator
 
-          //  this.moveGroupTwoSection();
-        }
-      },
-      (error) => {
-        this.toastr.error(error.error?.message, 'Error');
-        // Handle error here (e.g., show an error message)
-      }
-    );
+    this.liquidatorApplicationService
+      .getApplication(this.userRole.userId)
+      .subscribe(
+        (application) => {
+          if (application) {
+            this.applicationId = application.application_id;
+            localStorage.setItem(
+              'applicationId',
+              JSON.stringify(this.applicationId),
+            );
+
+            // Ensure all sections load before continuing
+            this.getSectionDetails().then(() => {
+              this.patchPersonalInfoForm();
+              // this.moveGroupTwoSection();
+              this.loading = false; // Stop loading after all tasks complete
+            });
+          } else {
+            this.loading = false; // Stop loading if no application is found
+          }
+        },
+        (error) => {
+          this.toastr.error(error.error?.message, 'Error');
+          this.loading = false; // Stop loading on error
+        },
+      );
   }
 
-  getSectionDetails() {
-    if (this.applicationId) {
-      for (let index = 1; index <= 9; index++) {
-        this.liquidatorApplicationService.getSectionDetails(this.applicationId, index).subscribe(
-          (section) => {
-            if (section) {
-              this.sectionDetails = section;
-              localStorage.setItem(`section${index}Details`, JSON.stringify(this.sectionDetails));
-              this.patchPersonalInfoForm();
+  async getSectionDetails() {
+    if (!this.applicationId) return;
 
-              //  this.moveGroupTwoSection();
+    const sectionRequests = [];
+
+    for (let index = 1; index <= 9; index++) {
+      sectionRequests.push(
+        this.liquidatorApplicationService
+          .getSectionDetails(this.applicationId, index)
+          .toPromise()
+          .then((section) => {
+            if (section) {
+              localStorage.setItem(
+                `section${index}Details`,
+                JSON.stringify(section),
+              );
             }
-          },
-          (error) => {}
-        );
-      }
+          })
+          .catch((error) => {
+            console.error(`Error fetching section ${index} details`, error);
+          }),
+      );
     }
+
+    await Promise.all(sectionRequests);
   }
 
   getPartnerDetails() {
     if (this.applicationId) {
-      this.liquidatorApplicationService.getTradingPartners(this.applicationId).subscribe(
-        (partner) => {
-          if (partner) {
-            this.partDetails = partner;
-            localStorage.setItem(`partnerDetails`, JSON.stringify(this.partDetails));
+      this.liquidatorApplicationService
+        .getTradingPartners(this.applicationId)
+        .subscribe(
+          (partner) => {
+            if (partner) {
+              this.partDetails = partner;
+              localStorage.setItem(
+                `partnerDetails`,
+                JSON.stringify(this.partDetails),
+              );
 
-            //  this.moveGroupTwoSection();
-          }
-        },
-        (error) => {}
-      );
+              //  this.moveGroupTwoSection();
+            }
+          },
+          (error) => {},
+        );
     }
   }
 
@@ -837,27 +921,35 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     if (this.personalInfoForm.valid) {
       const formData = new FormData();
       formData.append('full_name', this.personalInfoForm.get('fullName').value);
-      formData.append('identity_number', this.personalInfoForm.get('identityNumber').value);
+      formData.append(
+        'identity_number',
+        this.personalInfoForm.get('identityNumber').value,
+      );
       formData.append('race', this.personalInfoForm.get('race').value);
       formData.append('gender', this.personalInfoForm.get('gender').value);
       formData.append('id_document_file_name', this.FileName);
       formData.append('id_document_file', this.File); // Ensure the file is added as Blob
 
-      this.liquidatorApplicationService.editSection(this.applicationId, 1, formData).subscribe(
-        (response) => {
-          if (response.statusCode === 200) {
-            this.section1Details = response.data;
-            localStorage.setItem('section1Details', JSON.stringify(this.section1Details));
-            this.patchPersonalInfoForm();
-            this.toastr.success(response.message, 'Success');
-            this.moveGroupTwoSection();
-          }
-        },
-        (error) => {
-          this.toastr.error(error.error?.message, 'Error');
-          // Handle error here (e.g., show an error message)
-        }
-      );
+      this.liquidatorApplicationService
+        .editSection(this.applicationId, 1, formData)
+        .subscribe(
+          (response) => {
+            if (response.statusCode === 200) {
+              this.section1Details = response.data;
+              localStorage.setItem(
+                'section1Details',
+                JSON.stringify(this.section1Details),
+              );
+              this.patchPersonalInfoForm();
+              this.toastr.success(response.message, 'Success');
+              this.moveGroupTwoSection();
+            }
+          },
+          (error) => {
+            this.toastr.error(error.error?.message, 'Error');
+            // Handle error here (e.g., show an error message)
+          },
+        );
     } else {
       Object.keys(this.personalInfoForm.controls).forEach((controlName) => {
         const control = this.personalInfoForm.get(controlName);
@@ -871,13 +963,16 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       this.liquidatorApplicationService
         .editSection2(this.applicationId, 2, {
           business_type: this.businessForm.get('businessType').value,
-          business_status: this.businessForm.get('businessStatus').value
+          business_status: this.businessForm.get('businessStatus').value,
         })
         .subscribe(
           (response) => {
             if (response.statusCode === 200) {
               this.section2Details = response.data;
-              localStorage.setItem('section2Details', JSON.stringify(this.section2Details));
+              localStorage.setItem(
+                'section2Details',
+                JSON.stringify(this.section2Details),
+              );
               this.patchVerificationBusiness();
               this.toastr.success(response.message, 'Sucess');
               this.moveGroupThreeSection();
@@ -886,7 +981,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
           (error) => {
             this.toastr.error(error.error?.message, 'Error');
             // Handle error here (e.g., show an error message)
-          }
+          },
         );
     } else {
       Object.keys(this.businessForm.controls).forEach((controlName) => {
@@ -902,13 +997,16 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       this.liquidatorApplicationService
         .updateSection(this.applicationId, 2, {
           business_type: this.businessForm.get('businessType')?.value,
-          business_status: this.businessForm.get('businessStatus')?.value
+          business_status: this.businessForm.get('businessStatus')?.value,
         })
         .subscribe({
           next: (businessInfo) => {
             if (businessInfo.statusCode === 200) {
               this.section2Details = businessInfo.data;
-              localStorage.setItem('section2Details', JSON.stringify(this.section2Details));
+              localStorage.setItem(
+                'section2Details',
+                JSON.stringify(this.section2Details),
+              );
               this.patchVerificationBusiness();
               this.toastr.success(businessInfo.message, 'Success');
               this.group2SectionValid = true;
@@ -917,8 +1015,11 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
             }
           },
           error: (error) => {
-            this.toastr.error(error.error?.message || 'An error occurred', 'Error');
-          }
+            this.toastr.error(
+              error.error?.message || 'An error occurred',
+              'Error',
+            );
+          },
         });
     } else {
       // If the form is invalid, mark controls as touched and log invalid controls
@@ -947,7 +1048,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
         const control = this.businessForm.get(controlName);
         return {
           controlName,
-          errors: control?.errors || null
+          errors: control?.errors || null,
         };
       })
       .filter((control) => control.errors); // Filter only controls with errors
@@ -958,13 +1059,16 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       this.liquidatorApplicationService
         .updateSection(this.applicationId, 3, {
           employer_name: this.empBusTradingForm.get('employerName').value,
-          business_telephone: this.empBusTradingForm.get('businessTelephone').value,
+          business_telephone:
+            this.empBusTradingForm.get('businessTelephone').value,
           business_address: this.empBusTradingForm.get('businessAddress').value,
           firm_name: this.empBusTradingForm.get('firmName').value,
-          partners_or_directors: this.empBusTradingForm.get('partnersOrDirectors').value,
+          partners_or_directors: this.empBusTradingForm.get(
+            'partnersOrDirectors',
+          ).value,
           business_name: this.empBusTradingForm.get('businessName').value,
           business_details: this.empBusTradingForm.get('businessDetails').value,
-          hasTradingPartners: this.hasTradingPartners
+          hasTradingPartners: this.hasTradingPartners,
           //  trading_partners: this.empBusTradingForm.get('tradingPartners').value
         })
         .subscribe({
@@ -973,18 +1077,27 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
               // test
 
               this.liquidatorApplicationService
-                .addTradingPartners(this.applicationId, this.empBusTradingForm.get('tradingPartners').value)
+                .addTradingPartners(
+                  this.applicationId,
+                  this.empBusTradingForm.get('tradingPartners').value,
+                )
                 .subscribe((partners) => {
                   if (partners) {
                     this.section3Details = employment.data;
-                    localStorage.setItem('section3Details', JSON.stringify(this.section3Details));
+                    localStorage.setItem(
+                      'section3Details',
+                      JSON.stringify(this.section3Details),
+                    );
                     this.getPartnerDetails();
-                    localStorage.setItem(`partnerDetails`, JSON.stringify(this.partDetails));
-                    this.patchempBusTrading()
+                    localStorage.setItem(
+                      `partnerDetails`,
+                      JSON.stringify(this.partDetails),
+                    );
+                    this.patchempBusTrading();
                     this.toastr.success(employment.message, 'Sucess');
                     this.group3SectionValid = true;
                     this.cdr.detectChanges();
-                    this.moveGroupFourSection()
+                    this.moveGroupFourSection();
                   }
                 });
 
@@ -994,13 +1107,15 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
           error: (error) => {
             this.toastr.error(error.error?.message, 'Error');
           },
-          complete: () => {}
+          complete: () => {},
         });
       //  this.moveGroupFourSection();
     } else if (
       this.empBusTradingForm.invalid &&
       Object.keys(this.empBusTradingForm.controls).some(
-        (key) => this.empBusTradingForm.get(key)?.touched || this.empBusTradingForm.get(key)?.dirty
+        (key) =>
+          this.empBusTradingForm.get(key)?.touched ||
+          this.empBusTradingForm.get(key)?.dirty,
       )
     ) {
       this.group3SectionEdit = true;
@@ -1019,24 +1134,37 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       this.liquidatorApplicationService
         .editSection2(this.applicationId, 3, {
           employer_name: this.empBusTradingForm.get('employerName').value,
-          business_telephone: this.empBusTradingForm.get('businessTelephone').value,
+          business_telephone:
+            this.empBusTradingForm.get('businessTelephone').value,
           business_address: this.empBusTradingForm.get('businessAddress').value,
           firm_name: this.empBusTradingForm.get('firmName').value,
-          partners_or_directors: this.empBusTradingForm.get('partnersOrDirectors').value,
+          partners_or_directors: this.empBusTradingForm.get(
+            'partnersOrDirectors',
+          ).value,
           business_name: this.empBusTradingForm.get('businessName').value,
           business_details: this.empBusTradingForm.get('businessDetails').value,
-          hasTradingPartners: this.empBusTradingForm.get('hasTradingPartners').value
+          hasTradingPartners:
+            this.empBusTradingForm.get('hasTradingPartners').value,
         })
         .subscribe(
           (response) => {
             if (response.statusCode === 200) {
               this.liquidatorApplicationService
-                .updateTradingPartners(this.applicationId, this.empBusTradingForm.get('tradingPartners').value)
+                .updateTradingPartners(
+                  this.applicationId,
+                  this.empBusTradingForm.get('tradingPartners').value,
+                )
                 .subscribe((update) => {
                   if (update && update.statusCode === 200) {
                     this.section3Details = response.data;
-                    localStorage.setItem('section3Details', JSON.stringify(this.section3Details));
-                    localStorage.setItem(`partnerDetails`, JSON.stringify(update.tradingPartners));
+                    localStorage.setItem(
+                      'section3Details',
+                      JSON.stringify(this.section3Details),
+                    );
+                    localStorage.setItem(
+                      `partnerDetails`,
+                      JSON.stringify(update.tradingPartners),
+                    );
                     this.patchempBusTrading();
                     this.toastr.success(response.message, 'Sucess');
                     this.moveGroupFourSection();
@@ -1047,7 +1175,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
           (error) => {
             this.toastr.error(error.error?.message, 'Error');
             // Handle error here (e.g., show an error message)
-          }
+          },
         );
     } else {
       Object.keys(this.empBusTradingForm.controls).forEach((controlName) => {
@@ -1058,34 +1186,59 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   }
 
   businessDetailsOfficeSubmit(): void {
-    if (this.businessDetailsOfficeForm.valid && this.businessAdressDetailsForm.valid) {
+    if (
+      this.businessDetailsOfficeForm.valid &&
+      this.businessAdressDetailsForm.valid
+    ) {
       this.liquidatorApplicationService
         .updateSection(this.applicationId, 4, {
-          proof_of_rental: this.businessDetailsOfficeForm.get('proofOfRental').value,
-          staff_details: this.businessDetailsOfficeForm.get('staffDetails').value,
-          num_computers: this.businessDetailsOfficeForm.get('numComputers').value,
+          proof_of_rental:
+            this.businessDetailsOfficeForm.get('proofOfRental').value,
+          staff_details:
+            this.businessDetailsOfficeForm.get('staffDetails').value,
+          num_computers:
+            this.businessDetailsOfficeForm.get('numComputers').value,
           num_printers: this.businessDetailsOfficeForm.get('numPrinters').value,
-          additional_info: this.businessDetailsOfficeForm.get('additionalInfo').value
+          additional_info:
+            this.businessDetailsOfficeForm.get('additionalInfo').value,
         })
         .subscribe(
           (response) => {
             if (response.statusCode === 200) {
               this.section4Details = response.data;
-              localStorage.setItem('section4Details', JSON.stringify(this.section4Details));
+              localStorage.setItem(
+                'section4Details',
+                JSON.stringify(this.section4Details),
+              );
               this.liquidatorApplicationService
                 .updateSection(this.applicationId, 5, {
-                  province1: this.businessAdressDetailsForm.get('provinceOfficeAddress1').value,
-                  address1: this.businessAdressDetailsForm.get('provinceDetails1').value,
-                  province2: this.businessAdressDetailsForm.get('provinceOfficeAddress2').value,
-                  address2: this.businessAdressDetailsForm.get('provinceDetails2').value,
-                  province3: this.businessAdressDetailsForm.get('provinceOfficeAddress3').value,
-                  address3: this.businessAdressDetailsForm.get('provinceDetails3').value
+                  province1: this.businessAdressDetailsForm.get(
+                    'provinceOfficeAddress1',
+                  ).value,
+                  address1:
+                    this.businessAdressDetailsForm.get('provinceDetails1')
+                      .value,
+                  province2: this.businessAdressDetailsForm.get(
+                    'provinceOfficeAddress2',
+                  ).value,
+                  address2:
+                    this.businessAdressDetailsForm.get('provinceDetails2')
+                      .value,
+                  province3: this.businessAdressDetailsForm.get(
+                    'provinceOfficeAddress3',
+                  ).value,
+                  address3:
+                    this.businessAdressDetailsForm.get('provinceDetails3')
+                      .value,
                 })
                 .subscribe(
                   (response) => {
                     if (response.statusCode === 200) {
                       this.section5Details = response.data;
-                      localStorage.setItem('section5Details', JSON.stringify(this.section5Details));
+                      localStorage.setItem(
+                        'section5Details',
+                        JSON.stringify(this.section5Details),
+                      );
                       this.patchbusinessDetailsOffice();
                       this.toastr.success(response.message, 'Sucess');
                       this.group4SectionValid = true;
@@ -1095,61 +1248,90 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
                   (error) => {
                     this.toastr.error(error.error?.message, 'Error');
                     // Handle error here (e.g., show an error message)
-                  }
+                  },
                 );
             }
           },
           (error) => {
             this.toastr.error(error.error?.message, 'Error');
             // Handle error here (e.g., show an error message)
-          }
+          },
         );
     } else if (
       this.businessDetailsOfficeForm.invalid &&
       Object.keys(this.businessDetailsOfficeForm.controls).some(
-        (key) => this.businessDetailsOfficeForm.get(key)?.touched || this.businessDetailsOfficeForm.get(key)?.dirty
+        (key) =>
+          this.businessDetailsOfficeForm.get(key)?.touched ||
+          this.businessDetailsOfficeForm.get(key)?.dirty,
       )
     ) {
       this.group4SectionEdit = true;
       this.group4SectionText = 'active edit-text';
       this.group4SectionValid = false;
     } else {
-      Object.keys(this.businessDetailsOfficeForm.controls).forEach((controlName) => {
-        const controlB = this.businessDetailsOfficeForm.get(controlName);
-        controlB?.markAsTouched();
-      });
+      Object.keys(this.businessDetailsOfficeForm.controls).forEach(
+        (controlName) => {
+          const controlB = this.businessDetailsOfficeForm.get(controlName);
+          controlB?.markAsTouched();
+        },
+      );
     }
   }
 
   editSection4() {
-    if (this.businessDetailsOfficeForm.valid && this.businessAdressDetailsForm.valid) {
+    if (
+      this.businessDetailsOfficeForm.valid &&
+      this.businessAdressDetailsForm.valid
+    ) {
       this.liquidatorApplicationService
         .editSection2(this.applicationId, 4, {
-          proof_of_rental: this.businessDetailsOfficeForm.get('proofOfRental').value,
-          staff_details: this.businessDetailsOfficeForm.get('staffDetails').value,
-          num_computers: this.businessDetailsOfficeForm.get('numComputers').value,
+          proof_of_rental:
+            this.businessDetailsOfficeForm.get('proofOfRental').value,
+          staff_details:
+            this.businessDetailsOfficeForm.get('staffDetails').value,
+          num_computers:
+            this.businessDetailsOfficeForm.get('numComputers').value,
           num_printers: this.businessDetailsOfficeForm.get('numPrinters').value,
-          additional_info: this.businessDetailsOfficeForm.get('additionalInfo').value
+          additional_info:
+            this.businessDetailsOfficeForm.get('additionalInfo').value,
         })
         .subscribe(
           (response) => {
             if (response.statusCode === 200) {
               this.section4Details = response.data;
-              localStorage.setItem('section4Details', JSON.stringify(this.section4Details));
+              localStorage.setItem(
+                'section4Details',
+                JSON.stringify(this.section4Details),
+              );
               this.liquidatorApplicationService
                 .editSection2(this.applicationId, 5, {
-                  province1: this.businessAdressDetailsForm.get('provinceOfficeAddress1').value,
-                  address1: this.businessAdressDetailsForm.get('provinceDetails1').value,
-                  province2: this.businessAdressDetailsForm.get('provinceOfficeAddress2').value,
-                  address2: this.businessAdressDetailsForm.get('provinceDetails2').value,
-                  province3: this.businessAdressDetailsForm.get('provinceOfficeAddress3').value,
-                  address3: this.businessAdressDetailsForm.get('provinceDetails3').value
+                  province1: this.businessAdressDetailsForm.get(
+                    'provinceOfficeAddress1',
+                  ).value,
+                  address1:
+                    this.businessAdressDetailsForm.get('provinceDetails1')
+                      .value,
+                  province2: this.businessAdressDetailsForm.get(
+                    'provinceOfficeAddress2',
+                  ).value,
+                  address2:
+                    this.businessAdressDetailsForm.get('provinceDetails2')
+                      .value,
+                  province3: this.businessAdressDetailsForm.get(
+                    'provinceOfficeAddress3',
+                  ).value,
+                  address3:
+                    this.businessAdressDetailsForm.get('provinceDetails3')
+                      .value,
                 })
                 .subscribe(
                   (response) => {
                     if (response.statusCode === 200) {
                       this.section5Details = response.data;
-                      localStorage.setItem('section5Details', JSON.stringify(this.section5Details));
+                      localStorage.setItem(
+                        'section5Details',
+                        JSON.stringify(this.section5Details),
+                      );
                       this.patchbusinessDetailsOffice();
                       this.toastr.success(response.message, 'Sucess');
                       this.group4SectionValid = true;
@@ -1159,108 +1341,148 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
                   (error) => {
                     this.toastr.error(error.error?.message, 'Error');
                     // Handle error here (e.g., show an error message)
-                  }
+                  },
                 );
             }
           },
           (error) => {
             this.toastr.error(error.error?.message, 'Error');
             // Handle error here (e.g., show an error message)
-          }
+          },
         );
     } else {
-      Object.keys(this.businessDetailsOfficeForm.controls).forEach((controlName) => {
-        const control = this.businessDetailsOfficeForm.get(controlName);
-        control?.markAsTouched();
-      });
+      Object.keys(this.businessDetailsOfficeForm.controls).forEach(
+        (controlName) => {
+          const control = this.businessDetailsOfficeForm.get(controlName);
+          control?.markAsTouched();
+        },
+      );
 
-      Object.keys(this.businessAdressDetailsForm.controls).forEach((controlName) => {
-        const control = this.businessAdressDetailsForm.get(controlName);
-        control?.markAsTouched();
-      });
+      Object.keys(this.businessAdressDetailsForm.controls).forEach(
+        (controlName) => {
+          const control = this.businessAdressDetailsForm.get(controlName);
+          control?.markAsTouched();
+        },
+      );
     }
   }
 
   qualProMembershipSubmit(): void {
     if (this.qualProMembershipForm.valid) {
       const formData = new FormData();
-      formData.append('qualifications', this.qualProMembershipForm.get('qualifications').value);
-      formData.append('professional_memberships', this.qualProMembershipForm.get('professionalMemberships').value);
+      formData.append(
+        'qualifications',
+        this.qualProMembershipForm.get('qualifications').value,
+      );
+      formData.append(
+        'professional_memberships',
+        this.qualProMembershipForm.get('professionalMemberships').value,
+      );
       formData.append('membership_file_name', this.membership_file_name);
       formData.append('membership_file', this.membership_file);
-      formData.append('qualification_file_name', this.qualificationFile_file_name);
+      formData.append(
+        'qualification_file_name',
+        this.qualificationFile_file_name,
+      );
       formData.append('qualification_file', this.qualificationFile_file);
 
-      this.liquidatorApplicationService.updateSection2(this.applicationId, 6, formData).subscribe({
-        next: (employment) => {
-          if (employment.statusCode === 200) {
-            this.section6Details = employment.data;
-            localStorage.setItem('section6Details', JSON.stringify(this.section6Details));
-            this.patchQualProMembership();
-            this.toastr.success(employment.message, 'Sucess');
-            this.group5SectionValid = true;
-            this.cdr.detectChanges();
-            this.moveGroupSixSection();
-          }
-        },
-        error: (error) => {
-          this.toastr.error(error.error?.message, 'Error');
-        },
-        complete: () => {}
-      });
+      this.liquidatorApplicationService
+        .updateSection2(this.applicationId, 6, formData)
+        .subscribe({
+          next: (employment) => {
+            if (employment.statusCode === 200) {
+              this.section6Details = employment.data;
+              localStorage.setItem(
+                'section6Details',
+                JSON.stringify(this.section6Details),
+              );
+              this.patchQualProMembership();
+              this.toastr.success(employment.message, 'Sucess');
+              this.group5SectionValid = true;
+              this.cdr.detectChanges();
+              this.moveGroupSixSection();
+            }
+          },
+          error: (error) => {
+            this.toastr.error(error.error?.message, 'Error');
+          },
+          complete: () => {},
+        });
     } else if (
       this.qualProMembershipForm.invalid &&
       Object.keys(this.qualProMembershipForm.controls).some(
-        (key) => this.qualProMembershipForm.get(key)?.touched || this.qualProMembershipForm.get(key)?.dirty
+        (key) =>
+          this.qualProMembershipForm.get(key)?.touched ||
+          this.qualProMembershipForm.get(key)?.dirty,
       )
     ) {
       this.group5SectionEdit = true;
       this.group5SectionText = 'active edit-text';
       this.group5SectionValid = false;
     } else {
-      Object.keys(this.qualProMembershipForm.controls).forEach((controlName) => {
-        const controlB = this.qualProMembershipForm.get(controlName);
-        controlB?.markAsTouched();
-      });
+      Object.keys(this.qualProMembershipForm.controls).forEach(
+        (controlName) => {
+          const controlB = this.qualProMembershipForm.get(controlName);
+          controlB?.markAsTouched();
+        },
+      );
     }
   }
 
   editSection5() {
     if (this.qualProMembershipForm.valid) {
       const formData = new FormData();
-      formData.append('qualifications', this.qualProMembershipForm.get('qualifications').value);
-      formData.append('professional_memberships', this.qualProMembershipForm.get('professionalMemberships').value);
+      formData.append(
+        'qualifications',
+        this.qualProMembershipForm.get('qualifications').value,
+      );
+      formData.append(
+        'professional_memberships',
+        this.qualProMembershipForm.get('professionalMemberships').value,
+      );
       formData.append('membership_file_name', this.membership_file_name);
       formData.append('membership_file', this.membership_file);
-      formData.append('qualification_file_name', this.qualificationFile_file_name);
+      formData.append(
+        'qualification_file_name',
+        this.qualificationFile_file_name,
+      );
       formData.append('qualification_file', this.qualificationFile_file);
 
-      this.liquidatorApplicationService.editSection(this.applicationId, 6, formData).subscribe(
-        (response) => {
-          if (response.statusCode === 200) {
-            this.section6Details = response.data;
-            localStorage.setItem('section6Details', JSON.stringify(this.section6Details));
-            this.patchbusinessDetailsOffice();
-            this.toastr.success(response.message, 'Sucess');
-            this.group4SectionValid = true;
-            this.moveGroupFiveSection();
-          }
-        },
-        (error) => {
-          this.toastr.error(error.error?.message, 'Error');
-          // Handle error here (e.g., show an error message)
-        }
-      );
+      this.liquidatorApplicationService
+        .editSection(this.applicationId, 6, formData)
+        .subscribe(
+          (response) => {
+            if (response.statusCode === 200) {
+              this.section6Details = response.data;
+              localStorage.setItem(
+                'section6Details',
+                JSON.stringify(this.section6Details),
+              );
+              this.patchbusinessDetailsOffice();
+              this.toastr.success(response.message, 'Sucess');
+              this.group4SectionValid = true;
+              this.moveGroupFiveSection();
+            }
+          },
+          (error) => {
+            this.toastr.error(error.error?.message, 'Error');
+            // Handle error here (e.g., show an error message)
+          },
+        );
     } else {
-      Object.keys(this.businessDetailsOfficeForm.controls).forEach((controlName) => {
-        const control = this.businessDetailsOfficeForm.get(controlName);
-        control?.markAsTouched();
-      });
+      Object.keys(this.businessDetailsOfficeForm.controls).forEach(
+        (controlName) => {
+          const control = this.businessDetailsOfficeForm.get(controlName);
+          control?.markAsTouched();
+        },
+      );
 
-      Object.keys(this.businessAdressDetailsForm.controls).forEach((controlName) => {
-        const control = this.businessAdressDetailsForm.get(controlName);
-        control?.markAsTouched();
-      });
+      Object.keys(this.businessAdressDetailsForm.controls).forEach(
+        (controlName) => {
+          const control = this.businessAdressDetailsForm.get(controlName);
+          control?.markAsTouched();
+        },
+      );
     }
   }
 
@@ -1268,16 +1490,25 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     if (this.disqualRelationshipForm.valid) {
       this.liquidatorApplicationService
         .updateSection(this.applicationId, 7, {
-          disqualification_details: this.disqualRelationshipForm.get('disqualification').value,
-          relationship_disclosure: this.disqualRelationshipForm.get('relationshipDisclosure').value,
-          relationship_details: this.disqualRelationshipForm.get('relationshipDetails').value,
-          relationship_city: this.disqualRelationshipForm.get('relationshipCity').value
+          disqualification_details:
+            this.disqualRelationshipForm.get('disqualification').value,
+          relationship_disclosure: this.disqualRelationshipForm.get(
+            'relationshipDisclosure',
+          ).value,
+          relationship_details: this.disqualRelationshipForm.get(
+            'relationshipDetails',
+          ).value,
+          relationship_city:
+            this.disqualRelationshipForm.get('relationshipCity').value,
         })
         .subscribe({
           next: (disqualification) => {
             if (disqualification.statusCode === 200) {
               this.section7Details = disqualification.data;
-              localStorage.setItem('section7Details', JSON.stringify(this.section7Details));
+              localStorage.setItem(
+                'section7Details',
+                JSON.stringify(this.section7Details),
+              );
               // this.patchQualProMembership();
               this.toastr.success(disqualification.message, 'Sucess');
               this.group6SectionValid = true;
@@ -1288,22 +1519,26 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
           error: (error) => {
             this.toastr.error(error.error?.message, 'Error');
           },
-          complete: () => {}
+          complete: () => {},
         });
     } else if (
       this.disqualRelationshipForm.invalid &&
       Object.keys(this.disqualRelationshipForm.controls).some(
-        (key) => this.disqualRelationshipForm.get(key)?.touched || this.disqualRelationshipForm.get(key)?.dirty
+        (key) =>
+          this.disqualRelationshipForm.get(key)?.touched ||
+          this.disqualRelationshipForm.get(key)?.dirty,
       )
     ) {
       this.group6SectionEdit = true;
       this.group6SectionText = 'active edit-text';
       this.group6SectionValid = false;
     } else {
-      Object.keys(this.disqualRelationshipForm.controls).forEach((controlName) => {
-        const controlB = this.disqualRelationshipForm.get(controlName);
-        controlB?.markAsTouched();
-      });
+      Object.keys(this.disqualRelationshipForm.controls).forEach(
+        (controlName) => {
+          const controlB = this.disqualRelationshipForm.get(controlName);
+          controlB?.markAsTouched();
+        },
+      );
     }
   }
 
@@ -1311,16 +1546,25 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     if (this.disqualRelationshipForm.valid) {
       this.liquidatorApplicationService
         .editSection2(this.applicationId, 7, {
-          disqualification_details: this.disqualRelationshipForm.get('disqualification').value,
-          relationship_disclosure: this.disqualRelationshipForm.get('relationshipDisclosure').value,
-          relationship_details: this.disqualRelationshipForm.get('relationshipDetails').value,
-          relationship_city: this.disqualRelationshipForm.get('relationshipCity').value
+          disqualification_details:
+            this.disqualRelationshipForm.get('disqualification').value,
+          relationship_disclosure: this.disqualRelationshipForm.get(
+            'relationshipDisclosure',
+          ).value,
+          relationship_details: this.disqualRelationshipForm.get(
+            'relationshipDetails',
+          ).value,
+          relationship_city:
+            this.disqualRelationshipForm.get('relationshipCity').value,
         })
         .subscribe(
           (response) => {
             if (response.statusCode === 200) {
               this.section7Details = response.data;
-              localStorage.setItem('section7Details', JSON.stringify(this.section7Details));
+              localStorage.setItem(
+                'section7Details',
+                JSON.stringify(this.section7Details),
+              );
               this.patchDisqualRelationship();
               this.toastr.success(response.message, 'Sucess');
               this.group6SectionValid = true;
@@ -1330,18 +1574,22 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
           (error) => {
             this.toastr.error(error.error?.message, 'Error');
             // Handle error here (e.g., show an error message)
-          }
+          },
         );
     } else {
-      Object.keys(this.businessDetailsOfficeForm.controls).forEach((controlName) => {
-        const control = this.businessDetailsOfficeForm.get(controlName);
-        control?.markAsTouched();
-      });
+      Object.keys(this.businessDetailsOfficeForm.controls).forEach(
+        (controlName) => {
+          const control = this.businessDetailsOfficeForm.get(controlName);
+          control?.markAsTouched();
+        },
+      );
 
-      Object.keys(this.businessAdressDetailsForm.controls).forEach((controlName) => {
-        const control = this.businessAdressDetailsForm.get(controlName);
-        control?.markAsTouched();
-      });
+      Object.keys(this.businessAdressDetailsForm.controls).forEach(
+        (controlName) => {
+          const control = this.businessAdressDetailsForm.get(controlName);
+          control?.markAsTouched();
+        },
+      );
     }
   }
 
@@ -1356,7 +1604,10 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       }
     } else {
       // Remove the value from the array if unchecked
-      this.selectedAppointmentLocations = this.selectedAppointmentLocations.filter((location) => location !== value);
+      this.selectedAppointmentLocations =
+        this.selectedAppointmentLocations.filter(
+          (location) => location !== value,
+        );
     }
 
     console.log(this.selectedAppointmentLocations); // Debugging: See the current selection
@@ -1365,32 +1616,45 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   appEmpHistorySubmit(): void {
     if (this.appEmpHistoryForm.valid) {
       const formData = new FormData();
-      formData.append('appointment_locations', JSON.stringify(this.selectedAppointmentLocations));
-      formData.append('employment_history', this.appEmpHistoryForm.get('employmentHistory').value);
+      formData.append(
+        'appointment_locations',
+        JSON.stringify(this.selectedAppointmentLocations),
+      );
+      formData.append(
+        'employment_history',
+        this.appEmpHistoryForm.get('employmentHistory').value,
+      );
       formData.append('curriculum_vitae_file_name', this.csFileName);
       formData.append('curriculum_vitae_file', this.cvFile);
 
-      this.liquidatorApplicationService.updateSection2(this.applicationId, 8, formData).subscribe({
-        next: (employment) => {
-          if (employment.statusCode === 200) {
-            this.section8Details = employment.data;
-            localStorage.setItem('section8Details', JSON.stringify(this.section8Details));
-            // this.patchQualProMembership();
-            this.toastr.success(employment.message, 'Sucess');
-            this.group7SectionValid = true;
-            this.cdr.detectChanges();
-            this.moveGroupEightSection();
-          }
-        },
-        error: (error) => {
-          this.toastr.error(error.error?.message, 'Error');
-        },
-        complete: () => {}
-      });
+      this.liquidatorApplicationService
+        .updateSection2(this.applicationId, 8, formData)
+        .subscribe({
+          next: (employment) => {
+            if (employment.statusCode === 200) {
+              this.section8Details = employment.data;
+              localStorage.setItem(
+                'section8Details',
+                JSON.stringify(this.section8Details),
+              );
+              // this.patchQualProMembership();
+              this.toastr.success(employment.message, 'Sucess');
+              this.group7SectionValid = true;
+              this.cdr.detectChanges();
+              this.moveGroupEightSection();
+            }
+          },
+          error: (error) => {
+            this.toastr.error(error.error?.message, 'Error');
+          },
+          complete: () => {},
+        });
     } else if (
       this.appEmpHistoryForm.invalid &&
       Object.keys(this.appEmpHistoryForm.controls).some(
-        (key) => this.appEmpHistoryForm.get(key)?.touched || this.appEmpHistoryForm.get(key)?.dirty
+        (key) =>
+          this.appEmpHistoryForm.get(key)?.touched ||
+          this.appEmpHistoryForm.get(key)?.dirty,
       )
     ) {
       this.group7SectionEdit = true;
@@ -1407,74 +1671,101 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   editSection7() {
     if (this.appEmpHistoryForm.valid) {
       const formData = new FormData();
-      formData.append('appointment_locations', JSON.stringify(this.selectedAppointmentLocations));
-      formData.append('employment_history', this.appEmpHistoryForm.get('employmentHistory').value);
+      formData.append(
+        'appointment_locations',
+        JSON.stringify(this.selectedAppointmentLocations),
+      );
+      formData.append(
+        'employment_history',
+        this.appEmpHistoryForm.get('employmentHistory').value,
+      );
       formData.append('curriculum_vitae_file_name', this.csFileName);
       formData.append('curriculum_vitae_file', this.cvFile);
 
-      this.liquidatorApplicationService.editSection(this.applicationId, 8, formData).subscribe(
-        (response) => {
-          if (response.statusCode === 200) {
-            this.section8Details = response.data;
-            localStorage.setItem('section8Details', JSON.stringify(this.section8Details));
-            this.patchbusinessDetailsOffice();
-            this.toastr.success(response.message, 'Sucess');
-            this.group7SectionValid = true;
-            this.moveGroupEightSection();
-          }
-        },
-        (error) => {
-          this.toastr.error(error.error?.message, 'Error');
-          // Handle error here (e.g., show an error message)
-        }
-      );
+      this.liquidatorApplicationService
+        .editSection(this.applicationId, 8, formData)
+        .subscribe(
+          (response) => {
+            if (response.statusCode === 200) {
+              this.section8Details = response.data;
+              localStorage.setItem(
+                'section8Details',
+                JSON.stringify(this.section8Details),
+              );
+              this.patchbusinessDetailsOffice();
+              this.toastr.success(response.message, 'Sucess');
+              this.group7SectionValid = true;
+              this.moveGroupEightSection();
+            }
+          },
+          (error) => {
+            this.toastr.error(error.error?.message, 'Error');
+            // Handle error here (e.g., show an error message)
+          },
+        );
     } else {
-      Object.keys(this.businessDetailsOfficeForm.controls).forEach((controlName) => {
-        const control = this.businessDetailsOfficeForm.get(controlName);
-        control?.markAsTouched();
-      });
+      Object.keys(this.businessDetailsOfficeForm.controls).forEach(
+        (controlName) => {
+          const control = this.businessDetailsOfficeForm.get(controlName);
+          control?.markAsTouched();
+        },
+      );
 
-      Object.keys(this.businessAdressDetailsForm.controls).forEach((controlName) => {
-        const control = this.businessAdressDetailsForm.get(controlName);
-        control?.markAsTouched();
-      });
+      Object.keys(this.businessAdressDetailsForm.controls).forEach(
+        (controlName) => {
+          const control = this.businessAdressDetailsForm.get(controlName);
+          control?.markAsTouched();
+        },
+      );
     }
   }
 
   taxBondBankSubmit(): void {
     if (this.taxBondBankForm.valid) {
-      const declarationValue = this.taxBondBankForm.get('declaration').value ? '1' : '0';
+      const declarationValue = this.taxBondBankForm.get('declaration').value
+        ? '1'
+        : '0';
       const formData = new FormData();
       formData.append('tax_clearance_certificate_file', this.TaxClearanceFile);
-      formData.append('tax_clearance_certificate_file_name', this.TaxClearanceFileName);
+      formData.append(
+        'tax_clearance_certificate_file_name',
+        this.TaxClearanceFileName,
+      );
       formData.append('bank_account_proof_file', this.bankAccountFile);
       formData.append('bank_account_proof_file_name', this.bankAccountFileName);
       formData.append('bond_facility_file', this.bondFacilityFile);
       formData.append('bond_facility_file_name', this.bondFacilityFileName);
       formData.append('declaration_agreement', declarationValue);
 
-      this.liquidatorApplicationService.updateSection2(this.applicationId, 9, formData).subscribe({
-        next: (tax) => {
-          if (tax.statusCode === 200) {
-            this.section9Details = tax.data;
-            localStorage.setItem('section9Details', JSON.stringify(this.section9Details));
-            // this.patchQualProMembership();
-            this.patchTaxBondBank();
-            this.toastr.success(tax.message, 'Sucess');
-            this.group8SectionValid = true;
-            this.group8SectionEdit = false;
-            this.cdr.detectChanges();
-          }
-        },
-        error: (error) => {
-          this.toastr.error(error.error?.message, 'Error');
-        },
-        complete: () => {}
-      });
+      this.liquidatorApplicationService
+        .updateSection2(this.applicationId, 9, formData)
+        .subscribe({
+          next: (tax) => {
+            if (tax.statusCode === 200) {
+              this.section9Details = tax.data;
+              localStorage.setItem(
+                'section9Details',
+                JSON.stringify(this.section9Details),
+              );
+              // this.patchQualProMembership();
+              this.patchTaxBondBank();
+              this.toastr.success(tax.message, 'Sucess');
+              this.group8SectionValid = true;
+              this.group8SectionEdit = false;
+              this.cdr.detectChanges();
+            }
+          },
+          error: (error) => {
+            this.toastr.error(error.error?.message, 'Error');
+          },
+          complete: () => {},
+        });
     } else if (
       this.taxBondBankForm.invalid &&
       Object.keys(this.taxBondBankForm.controls).some(
-        (key) => this.taxBondBankForm.get(key)?.touched || this.taxBondBankForm.get(key)?.dirty
+        (key) =>
+          this.taxBondBankForm.get(key)?.touched ||
+          this.taxBondBankForm.get(key)?.dirty,
       )
     ) {
       this.group8SectionEdit = true;
@@ -1490,31 +1781,41 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
 
   editSection8() {
     if (this.taxBondBankForm.valid) {
-      const declarationValue = this.taxBondBankForm.get('declaration').value ? '1' : '0';
+      const declarationValue = this.taxBondBankForm.get('declaration').value
+        ? '1'
+        : '0';
       const formData = new FormData();
       formData.append('tax_clearance_certificate_file', this.TaxClearanceFile);
-      formData.append('tax_clearance_certificate_file_name', this.TaxClearanceFileName);
+      formData.append(
+        'tax_clearance_certificate_file_name',
+        this.TaxClearanceFileName,
+      );
       formData.append('bank_account_proof_file', this.bankAccountFile);
       formData.append('bank_account_proof_file_name', this.bankAccountFileName);
       formData.append('bond_facility_file', this.bondFacilityFile);
       formData.append('bond_facility_file_name', this.bondFacilityFileName);
       formData.append('declaration_agreement', declarationValue);
 
-      this.liquidatorApplicationService.editSection(this.applicationId, 9, formData).subscribe(
-        (response) => {
-          if (response.statusCode === 200) {
-            this.section9Details = response.data;
-            localStorage.setItem('section9Details', JSON.stringify(this.section9Details));
-            this.patchTaxBondBank();
-            this.toastr.success(response.message, 'Sucess');
-            this.group8SectionValid = true;
-          }
-        },
-        (error) => {
-          this.toastr.error(error.error?.message, 'Error');
-          // Handle error here (e.g., show an error message)
-        }
-      );
+      this.liquidatorApplicationService
+        .editSection(this.applicationId, 9, formData)
+        .subscribe(
+          (response) => {
+            if (response.statusCode === 200) {
+              this.section9Details = response.data;
+              localStorage.setItem(
+                'section9Details',
+                JSON.stringify(this.section9Details),
+              );
+              this.patchTaxBondBank();
+              this.toastr.success(response.message, 'Sucess');
+              this.group8SectionValid = true;
+            }
+          },
+          (error) => {
+            this.toastr.error(error.error?.message, 'Error');
+            // Handle error here (e.g., show an error message)
+          },
+        );
     } else {
       Object.keys(this.taxBondBankForm.controls).forEach((controlName) => {
         const control = this.taxBondBankForm.get(controlName);
@@ -1528,12 +1829,10 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     }
   }
 
-
-  updateStatus(status:string) {
-  
+  updateStatus(status: string) {
     const statusUpdate = {
       review_status: status,
-/*       outcome: '',
+      /*       outcome: '',
       reviewer_id: '',
       tax_clearance_private: '',
       tax_clearance_business: '',
@@ -1544,34 +1843,34 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       further_comments: '', */
     };
 
-    this.liquidatorApplicationService.submitDeclarationForm(this.applicationId, statusUpdate).subscribe({
-      next: (response) => {
-      
-        console.log('Application status updated successfully:', response);
-      },
-      error: (err) => {
-        console.error('Error updating application status:', err);
-      },
-    });
+    this.liquidatorApplicationService
+      .submitDeclarationForm(this.applicationId, statusUpdate)
+      .subscribe({
+        next: (response) => {
+          console.log('Application status updated successfully:', response);
+        },
+        error: (err) => {
+          console.error('Error updating application status:', err);
+        },
+      });
   }
-
 
   updateDeclarationStatus(): void {
     const statusData = {
       review_status: 'Submitted',
- 
     };
 
-    this.liquidatorApplicationService.updateDeclarationForm(this.applicationId, statusData)
+    this.liquidatorApplicationService
+      .updateDeclarationForm(this.applicationId, statusData)
       .subscribe(
         (response) => {
-          this.checkFormCompletion() 
+          this.checkFormCompletion();
           this.toastr.success(response.message, 'Success');
-          this.ngOnInit()
+          this.ngOnInit();
         },
         (error) => {
           console.error('Error updating status:', error);
-        }
+        },
       );
   }
 
@@ -1691,10 +1990,10 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   }
 
   moveGroupNineSection() {
-     this.checkFormCompletion();
+    this.checkFormCompletion();
     this.currentStep = 9;
     this.setActiveSection(8);
-   
+
     this.cdr.detectChanges();
   }
 
@@ -1740,30 +2039,49 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
         switchMap((response) => {
           if (response?.statusCode === 201) {
             this.applicationId = response.applicationId;
-            localStorage.setItem('applicationId', JSON.stringify(this.applicationId));
+            localStorage.setItem(
+              'applicationId',
+              JSON.stringify(this.applicationId),
+            );
             this.toastr.success(response.message, 'Success');
 
             const formData = new FormData();
-            formData.append('full_name', this.personalInfoForm.get('fullName').value);
-            formData.append('identity_number', this.personalInfoForm.get('identityNumber').value);
+            formData.append(
+              'full_name',
+              this.personalInfoForm.get('fullName').value,
+            );
+            formData.append(
+              'identity_number',
+              this.personalInfoForm.get('identityNumber').value,
+            );
             formData.append('race', this.personalInfoForm.get('race').value);
-            formData.append('gender', this.personalInfoForm.get('gender').value);
+            formData.append(
+              'gender',
+              this.personalInfoForm.get('gender').value,
+            );
             formData.append('id_document_file_name', this.FileName);
             formData.append('id_document_file', this.File); // Ensure the file is added as Blob
 
-            return this.liquidatorApplicationService.updateSection2(response.applicationId, 1, formData);
+            return this.liquidatorApplicationService.updateSection2(
+              response.applicationId,
+              1,
+              formData,
+            );
           }
           return EMPTY;
-        })
+        }),
       )
       .subscribe({
         next: (updateResponse: any) => {
           if (updateResponse?.statusCode === 200) {
-            this.updateStatus('Draft') 
+            this.updateStatus('Draft');
             this.section1Details = updateResponse.data;
 
             // Save to local storage for persistence
-            localStorage.setItem('section1Details', JSON.stringify(this.section1Details));
+            localStorage.setItem(
+              'section1Details',
+              JSON.stringify(this.section1Details),
+            );
 
             // Patch the form with section1Details data
             this.patchPersonalInfoForm();
@@ -1776,7 +2094,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
           if (error.error?.statusCode !== 400) {
             this.toastr.error(error.error?.message);
           }
-        }
+        },
       });
   }
 
@@ -1788,7 +2106,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
         fullName: this.section1Details.full_name,
         identityNumber: this.section1Details.identity_number,
         race: this.section1Details.race,
-        gender: this.section1Details.gender
+        gender: this.section1Details.gender,
       });
       this.generateFileLink(this.section1Details);
       // once i have the file need to fix this
@@ -1804,7 +2122,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     if (this.section2Details) {
       this.businessForm.patchValue({
         businessType: this.section2Details.business_type,
-        businessStatus: this.section2Details.business_status
+        businessStatus: this.section2Details.business_status,
       });
     }
   }
@@ -1819,7 +2137,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
         partnersOrDirectors: this.section3Details.partners_or_directors,
         businessName: this.section3Details.business_name,
         businessDetails: this.section3Details.employer_name,
-        hasTradingPartners: this.section3Details.hasTradingPartners
+        hasTradingPartners: this.section3Details.hasTradingPartners,
       });
 
       if (this.section3Details.hasTradingPartners === 1) {
@@ -1833,7 +2151,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       this.partDetails.tradingPartners.forEach((partner) => {
         const partnerGroup = this.fb.group({
           name: [partner.name, Validators.required],
-          address: [partner.address, Validators.required]
+          address: [partner.address, Validators.required],
         });
         this.tradingPartners.push(partnerGroup); // Add to FormArray
       });
@@ -1847,7 +2165,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
         staffDetails: this.section4Details.staff_details,
         numComputers: this.section4Details.num_computers,
         numPrinters: this.section4Details.num_printers,
-        additionalInfo: this.section4Details.additional_info
+        additionalInfo: this.section4Details.additional_info,
       });
     }
 
@@ -1858,7 +2176,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
         provinceOfficeAddress2: this.section5Details.province2,
         provinceDetails2: this.section5Details.address2,
         provinceOfficeAddress3: this.section5Details.province3,
-        provinceDetails3: this.section5Details.address3
+        provinceDetails3: this.section5Details.address3,
       });
     }
   }
@@ -1867,28 +2185,36 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     if (this.section6Details) {
       this.qualProMembershipForm.patchValue({
         qualifications: this.section6Details.qualifications,
-        professionalMemberships: this.section6Details.professional_memberships
+        professionalMemberships: this.section6Details.professional_memberships,
         //   membershipConfirmation: this.section6Details.membership_confirmation_file
       });
 
       this.generateFileLink(this.section6Details);
 
       if (this.qualificationFileUrl && this.membershipFileUrl) {
-        this.qualProMembershipForm.get('professionalMembershipsFile')?.clearValidators();
-        this.qualProMembershipForm.get('professionalMembershipsFile')?.updateValueAndValidity();
+        this.qualProMembershipForm
+          .get('professionalMembershipsFile')
+          ?.clearValidators();
+        this.qualProMembershipForm
+          .get('professionalMembershipsFile')
+          ?.updateValueAndValidity();
 
         this.qualProMembershipForm.get('qualificationFile')?.clearValidators();
-        this.qualProMembershipForm.get('qualificationFile')?.updateValueAndValidity();
+        this.qualProMembershipForm
+          .get('qualificationFile')
+          ?.updateValueAndValidity();
       }
 
       // this.membershipConfirmationFileName = this.section6Details.membership_confirmation_file.split('\\').pop();
-      Object.keys(this.qualProMembershipForm.controls).forEach((controlName) => {
-        const control = this.qualProMembershipForm.get(controlName);
-        if (control) {
-          control.clearValidators();
-          control.updateValueAndValidity();
-        }
-      });
+      Object.keys(this.qualProMembershipForm.controls).forEach(
+        (controlName) => {
+          const control = this.qualProMembershipForm.get(controlName);
+          if (control) {
+            control.clearValidators();
+            control.updateValueAndValidity();
+          }
+        },
+      );
 
       // Update the form's overall validity status
       this.qualProMembershipForm.updateValueAndValidity();
@@ -1908,7 +2234,10 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       if (controlName === 'qualificationFile') {
         this.qualificationFile_file_name = file.name;
         this.qualificationFile_file = file; // Assign file
-        console.log('Qualification File Name:', this.qualificationFile_file_name);
+        console.log(
+          'Qualification File Name:',
+          this.qualificationFile_file_name,
+        );
         console.log('Qualification File:', this.qualificationFile_file);
         this.qualProMembershipForm.get(controlName)?.setValue(file);
       }
@@ -1935,7 +2264,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
         disqualification: this.section7Details.disqualification_details,
         relationshipDisclosure: this.section7Details.relationship_disclosure,
         relationshipDetails: this.section7Details.relationship_details,
-        relationshipCity: this.section7Details.relationship_city
+        relationshipCity: this.section7Details.relationship_city,
       });
     }
   }
@@ -1943,11 +2272,13 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   patchAppEmpHistory() {
     if (this.section8Details) {
       // Parse `appointment_locations` from JSON string format
-      const appointmentLocations = this.section8Details.appointment_locations ? JSON.parse(this.section8Details.appointment_locations) : [];
+      const appointmentLocations = this.section8Details.appointment_locations
+        ? JSON.parse(this.section8Details.appointment_locations)
+        : [];
 
       // Patch employment history
       this.appEmpHistoryForm.patchValue({
-        employmentHistory: this.section8Details.employment_history
+        employmentHistory: this.section8Details.employment_history,
       });
 
       // Manually set the selected locations for the checkboxes
@@ -1955,14 +2286,16 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
 
       // Update the checked status of each checkbox based on `selectedAppointmentLocations`
       const checkboxes = document.querySelectorAll(
-        'input[type="checkbox"][formControlName="appointmentLocations"]'
+        'input[type="checkbox"][formControlName="appointmentLocations"]',
       ) as NodeListOf<HTMLInputElement>;
 
       console.log(checkboxes);
 
       checkboxes.forEach((checkbox) => {
         console.log(checkbox);
-        checkbox.checked = this.selectedAppointmentLocations.includes(checkbox.value);
+        checkbox.checked = this.selectedAppointmentLocations.includes(
+          checkbox.value,
+        );
       });
 
       this.generateFileLink(this.section8Details);
@@ -1985,11 +2318,10 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       this.taxBondBankForm.patchValue({
         taxClearance: this.section9Details.tax_clearance_certificate,
         bankAccountDocumentation: this.section9Details.bank_account_proof,
-        declaration: this.section9Details.declaration_agreement === 1
+        declaration: this.section9Details.declaration_agreement === 1,
       });
     }
 
-    
     Object.keys(this.taxBondBankForm.controls).forEach((controlName) => {
       const control = this.taxBondBankForm.get(controlName);
       if (control) {
@@ -1999,7 +2331,6 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     });
 
     this.generateFileLink(this.section9Details);
-
   }
 
   onFileChange(event: Event) {
@@ -2015,34 +2346,44 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   getApplication(applicationId: number) {
     this.liquidatorApplicationService.getApplication(applicationId).subscribe({
       next: (response) => console.log('Application details:', response),
-      error: (error) => console.error('Error fetching application:', error)
+      error: (error) => console.error('Error fetching application:', error),
     });
   }
 
   updateSection(applicationId: number, section: number, data: any) {
-    this.liquidatorApplicationService.updateSection(applicationId, section, data).subscribe({
-      next: (response) => console.log(`Section ${section} updated:`, response),
-      error: (error) => console.error(`Error updating section ${section}:`, error)
-    });
+    this.liquidatorApplicationService
+      .updateSection(applicationId, section, data)
+      .subscribe({
+        next: (response) =>
+          console.log(`Section ${section} updated:`, response),
+        error: (error) =>
+          console.error(`Error updating section ${section}:`, error),
+      });
   }
 
   submitApplication(applicationId: number) {
-    this.liquidatorApplicationService.submitApplication(applicationId).subscribe({
-      next: (response) => console.log('Application submitted:', response),
-      error: (error) => console.error('Error submitting application:', error)
-    });
+    this.liquidatorApplicationService
+      .submitApplication(applicationId)
+      .subscribe({
+        next: (response) => console.log('Application submitted:', response),
+        error: (error) => console.error('Error submitting application:', error),
+      });
   }
 
   getReviewStatus(applicationId: number) {
     this.liquidatorApplicationService.getReviewStatus(applicationId).subscribe({
       next: (response) => console.log('Review status:', response),
-      error: (error) => console.error('Error fetching review status:', error)
+      error: (error) => console.error('Error fetching review status:', error),
     });
   }
 
   ngOnChanges(changes: SimpleChanges) {
     // Detect changes to group3Section
-    if (changes['group3Section'] && this.group3Section && !this.autocompleteInitialized) {
+    if (
+      changes['group3Section'] &&
+      this.group3Section &&
+      !this.autocompleteInitialized
+    ) {
       // Attempt to initialize autocomplete once group3Section becomes true
       this.cdr.detectChanges();
       this.initializeAutocomplete();
@@ -2061,18 +2402,32 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   initializeAutocomplete(): void {
     const attemptInitializeAutocomplete = (attemptsLeft: number) => {
       // Define input elements for different forms
-      const provinceOfficeAddress1Input = document.getElementById('province-office-address') as HTMLInputElement;
-      const provinceDetails1Input = document.getElementById('province-office-address2') as HTMLInputElement;
-      const provinceOfficeAddress2Input = document.getElementById('province-office-address3') as HTMLInputElement;
-      const businessAddressInput = document.getElementById('business-address') as HTMLInputElement;
+      const provinceOfficeAddress1Input = document.getElementById(
+        'province-office-address',
+      ) as HTMLInputElement;
+      const provinceDetails1Input = document.getElementById(
+        'province-office-address2',
+      ) as HTMLInputElement;
+      const provinceOfficeAddress2Input = document.getElementById(
+        'province-office-address3',
+      ) as HTMLInputElement;
+      const businessAddressInput = document.getElementById(
+        'business-address',
+      ) as HTMLInputElement;
 
       // Dynamically handle partner addresses
-      const partnerAddressInputs = Array.from(document.querySelectorAll('[id^="partnerAddress"]')) as HTMLTextAreaElement[];
+      const partnerAddressInputs = Array.from(
+        document.querySelectorAll('[id^="partnerAddress"]'),
+      ) as HTMLTextAreaElement[];
 
       // Helper function to extract province/state
-      const getProvinceFromPlace = (place: google.maps.places.PlaceResult): string | null => {
+      const getProvinceFromPlace = (
+        place: google.maps.places.PlaceResult,
+      ): string | null => {
         if (place.address_components) {
-          const provinceComponent = place.address_components.find((component) => component.types.includes('administrative_area_level_1'));
+          const provinceComponent = place.address_components.find((component) =>
+            component.types.includes('administrative_area_level_1'),
+          );
           return provinceComponent ? provinceComponent.long_name : null;
         }
         return null;
@@ -2083,32 +2438,34 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
         {
           input: provinceOfficeAddress1Input,
           form: this.businessAdressDetailsForm, // Example form for Province Office Address 1
-          formControlName: 'provinceOfficeAddress1'
+          formControlName: 'provinceOfficeAddress1',
         },
         {
           input: provinceDetails1Input,
           form: this.businessAdressDetailsForm, // Example form for Province Details
-          formControlName: 'provinceOfficeAddress2'
+          formControlName: 'provinceOfficeAddress2',
         },
         {
           input: provinceOfficeAddress2Input,
           form: this.businessAdressDetailsForm, // Example form for Province Office Address 2
-          formControlName: 'provinceOfficeAddress3'
+          formControlName: 'provinceOfficeAddress3',
         },
         {
           input: businessAddressInput,
           form: this.empBusTradingForm, // Example form for Business Address
-          formControlName: 'businessAddress'
+          formControlName: 'businessAddress',
         },
         // Handle dynamically indexed partner addresses
         ...partnerAddressInputs.map((input, index) => {
-          const tradingPartnersFormArray = this.empBusTradingForm.get('tradingPartners') as FormArray;
+          const tradingPartnersFormArray = this.empBusTradingForm.get(
+            'tradingPartners',
+          ) as FormArray;
           return {
             input,
             form: tradingPartnersFormArray.at(index) as FormGroup, // Get the correct FormGroup from FormArray
-            formControlName: 'address' // Address is the control name inside each FormGroup
+            formControlName: 'address', // Address is the control name inside each FormGroup
           };
-        })
+        }),
       ];
       console.log(inputControls);
       inputControls.forEach(({ input, form, formControlName }) => {
@@ -2116,7 +2473,7 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
         if (input) {
           const autocomplete = new google.maps.places.Autocomplete(input, {
             componentRestrictions: { country: 'ZA' }, // Restrict to South Africa
-            types: ['address'] // Only addresses
+            types: ['address'], // Only addresses
           });
 
           autocomplete.addListener('place_changed', () => {
@@ -2124,7 +2481,9 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
             const province = getProvinceFromPlace(place);
 
             if (place && place.formatted_address) {
-              const fullAddress = province ? `${place.formatted_address}, ${province}` : place.formatted_address;
+              const fullAddress = province
+                ? `${place.formatted_address}, ${province}`
+                : place.formatted_address;
 
               // Update the input value and form control
               input.value = fullAddress;
@@ -2134,7 +2493,10 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
                 control.markAsTouched();
                 control.updateValueAndValidity();
 
-                console.log(`Updated Address for ${formControlName} in its form:`, control.value);
+                console.log(
+                  `Updated Address for ${formControlName} in its form:`,
+                  control.value,
+                );
               }
             } else {
               console.warn(`No valid place found for ${formControlName}.`);
@@ -2145,7 +2507,10 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
           const control = form?.get(formControlName);
           if (control) {
             control.valueChanges.subscribe((value) => {
-              console.log(`Control value changed for ${formControlName}:`, value);
+              console.log(
+                `Control value changed for ${formControlName}:`,
+                value,
+              );
             });
           }
         } else {
@@ -2181,7 +2546,11 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
       const fullYear = year >= 0 && year <= 21 ? 2000 + year : 1900 + year;
 
       const date = new Date(fullYear, month - 1, day);
-      if (date.getFullYear() !== fullYear || date.getMonth() + 1 !== month || date.getDate() !== day) {
+      if (
+        date.getFullYear() !== fullYear ||
+        date.getMonth() + 1 !== month ||
+        date.getDate() !== day
+      ) {
         return { invalidDateOfBirth: true };
       }
 
@@ -2221,7 +2590,10 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     const determineFileType = (fileName: string): string => {
       if (!fileName) return 'application/pdf'; // Default file type
       const lowerCaseFileName = fileName.toLowerCase();
-      if (lowerCaseFileName.endsWith('.jpg') || lowerCaseFileName.endsWith('.jpeg')) {
+      if (
+        lowerCaseFileName.endsWith('.jpg') ||
+        lowerCaseFileName.endsWith('.jpeg')
+      ) {
         return 'image/jpeg';
       } else if (lowerCaseFileName.endsWith('.png')) {
         return 'image/png';
@@ -2235,16 +2607,27 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
 
     // Generate file URL for `qualification_file`
     if (data.qualification_file?.data && data.qualification_file_name) {
-      const qualificationFileType = determineFileType(data.qualification_file_name);
-      const qualificationBlob = new Blob([new Uint8Array(data.qualification_file.data)], { type: qualificationFileType });
+      const qualificationFileType = determineFileType(
+        data.qualification_file_name,
+      );
+      const qualificationBlob = new Blob(
+        [new Uint8Array(data.qualification_file.data)],
+        { type: qualificationFileType },
+      );
       this.qualificationFileUrl = URL.createObjectURL(qualificationBlob);
-      console.log('Generated qualification file URL:', this.qualificationFileUrl);
+      console.log(
+        'Generated qualification file URL:',
+        this.qualificationFileUrl,
+      );
     }
 
     // Generate file URL for `membership_file`
     if (data.membership_file?.data && data.membership_file_name) {
       const membershipFileType = determineFileType(data.membership_file_name);
-      const membershipBlob = new Blob([new Uint8Array(data.membership_file.data)], { type: membershipFileType });
+      const membershipBlob = new Blob(
+        [new Uint8Array(data.membership_file.data)],
+        { type: membershipFileType },
+      );
       this.membershipFileUrl = URL.createObjectURL(membershipBlob);
       console.log('Generated membership file URL:', this.membershipFileUrl);
     }
@@ -2252,51 +2635,95 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
     // Generate file URL for `id_document_file_name` if applicable
     if (data.id_document_file?.data && data.id_document_file_name) {
       const idDocumentFileType = determineFileType(data.id_document_file_name);
-      const idDocumentBlob = new Blob([new Uint8Array(data.id_document_file.data)], { type: idDocumentFileType });
+      const idDocumentBlob = new Blob(
+        [new Uint8Array(data.id_document_file.data)],
+        { type: idDocumentFileType },
+      );
       this.idDocumentFileUrl = URL.createObjectURL(idDocumentBlob);
       console.log('Generated ID document file URL:', this.idDocumentFileUrl);
     }
 
     if (data.curriculum_vitae_file?.data && data.curriculum_vitae_file_name) {
-      const curriculumVitaeFileType = determineFileType(data.curriculum_vitae_file_name);
-      const curriculumVitaeBlob = new Blob([new Uint8Array(data.curriculum_vitae_file.data)], { type: curriculumVitaeFileType });
+      const curriculumVitaeFileType = determineFileType(
+        data.curriculum_vitae_file_name,
+      );
+      const curriculumVitaeBlob = new Blob(
+        [new Uint8Array(data.curriculum_vitae_file.data)],
+        { type: curriculumVitaeFileType },
+      );
       this.curriculumVitaeFileUrl = URL.createObjectURL(curriculumVitaeBlob);
-      console.log('Generated ID document file URL:', this.curriculumVitaeFileUrl);
+      console.log(
+        'Generated ID document file URL:',
+        this.curriculumVitaeFileUrl,
+      );
       console.log(this.appEmpHistoryForm);
     }
 
-    if (data.tax_clearance_certificate_file?.data && data.tax_clearance_certificate_file_name) {
-      const taxClearanceCertificateFileType = determineFileType(data.tax_clearance_certificate_file_name);
-      const taxClearanceCertificateBlob = new Blob([new Uint8Array(data.tax_clearance_certificate_file.data)], {
-        type: taxClearanceCertificateFileType
-      });
-      this.taxClearanceCertificateFileUrl = URL.createObjectURL(taxClearanceCertificateBlob);
-      console.log('Generated ID document file URL:', this.taxClearanceCertificateFileUrl);
+    if (
+      data.tax_clearance_certificate_file?.data &&
+      data.tax_clearance_certificate_file_name
+    ) {
+      const taxClearanceCertificateFileType = determineFileType(
+        data.tax_clearance_certificate_file_name,
+      );
+      const taxClearanceCertificateBlob = new Blob(
+        [new Uint8Array(data.tax_clearance_certificate_file.data)],
+        {
+          type: taxClearanceCertificateFileType,
+        },
+      );
+      this.taxClearanceCertificateFileUrl = URL.createObjectURL(
+        taxClearanceCertificateBlob,
+      );
+      console.log(
+        'Generated ID document file URL:',
+        this.taxClearanceCertificateFileUrl,
+      );
       console.log(this.appEmpHistoryForm);
     }
 
     if (data.bond_facility_file?.data && data.bond_facility_file_name) {
-      const bondFacilityFileType = determineFileType(data.bond_facility_file_name);
-      const bondFacilityBlob = new Blob([new Uint8Array(data.bond_facility_file.data)], {
-        type: bondFacilityFileType
-      });
+      const bondFacilityFileType = determineFileType(
+        data.bond_facility_file_name,
+      );
+      const bondFacilityBlob = new Blob(
+        [new Uint8Array(data.bond_facility_file.data)],
+        {
+          type: bondFacilityFileType,
+        },
+      );
       this.bondFacilityFileUrl = URL.createObjectURL(bondFacilityBlob);
       console.log('Generated ID document file URL:', this.bondFacilityFileUrl);
       console.log(this.appEmpHistoryForm);
     }
 
-    if (data.bank_account_proof_file?.data && data.bank_account_proof_file_name) {
-      const bankAccountProofFileType = determineFileType(data.bank_account_proof_file_name);
-      const bankAccountProofBlob = new Blob([new Uint8Array(data.bank_account_proof_file.data)], {
-        type: bankAccountProofFileType
-      });
+    if (
+      data.bank_account_proof_file?.data &&
+      data.bank_account_proof_file_name
+    ) {
+      const bankAccountProofFileType = determineFileType(
+        data.bank_account_proof_file_name,
+      );
+      const bankAccountProofBlob = new Blob(
+        [new Uint8Array(data.bank_account_proof_file.data)],
+        {
+          type: bankAccountProofFileType,
+        },
+      );
       this.bankAccountProofFileUrl = URL.createObjectURL(bankAccountProofBlob);
-      console.log('Generated ID document file URL:', this.bankAccountProofFileUrl);
+      console.log(
+        'Generated ID document file URL:',
+        this.bankAccountProofFileUrl,
+      );
       console.log(this.appEmpHistoryForm);
     }
 
     // Handle case where no files are found
-    if (!data.qualification_file?.data && !data.membership_file?.data && !(data.id_document_file?.data && data.id_document_file_name)) {
+    if (
+      !data.qualification_file?.data &&
+      !data.membership_file?.data &&
+      !(data.id_document_file?.data && data.id_document_file_name)
+    ) {
       console.error('No valid files found.');
     }
   }
@@ -2304,13 +2731,19 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   onRelationshipChange(value: string): void {
     if (value === 'related') {
       this.showRelationshipDetails = true;
-      this.disqualRelationshipForm.get('relationshipDetails')?.setValidators([Validators.required]);
+      this.disqualRelationshipForm
+        .get('relationshipDetails')
+        ?.setValidators([Validators.required]);
     } else {
       this.showRelationshipDetails = false;
-      this.disqualRelationshipForm.get('relationshipDetails')?.clearValidators();
+      this.disqualRelationshipForm
+        .get('relationshipDetails')
+        ?.clearValidators();
       this.disqualRelationshipForm.get('relationshipDetails')?.reset(); // Clear the field
     }
-    this.disqualRelationshipForm.get('relationshipDetails')?.updateValueAndValidity();
+    this.disqualRelationshipForm
+      .get('relationshipDetails')
+      ?.updateValueAndValidity();
   }
 
   private startCountdown(): void {
@@ -2339,57 +2772,117 @@ export class LiquidatorsComponent implements OnInit, OnChanges {
   }
 
   fetchStatus() {
+    this.liquidatorApplicationService
+      .getApplicationStatus(this.applicationId)
+      .subscribe({
+        next: (response) => {
+          this.application_status = response;
+          this.current_form_status = this.application_status.data.review_status;
+          localStorage.setItem('currentFormStatus', this.current_form_status);
 
-    this.liquidatorApplicationService.getApplicationStatus(this.applicationId).subscribe({
-      next: (response) => {
-        this.application_status = response
-        this.current_form_status = this.application_status.data.review_status
-        localStorage.setItem('currentFormStatus', this.current_form_status);
-     
-        console.log('Application status retrieved:', response);
-      },
-      error: (err) => {
-        console.error('Error retrieving application status:', err);
-      },
-    });
+          console.log('Application status retrieved:', response);
+        },
+        error: (err) => {
+          console.error('Error retrieving application status:', err);
+        },
+      });
   }
 
   checkFormCompletion() {
     const form_status = localStorage.getItem('currentFormStatus');
-  
-    // Update this logic based on your form completion criteria
-    this.formIsComplete = this.taxBondBankForm.valid &&  form_status === 'Submitted';
 
+    // Update this logic based on your form completion criteria
+    this.formIsComplete =
+      this.taxBondBankForm.valid && form_status === 'Submitted';
   }
 
   isSection9DetailsValid(): boolean {
     if (!this.section9Details) {
       return false; // section9Details must exist
     }
-  
+
     // Check required fields
     const requiredFields = [
       'tax_clearance_certificate_file',
       'bank_account_proof_file',
       'bond_facility_file',
     ];
- 
+
     // Ensure all required fields are defined and truthy
-    return requiredFields.every(field => this.section9Details[field]);
-    
+    return requiredFields.every((field) => this.section9Details[field]);
   }
 
   updateButtonState(): void {
-   
     const buttonElement = document.querySelector(
-      'button#submitDeclarationButton'
+      'button#submitDeclarationButton',
     ) as HTMLButtonElement;
 
     if (buttonElement) {
       buttonElement.disabled = this.isSection9DetailsValid();
     }
   }
-  
+
+  loadCurrentApplicationDate() {
+    this.adminService.getCurrentApplicationDate().subscribe((response) => {
+      const now = new Date();
+      if (response.currentApplicationDate != null) {
+        this.currentApplicationDate = response.currentApplicationDate;
+        this.closingDate = new Date(this.currentApplicationDate.closingDate);
+
+        const timeDifference = this.closingDate.getTime() - now.getTime();
+
+        if (timeDifference > 0) {
+          const totalHours = timeDifference / (1000 * 60 * 60);
+          this.showHours = totalHours < 12;
+
+          if (this.showHours) {
+            this.remainingHours = Math.floor(totalHours);
+          } else {
+            this.daysRemaining = Math.floor(totalHours / 24);
+          }
+        } else {
+          this.remainingHours = 0;
+          this.daysRemaining = 0;
+          this.showHours = false; // Timer expired
+        }
+
+        this.openingDate = new Date(this.currentApplicationDate.openingDate);
+        const timeDif = this.openingDate.getTime() - now.getTime();
+
+        if (timeDif > 0) {
+          const totalHours = timeDif / (1000 * 60 * 60);
+          this.showOpeningHours = totalHours < 12;
+
+          if (this.showOpeningHours) {
+            this.openingRemainingHours = Math.floor(totalHours);
+          } else {
+            this.openingDaysRemaining = Math.floor(totalHours / 24);
+          }
+        } else {
+          this.openingRemainingHours = 0;
+          this.openingDaysRemaining = 0;
+          this.showOpeningHours = false; // Timer expired
+        }
+
+        this.isBetweenOpeningAndClosing =
+          now.getTime() >= this.openingDate.getTime() &&
+          now.getTime() <= this.closingDate.getTime();
+      } else if (response.currentApplicationDate == null) {
+        const currentYear = now.getFullYear();
+        this.nextOpeningYear = currentYear + 1;
+      }
+
+      // If an opening date is not set, assume next yearly intake
+    });
+  }
+
+  onScroll() {
+    const element = this.modalBody.nativeElement;
+
+    if (element.scrollTop > 1000) {
+      this.taxBondBankForm.get('declaration').enable(); // Allow user to manually check the checkbox after reading
+    }
+  }
 
   ngOnDestroy(): void {
     this.countdownSubscription?.unsubscribe(); // Clean up the subscription

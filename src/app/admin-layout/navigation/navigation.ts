@@ -62,8 +62,24 @@ export const NavigationItems: NavigationItem[] = [
         target: true,
         breadcrumbs: false
       }
-      
     ]
   },
-  
+  {
+    id: 'admin',
+    title: 'Admin',
+    type: 'group',
+    icon: 'settings', // Change icon as needed
+    children: [
+      {
+        id: 'adminPanel',
+        title: 'Admin Panel',
+        type: 'item',
+        classes: 'nav-item',
+        url: '/admin',
+        icon: 'admin_panel_settings', // Change icon as needed
+        breadcrumbs: false
+      }
+    ]
+  }
 ];
+

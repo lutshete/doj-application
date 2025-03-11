@@ -1,0 +1,316 @@
+<div class="admin-container">
+    <h2 class="section-title">Admin Panel</h2>
+  
+    <!-- User Overview Section -->
+    <div class="stats-container">
+      <div class="stats-card total-users">
+        <h3>Total Users</h3>
+        <p>{{ getTotalUsers() }}</p>
+      </div>
+      <div class="stats-card admins">
+        <h3>Admins</h3>
+        <p>{{ getAdminCount() }}</p>
+      </div>
+      <div class="stats-card liquidators">
+        <h3>Liquidators</h3>
+        <p>{{ getLiquidatorCount() }}</p>
+      </div>
+      <div class="stats-card chief-masters">
+        <h3>Chief Master</h3>
+        <p>{{ getChiefMasterCount() }}</p>
+      </div>
+    </div>
+  
+    <!-- Manage Users -->
+    <div class="row ">
+      <!-- User Form (Left) -->
+      <div class="col-md-4">
+        <div class="form-container">
+          <h3>Add User</h3>
+          <form [formGroup]="userForm" (ngSubmit)="updateUser()" class="row g-3">
+  
+            <!-- First Name (Left) -->
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" formControlName="firstName" class="form-control" disable />
+              </div>
+            </div>
+          
+            <!-- Last Name (Right) -->
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" formControlName="lastName" class="form-control" disable="true" />
+              </div>
+            </div>
+          
+            <!-- Role (Left) -->
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="role">Role</label>
+                <select id="role" formControlName="role" class="form-select">
+                  <option value="official">Official</option>
+                  <option value="liquidator">Liquidator</option>
+                  <option value="chief master">Chief Master</option>
+                </select>
+              </div>
+            </div>
+          
+            <!-- Status (Right) -->
+            <div class="col-md-6">
+              <div class="form-group">
+                <label for="isActive">Status</label>
+                <select id="isActive" formControlName="isActive" class="form-select">
+                  <option [value]="true">Active</option>
+                  <option [value]="false">Inactive</option>
+                </select>
+              </div>
+            </div>
+          
+            <!-- Email (Full Width) -->
+            <div class="col-12">
+              <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" formControlName="email" class="form-control" required />
+              </div>
+            </div>
+          
+            <!-- Full-width Submit & Cancel Buttons -->
+            <div class="col-12 d-flex gap-3">
+              <button type="submit" class="btn btn-primary w-100">
+                Update User
+              </button>
+              <button type="button" class="btn btn-secondary w-100" (click)="cancelEdit()">
+                Cancel
+              </button>
+            </div>
+          
+          </form>
+          
+          
+          
+        </div>
+      </div>
+  
+      <!-- User Table (Right) -->
+      <div class="col-md-8">
+        <div class="table-container">
+          <input type="text" placeholder="Search users..." [(ngModel)]="searchQuery" class="search-box" />
+          <table class="user-table">
+            <thead>
+              <tr>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Role</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let user of paginatedUsers">
+                <td>{{ user.firstName }} {{ user.lastName }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.role }}</td>
+                <td>
+                  <span [class.active]="user.isActive" [class.inactive]="!user.isActive">
+                    {{ user.isActive ? 'Active' : 'Inactive' }}
+                  </span>
+                </td>
+                <td>
+                  <button class="btn-edit" (click)="editUser(user)">✏️</button>
+                  <button class="btn-deactivate" (click)="disableUser(user.id)" title="Deactivate User">
+                    <i class="material-icons">block</i>
+                  </button>
+                  
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pagination">
+            <button (click)="prevPageUsers()" [disabled]="currentPageUsers === 0">Prev</button>
+            <span>Page {{ currentPageUsers + 1 }}</span>
+            <button (click)="nextPageUsers()" [disabled]="(currentPageUsers + 1) * pageSizeUsers >= users.length">Next</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  
+    <!-- Application Dates -->
+    <div class="row" style="margin-top: 20px;">
+      <!-- Previous Application Dates -->
+      <div class="col-md-6">
+        <div class="table-container">
+          <h4>Previous Application Dates</h4>
+          <table class="date-table table">
+            <thead>
+              <tr>
+                <th>Opening Date</th>
+                <th>Closing Date</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let date of paginatedDates">
+                <td>{{ date.openingDate | date:'dd MMM yyyy' }}</td>
+                <td>{{ date.closingDate | date:'dd MMM yyyy' }}</td>
+              </tr>
+            </tbody>
+          </table>
+          <div class="pagination">
+            <button (click)="prevPageDates()" [disabled]="currentPageDates === 0">Prev</button>
+            <span>Page {{ currentPageDates + 1 }}</span>
+            <button (click)="nextPageDates()" [disabled]="(currentPageDates + 1) * pageSizeDates >= previousDates.length">Next</button>
+          </div>
+        </div>
+      </div>
+  
+      <!-- Update Current Dates -->
+      <div class="col-md-6">
+        <div class="update-dates-container">
+          <!-- Title & Add Meeting Button in a Flexbox -->
+          <div class="d-flex justify-content-between align-items-center mb-3">
+            <h4 class="mb-0">{{ currentApplicationDate ? 'Update Current Dates' : 'Add New Application Dates' }}</h4>
+            <button 
+            class="btn btn-success" 
+            style="width: auto;" 
+            data-bs-toggle="modal" 
+            data-bs-target="#addMeetingModal"
+            (click)="onOpenMeetingModal()">
+            
+            {{ meetings 
+                ? '✏️ Update Meeting (' + (meetings.startDate | date:'dd MMM yyyy') + ' - ' + (meetings.endDate | date:'dd MMM yyyy') + ')' 
+                : '➕ Add Meeting' }}
+          </button>
+          
+          
+          </div>
+      
+          <form [formGroup]="applicationDatesForm" (ngSubmit)="saveApplicationDates()">
+            <div class="form-group">
+              <label>Opening Date</label>
+              <input type="date" formControlName="openingDate" required class="form-control" />
+            </div>
+      
+            <div class="form-group">
+              <label>Closing Date</label>
+              <input type="date" formControlName="closingDate" required class="form-control" />
+              <small class="text-danger" *ngIf="applicationDatesForm.hasError('invalidDateRange')">
+                ❌ Opening Date must be before Closing Date.
+              </small>
+              <small class="text-danger" *ngIf="applicationDatesForm.hasError('invalidDuration')">
+                ❌ Closing Date must be between 3 to 4 weeks after Opening Date.
+              </small>
+              <small class="text-danger" *ngIf="applicationDatesForm.hasError('invalidExtension') && applicationDatesForm.get('closingDate')?.dirty">
+                ❌ Closing Date can only be extended by **one week** from the current closing date.
+              </small>
+            </div>
+      
+            <!-- Buttons Row -->
+            <div class="d-flex">
+              <!-- Submit Button -->
+              <button 
+                type="submit" 
+                class="btn btn-primary" 
+                [disabled]="!applicationDatesForm.valid && !currentApplicationDate">
+                {{ currentApplicationDate ? 'Extend Closing Date' : 'Create New Period' }}
+              </button>
+      
+              <!-- Delete Button (Only shown if dates exist) -->
+              <button *ngIf="currentApplicationDate && cantDelete" type="button" class="btn btn-danger ms-2" (click)="deleteApplicationDates()">
+                Delete
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+      
+      
+      
+    </div>
+  </div>
+
+  <!-- Add Meeting Modal -->
+  <div class="modal fade" id="addMeetingModal" tabindex="-1" aria-labelledby="addMeetingModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <!-- Modal Header -->
+        <div class="modal-header">
+          <h5 class="modal-title" id="addMeetingModalLabel">Schedule a Meeting</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="background-color: transparent; width: fit-content;"></button>
+        </div>
+  
+        <!-- Modal Body -->
+        <div class="modal-body">
+          <form [formGroup]="meetingForm" (ngSubmit)="scheduleMeeting()">
+            
+            <!-- Start Date -->
+            <div class="form-group mb-3">
+                <label>Start Date</label>
+                <input type="date" formControlName="startDate" required class="form-control" />
+              
+                <!-- Validation Error Message: Start Date Must Be After Opening Date -->
+             
+                 <small class="text-danger" *ngIf="meetingForm.get('startDate')?.hasError('invalidStartDate') && meetingForm.get('startDate')?.dirty">
+                    ❌ Start Date must be after the Closing Date ({{this.currentApplicationDate.closingDate}}).
+                  </small>
+                  
+              </div>
+              
+  
+            <!-- End Date -->
+            <div class="form-group mb-3">
+              <label>End Date</label>
+              <input type="date" formControlName="endDate" required class="form-control" />
+              <small class="text-danger" *ngIf="meetingForm.hasError('invalidDateRange')">
+                ❌ End Date must be after Start Date.
+              </small>
+            </div>
+  
+            <!-- Start Time -->
+            <div class="form-group mb-3">
+              <label>Start Time</label>
+              <input type="time" formControlName="startTime" required class="form-control" />
+            </div>
+  
+            <!-- End Time -->
+            <div class="form-group mb-3">
+              <label>End Time</label>
+              <input type="time" formControlName="endTime" required class="form-control" />
+              <small class="text-danger" *ngIf="meetingForm.hasError('invalidTimeRange')">
+                ❌ End Time must be after Start Time.
+              </small>
+            </div>
+  
+            <!-- Teams Meeting Link or Venue -->
+            <div class="form-group mb-3">
+              <label>Teams Meeting Link / Venue</label>
+              <input type="text" formControlName="meetingLink" placeholder="Enter Teams link or venue" class="form-control" />
+            </div>
+  
+            <!-- Submit Buttons -->
+            <div class="modal-footer">
+                <div class="row w-100">
+                  <div class="col-6">
+                    <button type="submit" class="btn btn-primary w-100" [disabled]="!meetingForm.valid">
+                      {{ meetings ? 'Update Meeting' : 'Save Meeting' }}
+                    </button>
+                  </div>
+                  <div class="col-6">
+                    <button type="button" class="btn btn-secondary w-100" data-bs-dismiss="modal">
+                      Cancel
+                    </button>
+                  </div>
+                </div>
+              </div>
+  
+          </form>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<!--   <button (click)="download()">Download Excel</button> -->
+
+  
+  
+  

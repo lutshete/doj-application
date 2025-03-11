@@ -18,6 +18,7 @@ export class OtpComponent {
   errorMessage: string = '';
   isResending: boolean = false;
   userEmail: any;
+  verificationStatus
 
   constructor(
     private fb: FormBuilder,
@@ -36,6 +37,14 @@ export class OtpComponent {
       otp6: ['', [Validators.required, Validators.pattern('[0-9]{1}')]]
     });
     this.userEmail = data.email;
+    this.verificationStatus = data.status
+
+  }
+
+  ngOnInit() {
+   if(this.verificationStatus === 'pending'){
+    this.resendOTP()
+   }
   }
 
   // Method to handle OTP form submission
@@ -72,8 +81,9 @@ export class OtpComponent {
 
   // Method to handle OTP resending
   resendOTP() {
+    console.log(this.userEmail)
     this.isResending = true;
-    this.authService.resendOtp().subscribe({
+    this.authService.resendOtp({email:this.userEmail}).subscribe({
       next: () => {
         this.isResending = false;
       },
@@ -91,7 +101,25 @@ export class OtpComponent {
       const nextInput = document.getElementById(nextElementId);
       nextInput?.focus();
     }
+    this.checkCompletion();
   }
+
+  handleBackspace(event: KeyboardEvent, currentElementId: string) {
+    if (event.key === 'Backspace' && !(event.target as HTMLInputElement).value) {
+      const prevIndex = parseInt(currentElementId.replace('otp', ''), 10) - 1;
+      if (prevIndex > 0) {
+        const prevInput = document.getElementById(`otp${prevIndex}`);
+        prevInput?.focus();
+      }
+    }
+  }
+
+  checkCompletion() {
+    if (Object.values(this.otpForm.value).every(val => val !== '')) {
+      this.submitOnComplete();
+    }
+  }
+
 
   // Automatically submit OTP when all fields are filled
   submitOnComplete() {

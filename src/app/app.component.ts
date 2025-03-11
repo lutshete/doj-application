@@ -13,7 +13,7 @@ export class AppComponent {
     this.router.events.subscribe(event => {
       if (event instanceof NavigationEnd) {
         // Define routes where <app-admin> should be hidden
-        const noAdminRoutes = ['/login', '/register', '/forgot-password', '/reset-password'];
+        const noAdminRoutes = ['/login', '/register', '/forgot-password', '/reset-password', '/approval-status', '/meeting-response'];
 
         // Extract base path (ignores query parameters)
         const basePath = event.url.split('?')[0];

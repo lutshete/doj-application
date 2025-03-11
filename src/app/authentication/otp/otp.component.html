@@ -2,13 +2,37 @@
   <h2 class="otp-title">Enter OTP</h2>
   <form [formGroup]="otpForm" (ngSubmit)="onSubmit()" class="otp-form">
     <div class="otp-inputs">
-      <input type="text" maxlength="1" formControlName="otp1" (input)="moveFocus($event, 'otp2')" class="otp-input" autofocus />
-      <input type="text" maxlength="1" formControlName="otp2" (input)="moveFocus($event, 'otp3')" class="otp-input" />
-      <input type="text" maxlength="1" formControlName="otp3" (input)="moveFocus($event, 'otp4')" class="otp-input" />
-      <input type="text" maxlength="1" formControlName="otp4" (input)="moveFocus($event, 'otp5')" class="otp-input" />
-      <input type="text" maxlength="1" formControlName="otp5" (input)="moveFocus($event, 'otp6')" class="otp-input" />
-      <input type="text" maxlength="1" formControlName="otp6" (input)="submitOnComplete()" class="otp-input" />
+      <input id="otp1" type="text" maxlength="1" formControlName="otp1" 
+             (input)="moveFocus($event, 'otp2')" 
+             (keydown)="handleBackspace($event, 'otp1')" 
+             class="otp-input" autofocus />
+             
+      <input id="otp2" type="text" maxlength="1" formControlName="otp2" 
+             (input)="moveFocus($event, 'otp3')" 
+             (keydown)="handleBackspace($event, 'otp2')" 
+             class="otp-input" />
+
+      <input id="otp3" type="text" maxlength="1" formControlName="otp3" 
+             (input)="moveFocus($event, 'otp4')" 
+             (keydown)="handleBackspace($event, 'otp3')" 
+             class="otp-input" />
+
+      <input id="otp4" type="text" maxlength="1" formControlName="otp4" 
+             (input)="moveFocus($event, 'otp5')" 
+             (keydown)="handleBackspace($event, 'otp4')" 
+             class="otp-input" />
+
+      <input id="otp5" type="text" maxlength="1" formControlName="otp5" 
+             (input)="moveFocus($event, 'otp6')" 
+             (keydown)="handleBackspace($event, 'otp5')" 
+             class="otp-input" />
+
+      <input id="otp6" type="text" maxlength="1" formControlName="otp6" 
+             (input)="submitOnComplete()" 
+             (keydown)="handleBackspace($event, 'otp6')" 
+             class="otp-input" />
     </div>
+
     <button type="submit" [disabled]="otpForm.invalid" class="verify-button">Verify OTP</button>
   </form>
 
@@ -19,3 +43,4 @@
 
   <p *ngIf="errorMessage" class="error-message">{{ errorMessage }}</p>
 </div>
+
