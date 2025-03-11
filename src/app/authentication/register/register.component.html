@@ -99,40 +99,41 @@
               <div class="col-md-6">
                 <div class="form-group mb-3 position-relative">
                   <label class="form-label" for="password">Password*</label>
-                  <input 
-                    [type]="showPassword ? 'text' : 'password'" 
-                    formControlName="password" 
-                    class="form-control shadow-sm" 
-                    id="password" 
-                    placeholder="Password" 
-                  />
-                  <i 
-                    class="show-hide-icon" 
-                    [ngClass]="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'" 
-                    (click)="togglePasswordVisibility()"
-                  ></i>
+                  <div class="input-group">
+                    <input 
+                      [type]="showPassword ? 'text' : 'password'" 
+                      formControlName="password" 
+                      class="form-control shadow-sm pr-5" 
+                      id="password" 
+                      placeholder="Password"
+                    />
+                    <span class="input-group-text show-hide-icon" (click)="togglePasswordVisibility()">
+                      <i [ngClass]="showPassword ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
+                    </span>
+                  </div>
                   <div *ngIf="f.password.invalid && (f.password.dirty || f.password.touched)">
                     <small class="error" *ngIf="f.password.errors?.['required']">Password is required.</small>
                     <small class="error" *ngIf="f.password.errors?.['minlength']">Password must be at least 6 characters long.</small>
                   </div>
                 </div>
               </div>
+              
 
               <div class="col-md-6">
                 <div class="form-group mb-3 position-relative">
                   <label class="form-label" for="confirmPassword">Confirm Password*</label>
-                  <input 
-                    [type]="showConfirmPassword ? 'text' : 'password'" 
-                    formControlName="confirmPassword" 
-                    class="form-control shadow-sm" 
-                    id="confirmPassword" 
-                    placeholder="Confirm Password" 
-                  />
-                  <i 
-                    class="show-hide-icon" 
-                    [ngClass]="showConfirmPassword ? 'fa fa-eye-slash' : 'fa fa-eye'" 
-                    (click)="toggleConfirmPasswordVisibility()"
-                  ></i>
+                  <div class="input-group">
+                    <input 
+                      [type]="showConfirmPassword ? 'text' : 'password'" 
+                      formControlName="confirmPassword" 
+                      class="form-control shadow-sm pr-5" 
+                      id="confirmPassword" 
+                      placeholder="Confirm Password"
+                    />
+                    <span class="input-group-text show-hide-icon" (click)="toggleConfirmPasswordVisibility()">
+                      <i [ngClass]="showConfirmPassword ? 'fa fa-eye-slash' : 'fa fa-eye'"></i>
+                    </span>
+                  </div>
                   <div *ngIf="f.confirmPassword.invalid && (f.confirmPassword.dirty || f.confirmPassword.touched)">
                     <small class="error" *ngIf="f.confirmPassword.errors?.['required']">Confirm password is required.</small>
                   </div>
@@ -141,6 +142,8 @@
                   </div>
                 </div>
               </div>
+              
+              
             </div>
 
             <p class="text-sm text-muted text-center mt-3">

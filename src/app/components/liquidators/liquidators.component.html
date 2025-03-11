@@ -25,7 +25,7 @@
       <!--Step 1-->
       <div class="form-container">
         <h2 class="text-center">Declaration Form</h2>
-        <p class="text-center text-danger attention-grabber">
+        <p class="text-center text-danger attention-grabber" *ngIf="isBetweenOpeningAndClosing">
           <ng-container *ngIf="showHours; else daysTemplate">
             <strong>Closing In:</strong>
             {{ remainingHours }} hours
@@ -39,7 +39,38 @@
           </ng-template>
         </p>
 
-        <form [formGroup]="personalInfoForm">
+       
+        <p class="text-center text-success attention-grabber" *ngIf="openingDaysRemaining > 0 || showOpeningHours">
+          <ng-container *ngIf="showOpeningHours; else openingDaysTemplate">
+            <strong>Opening In:</strong> {{ openingRemainingHours }} hours
+          </ng-container>
+          <ng-template #openingDaysTemplate>
+            <strong>Opening Date:</strong> {{ openingDate | date: 'longDate' }}
+            <br />
+            <strong>Days Remaining:</strong> {{ openingDaysRemaining }} days
+          </ng-template>
+        </p>
+
+      
+       <div class="placeholder-container" *ngIf="nextOpeningYear">
+        <div class="placeholder-card">
+          <h4 class="placeholder-title">📢 New Liquidators Intake Applications</h4>
+          <p class="placeholder-text">
+            The <strong>Liquidator Application Process</strong> is conducted annually to select qualified individuals for appointment.
+            Stay tuned for the next intake period.
+          </p>
+          <p class="next-opening">
+            📅 <strong>Expected Opening:</strong> {{ nextOpeningYear }}
+          </p>
+          <p class="placeholder-info">
+            For more details on eligibility and requirements, please review the
+            <a href="#" class="placeholder-link">📖 Application Guidelines</a>.
+          </p>
+        </div>
+      </div>
+      
+        
+        <form [formGroup]="personalInfoForm" *ngIf="isBetweenOpeningAndClosing">
           <div class="section" *ngIf="group1Section">
             <label for="full-name">Full Names and Surname</label>
             <input type="text" id="full-name" formControlName="fullName" placeholder="Enter full name" />
@@ -148,7 +179,7 @@
         <!--End of Step 1-->
 
         <!--Step 2-->
-        <div class="section" *ngIf="group2Section">
+        <div class="section" *ngIf="group2Section  && isBetweenOpeningAndClosing">
           <h3 class="section-title">3. Verification Consent</h3>
           <p>
             I hereby grant the Department of Justice and Constitutional Development and/or the Master of the High Court or any person
@@ -156,7 +187,7 @@
           </p>
         </div>
 
-        <div class="section" *ngIf="group2Section">
+        <div class="section" *ngIf="group2Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">4. Business Information</h3>
           <form [formGroup]="businessForm">
             <label>I conduct or will conduct my insolvency business as follows (tick the correct box):</label>
@@ -214,7 +245,7 @@
 
         <!--Step 3-->
         <!-- Section 5: Employment Details -->
-        <div class="section" *ngIf="group3Section">
+        <div class="section" *ngIf="group3Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">5. Employment Details</h3>
           <form [formGroup]="empBusTradingForm">
             <label for="employer-name">I am employed as an insolvency practitioner by:</label>
@@ -268,7 +299,7 @@
         </div>
 
         <!-- Section 6: Business Trading Details -->
-        <div class="section" *ngIf="group3Section">
+        <div class="section" *ngIf="group3Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">6. Business Trading Details</h3>
 
           <form [formGroup]="empBusTradingForm">
@@ -356,7 +387,7 @@
 
         <!--Step 4-->
         <!-- Section 7: Business Infrastructure Details -->
-        <div class="section" *ngIf="group4Section">
+        <div class="section" *ngIf="group4Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">7. Business Infrastructure Details</h3>
           <form [formGroup]="businessDetailsOfficeForm">
             <p>Please address this section by confirming the following information regarding your main business and satellite offices.</p>
@@ -424,7 +455,7 @@
         </div>
 
         <!-- Section 8: Office Addresses in Other Provinces -->
-        <div class="section" *ngIf="group4Section">
+        <div class="section" *ngIf="group4Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">8. Office Addresses in Other Provinces</h3>
           <form [formGroup]="businessAdressDetailsForm">
             <p>
@@ -543,7 +574,7 @@
 
         <!--Step 5-->
         <!-- Section 9: Relevant Qualifications -->
-        <div class="section" *ngIf="group5Section">
+        <div class="section" *ngIf="group5Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">9. Relevant Qualifications</h3>
           <form [formGroup]="qualProMembershipForm">
             <p>
@@ -580,7 +611,7 @@
         </div>
         <br />
         <!-- Section 10: Professional Memberships -->
-        <div class="section" *ngIf="group5Section">
+        <div class="section" *ngIf="group5Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">10. Professional Memberships</h3>
           <form [formGroup]="qualProMembershipForm">
             <p>
@@ -638,7 +669,7 @@
 
         <!--Step 6-->
         <!-- Section 11: Disqualification Provision -->
-        <div class="section" *ngIf="group6Section">
+        <div class="section" *ngIf="group6Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">11. Disqualification Provision</h3>
           <form [formGroup]="disqualRelationshipForm" (ngSubmit)="disqualRelationshipSubmit()">
             <p>
@@ -661,7 +692,7 @@
         </div>
 
         <!-- Section 12: Relationship Disclosure -->
-        <div class="section" *ngIf="group6Section">
+        <div class="section" *ngIf="group6Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">12. Relationship Disclosure</h3>
           <form [formGroup]="disqualRelationshipForm" (ngSubmit)="disqualRelationshipSubmit()">
             <p>Please tick the applicable box:</p>
@@ -748,7 +779,7 @@
 
         <!--Step 7-->
         <!-- Section 13: Appointment Locations -->
-        <div class="section" *ngIf="group7Section">
+        <div class="section" *ngIf="group7Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">13. Appointment Locations</h3>
           <form [formGroup]="appEmpHistoryForm">
             <p>
@@ -775,7 +806,7 @@
         </div>
 
         <!-- Section 14: Employment History -->
-        <div class="section" *ngIf="group7Section">
+        <div class="section" *ngIf="group7Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">14. Employment History</h3>
           <form [formGroup]="appEmpHistoryForm">
             <p>
@@ -822,7 +853,7 @@
 
         <!--step 8-->
         <!-- Section 15: Tax Clearance -->
-        <div class="section" *ngIf="group8Section">
+        <div class="section" *ngIf="group8Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">15. Tax Clearance</h3>
           <form [formGroup]="taxBondBankForm">
             <p>
@@ -855,7 +886,7 @@
         </div>
 
         <!-- Section 16: Bond Facility -->
-        <div class="section" *ngIf="group8Section">
+        <div class="section" *ngIf="group8Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">16. Bond Facility</h3>
           <form [formGroup]="taxBondBankForm">
             <p>
@@ -883,7 +914,7 @@
         </div>
 
         <!-- Section 17: Bank Account Documentation -->
-        <div class="section" *ngIf="group8Section">
+        <div class="section" *ngIf="group8Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">17. Bank Account Documentation</h3>
           <form [formGroup]="taxBondBankForm">
             <p>
@@ -910,7 +941,7 @@
         </div>
 
         <!-- Section 18: Declaration -->
-        <div class="section" *ngIf="group8Section">
+        <div class="section" *ngIf="group8Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">18. Declaration</h3>
           <form [formGroup]="taxBondBankForm">
             <p>
@@ -920,7 +951,7 @@
             </p>
 
             <div>
-              <input type="checkbox" id="agree-declaration" name="declaration" formControlName="declaration" required />
+              <input type="checkbox" id="agree-declaration" name="declaration" formControlName="declaration"  required />
               <div *ngIf="taxBondBankForm.get('declaration').invalid && taxBondBankForm.get('declaration').touched">
                 <small class="error">Declaration is required.</small>
               </div>
@@ -933,7 +964,7 @@
         </div>
 
         <!-- Final Submission -->
-        <div class="section" *ngIf="group8Section">
+        <div class="section" *ngIf="group8Section && isBetweenOpeningAndClosing">
           <h3 class="section-title">Submission</h3>
           <form [formGroup]="taxBondBankForm">
             <p></p>
@@ -978,7 +1009,7 @@
             </div>
 
             <!-- Modal Body (Scrollable) -->
-            <div class="modal-body">
+            <div class="modal-body" #modalBody (scroll)="onScroll()">
               <!-- Section 1 -->
               <h4>1. Purpose</h4>
               <p>
@@ -1096,7 +1127,7 @@
       </div>
     </app-card>
   </div>
-  <div class="col-4" id="a4">
+  <div class="col-4" id="a4" *ngIf="isBetweenOpeningAndClosing">
     <div class="card border-danger progress-card">
         <div class="card-header bg-danger text-white text-center">
             <strong>Progress Tracker</strong>
@@ -1329,6 +1360,66 @@
         </div>
     </div>
 </div>
+
+
+
+<!-- Placeholder for Minimum Requirements (Visible When No Opening Date) -->
+<div class="col-4" id="requirements-placeholder" *ngIf="nextOpeningYear || (openingDaysRemaining > 0 || showOpeningHours)">
+  <div class="card border-primary requirements-card">
+    <div class="card-header bg-primary text-white text-center">
+      <strong>📌 Minimum Requirements</strong>
+    </div>
+    <div class="card-body">
+      <p class="requirements-text">
+        To apply for the <strong>Annual Liquidator Appointment Process</strong>, applicants must meet the following requirements:
+      </p>
+      <ul class="requirements-list">
+        <li>✔️ South African citizen or permanent resident</li>
+        <li>✔️ At least 5 years of experience in insolvency or liquidation</li>
+        <li>✔️ Professional qualification in Law, Accounting, or related field</li>
+        <li>✔️ No criminal record related to financial fraud</li>
+        <li>✔️ Registered with a recognized insolvency body</li>
+        <li>✔️ Able to provide references for past liquidation cases</li>
+      </ul>
+
+   
+
+  
+
+      <!-- FAQs -->
+      <div class="faq-section">
+        <h5>❓ Frequently Asked Questions</h5>
+        <p><strong>Q: When do applications open?</strong></p>
+        <p>A: Applications open once a year. The next expected intake is in <strong>{{ nextOpeningYear }}</strong>.</p>
+        
+        <p><strong>Q: What if I don't meet all the requirements?</strong></p>
+        <p>A: You may still apply, but your application will be assessed based on eligibility criteria.</p>
+
+        <p><strong>Q: How do I know if my application was successful?</strong></p>
+        <p>A: You will receive an email notification once the selection process is complete.</p>
+      </div>
+
+      <!-- Contact Information -->
+      <div class="contact-info">
+        <h5>📞 Need Assistance?</h5>
+        <p>For any inquiries, contact us at:</p>
+        <p>📧 <a href="mailto:support@liquidators.co.za">support&#64;liquidators.co.za</a></p>
+        <p>📞 +27 123 456 7890</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+
+
+<div *ngIf="loading" class="loading-overlay">
+  <div class="loader-container">
+    <div class="spinner"></div>
+    <p class="loading-text">Fetching application details...</p>
+  </div>
+</div>
+
 
 
 </div>

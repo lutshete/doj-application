@@ -19,8 +19,8 @@ export class AuthService {
     return this.http.post(`${this.apiUrl}/verify-otp`, data);
   }
 
-  resendOtp(): Observable<any> {
-    return this.http.post(`${this.apiUrl}/resend-otp`, {});
+  resendOtp(email): Observable<any> {
+    return this.http.post(`${this.apiUrl}/resend-otp`, email);
   }
 
     // Method to approve a user
@@ -44,11 +44,24 @@ export class AuthService {
 
     decodeToken(): any {
       const sessionToken = localStorage.getItem('sessionToken');
+  
       if (!sessionToken) {
+        console.warn('No session token found.');
         return null;
       }
+  
       try {
-        return jwtDecode(sessionToken);
+        const decodedToken: any = jwtDecode(sessionToken);
+  
+        // ✅ Check if Token is Expired
+        if (decodedToken.exp && Date.now() >= decodedToken.exp * 1000) {
+          console.warn('Session token has expired.');
+          localStorage.removeItem('sessionToken'); // ✅ Remove expired token
+          return null;
+        }
+  
+        return decodedToken;
+  
       } catch (error) {
         console.error('Token decoding failed:', error);
         return null;

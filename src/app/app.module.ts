@@ -20,6 +20,8 @@ import { TrackComponent } from './components/track/track.component';
 import { ReviewApplicationComponent } from './components/review-application/review-application.component';
 import { ApprovalStatusComponent } from './components/approval-status/approval-status.component';
 import RegisterComponent from './authentication/register/register.component';
+import { AdminPanelComponent } from './components/admin-panel/admin-panel.component';
+import { MeetingResponseComponent } from './components/meeting-response/meeting-response.component';
 
 
 @NgModule({
@@ -33,7 +35,9 @@ import RegisterComponent from './authentication/register/register.component';
     TrackComponent,
     ReviewApplicationComponent,
     ApprovalStatusComponent,
-    RegisterComponent
+    RegisterComponent,
+    AdminPanelComponent,
+    MeetingResponseComponent
   ],
   imports: [
     BrowserModule,
