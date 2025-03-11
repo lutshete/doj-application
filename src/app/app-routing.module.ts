@@ -10,6 +10,8 @@ import { TrackComponent } from './components/track/track.component';
 import { ReviewApplicationComponent } from './components/review-application/review-application.component';
 import { ApprovalStatusComponent } from './components/approval-status/approval-status.component';
 import { AuthGuard } from './services/auth.guard';
+import { AdminPanelComponent } from './components/admin-panel/admin-panel.component';
+import { MeetingResponseComponent } from './components/meeting-response/meeting-response.component';
 
 const routes: Routes = [
   {
@@ -62,6 +64,12 @@ const routes: Routes = [
     component: ApprovalStatusComponent,
     
   },
+  {
+    path: 'admin',  // ✅ New Admin Panel Route
+    component: AdminPanelComponent,
+    canActivate: [AuthGuard], // Protect Admin Route
+  },
+  { path: 'meeting-response', component: MeetingResponseComponent },
 ];
 
 

@@ -1,0 +1,279 @@
+/* Admin Panel Container */
+.admin-container {
+    width: 100%;
+    max-width: 100%;
+    margin: auto;
+    padding: 20px;
+    background-color: #f8f9fa;
+    border-radius: 12px;
+    font-family: 'Poppins', sans-serif;
+}
+
+/* Stats Cards */
+.stats-container {
+    display: flex;
+    gap: 15px;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.stats-card {
+    flex: 1;
+    background: linear-gradient(135deg, #007bff, #0056b3);
+    color: white;
+    padding: 20px;
+    border-radius: 10px;
+    text-align: center;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    transition: transform 0.3s ease-in-out;
+    font-weight: bold;
+}
+
+.stats-card h3 {
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.stats-card p {
+    font-size: 24px;
+    font-weight: bold;
+}
+
+.stats-card:nth-child(2) {
+    background: linear-gradient(135deg, #28a745, #1e7e34);
+}
+
+.stats-card:nth-child(3) {
+    background: linear-gradient(135deg, #ffc107, #d39e00);
+}
+
+.stats-card:nth-child(4) {
+    background: linear-gradient(135deg, #dc3545, #b02a37);
+}
+
+.stats-card:hover {
+    transform: scale(1.05);
+}
+
+/* Manage Users Section */
+.manage-users {
+    display: flex;
+    gap: 20px;
+    align-items: stretch;
+    margin-bottom: 20px;
+}
+
+/* Form & Table Containers */
+.form-container, .table-container {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Form Styling */
+.form-group {
+    margin-bottom: 15px;
+}
+
+label {
+    font-weight: 600;
+    margin-bottom: 5px;
+    display: block;
+}
+
+input, select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ddd;
+    border-radius: 6px;
+    font-size: 15px;
+    background-color: #fff;
+}
+
+button {
+    background-color: #F47F0C;
+    color: white;
+    padding: 10px 18px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 15px;
+    font-weight: bold;
+    transition: 0.3s;
+    width: 100%;
+}
+
+button:hover {
+    background-color: #e76a00;
+}
+
+/* User Table */
+.user-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+/* Table Headers */
+.user-table thead {
+    background-color: #F47F0C;
+    color: white;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.user-table th, 
+.user-table td {
+    padding: 12px;
+    text-align: center;
+    border-bottom: 1px solid #ddd;
+}
+
+/* Table Row Hover Effect */
+.user-table tbody tr:hover {
+    background-color: #f1f1f1;
+}
+
+/* Table Actions Column */
+.user-table td:last-child {
+    display: flex;
+    justify-content: center;
+    gap: 5px;
+}
+
+/* Buttons inside Actions Column */
+.btn-edit, 
+.btn-delete {
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: bold;
+    min-width: 40px;
+    display: inline-block;
+    text-align: center;
+    border: none;
+    cursor: pointer;
+}
+
+/* Edit Button */
+.btn-edit {
+    background-color: #28a745;
+    color: white;
+}
+
+.btn-edit:hover {
+    background-color: #1e7e34;
+}
+
+/* Delete Button */
+.btn-delete {
+    background-color: #dc3545;
+    color: white;
+}
+
+.btn-delete:hover {
+    background-color: #b02a37;
+}
+
+/* Application Dates */
+.application-dates {
+    display: flex;
+    gap: 20px;
+    justify-content: space-between;
+    align-items: stretch;
+}
+
+/* Equal Heights for Previous & Current Dates */
+.table-container, .update-dates-container {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+/* Pagination */
+.pagination {
+    display: flex;
+    justify-content: end;
+    align-items: center;
+    gap: 10px;
+    margin-top: 15px;
+}
+
+/* Pagination Buttons */
+.pagination button {
+    background: #007bff;
+    color: white;
+    border: none;
+    padding: 8px 12px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 14px;
+    width: auto;
+}
+
+.pagination button:hover {
+    background: #0056b3;
+}
+
+.pagination button:disabled {
+    background: #ccc;
+    cursor: not-allowed;
+}
+
+.pagination span {
+    font-size: 14px;
+    font-weight: bold;
+}
+
+/* Search Bar */
+.search-box {
+    width: 100%;
+    max-width: 300px;
+    padding: 10px;
+    border-radius: 20px;
+    border: 1px solid #ccc;
+    margin-bottom: 10px;
+}
+
+/* Responsive Fixes */
+@media (max-width: 1024px) {
+    .stats-container {
+        flex-wrap: wrap;
+    }
+
+    .manage-users {
+        flex-direction: column;
+    }
+
+    .application-dates {
+        flex-direction: column;
+    }
+}
+
+@media (max-width: 768px) {
+    .stats-card {
+        flex-basis: 48%;
+    }
+
+    .stats-container {
+        justify-content: center;
+        flex-wrap: wrap;
+    }
+
+    .pagination {
+        flex-direction: column;
+        gap: 5px;
+    }
+}

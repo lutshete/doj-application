@@ -1,117 +1,112 @@
 <div class="container">
   <!-- Current Opening and Closing Dates Section -->
-  <div class="dates-section mb-4 p-3 rounded">
+  <div class="dates-section mb-4 p-3 rounded shadow-sm">
     <div class="d-flex justify-content-between align-items-center">
       <h5 class="section-title">Current Application Period</h5>
-      <div>
-        <span><strong>Opening Date:</strong> {{ currentPeriod?.opening_date }}</span>
-        <span class="ms-4"><strong>Closing Date:</strong> {{ currentPeriod?.closing_date }}</span>
+      <div class="fw-bold">
+        <span class="me-4"><strong>Opening Date:</strong> {{ currentPeriod?.opening_date }}</span>
+        <span><strong>Closing Date:</strong> {{ currentPeriod?.closing_date }}</span>
       </div>
     </div>
   </div>
 
   <!-- Summary Section -->
-  <div class="container">
-    <div class="summary-section d-flex justify-content-between align-items-center p-3 rounded shadow-sm">
-      <div class="summary-item">
-        <div class="icon text-primary me-2">
-          <i class="fas fa-file-alt"></i>
-        </div>
-        <span>Total Applications:</span>
-        <strong class="summary-value">{{summary.total}}</strong>
+  <div class="summary-section d-flex justify-content-around align-items-center p-3 rounded shadow-sm">
+    <div class="summary-item text-center">
+      <div class="icon text-primary mb-1">
+        <i class="fas fa-file-alt"></i>
       </div>
+      <span>Total Applications</span>
+      <strong class="summary-value d-block">{{ summary.total }}</strong>
+    </div>
 
+    <div class="summary-item text-center">
+      <div class="icon text-warning mb-1">
+        <i class="fas fa-hourglass-half"></i>
+      </div>
+      <span>Submitted</span>
+      <strong class="summary-value d-block">{{ summary.reviewed + summary.draft + summary.submitted }}</strong>
+    </div>
 
-      <div class="summary-item">
-        <div class="icon text-warning me-2">
-          <i class="fas fa-hourglass-half"></i>
-        </div>
-        <span>Submitted:</span>
-        <strong class="summary-value">{{ (summary.reviewed ) + (summary.draft) + (summary.submitted)}}</strong>
+    <div class="summary-item text-center">
+      <div class="icon text-success mb-1">
+        <i class="fas fa-check-circle"></i>
       </div>
+      <span>Approved</span>
+      <strong class="summary-value d-block">{{ summary.approved }}</strong>
+    </div>
 
-      <div class="summary-item">
-        <div class="icon text-success me-2">
-          <i class="fas fa-check-circle"></i>
-        </div>
-        <span>Approved:</span>
-        <strong class="summary-value">{{summary.approved}}</strong>
+    <div class="summary-item text-center">
+      <div class="icon text-danger mb-1">
+        <i class="fas fa-times-circle"></i>
       </div>
- 
-      <div class="summary-item">
-        <div class="icon text-danger me-2">
-          <i class="fas fa-times-circle"></i>
-        </div>
-        <span>Rejected:</span>
-        <strong class="summary-value">{{summary.rejected}}</strong>
-      </div>
+      <span>Rejected</span>
+      <strong class="summary-value d-block">{{ summary.rejected }}</strong>
     </div>
   </div>
 
   <!-- Filter and Search Section -->
   <div class="filter-search d-flex justify-content-between align-items-center mt-4 flex-wrap">
-  <input 
-    type="text" 
-    [(ngModel)]="searchQuery" 
-    (input)="onFilterChange()" 
-    class="form-control mb-2" 
-    placeholder="Search by Name or Surname or ID" 
-    style="max-width: 150px;"
-  >
-
-  <select 
-    [(ngModel)]="statusFilter" 
-    (change)="onFilterChange()" 
-    class="form-select mb-2" 
-    aria-label="Filter by Status" 
-    style="max-width: 150px;"
-  >
-    <option value="all">All Statuses</option>
-    <option value="Approved">Approved</option>
-    <option value="Draft">Pending</option>
-    <option value="Rejected">Rejected</option>
-  </select>
-
-  <!-- Province Filter -->
-  <select 
-    [(ngModel)]="provinceFilter" 
-    (change)="onFilterChange()" 
-    class="form-select mb-2" 
-    aria-label="Filter by Province" 
-    style="max-width: 150px;"
-  >
-    <option value="all">All Provinces</option>
-    <option *ngFor="let province of provinces" [value]="province">{{ province }}</option>
-  </select>
-
-  <div class="d-flex align-items-center mb-2">
-    <label for="openingDate" class="me-2">Opening Date:</label>
     <input 
-      type="date" 
-      id="openingDate" 
-      [(ngModel)]="openingDate" 
-      (change)="onFilterChange()" 
-      class="form-control" 
-      style="max-width: 100px;"
+      type="text" 
+      [(ngModel)]="searchQuery" 
+      (input)="onFilterChange()" 
+      class="form-control mb-2" 
+      placeholder="Search by Name, Surname, or ID" 
+      style="max-width: 200px;"
     >
-  </div>
-  
-  <div class="d-flex align-items-center mb-2 ms-3">
-    <label for="closingDate" class="me-2">Closing Date:</label>
-    <input 
-      type="date" 
-      id="closingDate" 
-      [(ngModel)]="closingDate" 
+
+    <select 
+      [(ngModel)]="statusFilter" 
       (change)="onFilterChange()" 
-      class="form-control" 
-      style="max-width: 100px;"
+      class="form-select mb-2" 
+      aria-label="Filter by Status" 
+      style="max-width: 200px;"
     >
+      <option value="all">All Statuses</option>
+      <option value="Approved">Approved</option>
+      <option value="Draft">Pending</option>
+      <option value="Rejected">Rejected</option>
+    </select>
+
+    <!-- Province Filter -->
+    <select 
+      [(ngModel)]="provinceFilter" 
+      (change)="onFilterChange()" 
+      class="form-select mb-2" 
+      aria-label="Filter by Province" 
+      style="max-width: 200px;"
+    >
+      <option value="all">All Provinces</option>
+      <option *ngFor="let province of provinces" [value]="province">{{ province }}</option>
+    </select>
+
+    <div class="d-flex align-items-center mb-2">
+      <label for="openingDate" class="me-2">Opening Date:</label>
+      <input 
+        type="date" 
+        id="openingDate" 
+        [(ngModel)]="openingDate" 
+        (change)="onFilterChange()" 
+        class="form-control" 
+        style="max-width: 140px;"
+      >
+    </div>
+
+    <div class="d-flex align-items-center mb-2 ms-3">
+      <label for="closingDate" class="me-2">Closing Date:</label>
+      <input 
+        type="date" 
+        id="closingDate" 
+        [(ngModel)]="closingDate" 
+        (change)="onFilterChange()" 
+        class="form-control" 
+        style="max-width: 140px;"
+      >
+    </div>
+
+    <button (click)="onFilterChange()" class="btn btn-primary mb-2 px-3" style="max-width: 200px;">Search</button>
   </div>
-
-  <button (click)="onFilterChange()" class="btn btn-primary mb-2" style="max-width: 150px;">Search</button>
-</div>
-
-  
 
   <!-- Applications Table -->
   <div class="card table-card mt-4">
@@ -134,16 +129,18 @@
             <td>{{ application.practitioner_name }}</td>
             <td>{{ application.email }}</td>
             <td>{{ application.contact_number }}</td>
-            
+
             <td>
               <span 
-                [class]="
-                  application.status === 'Draft' ? 'badge bg-secondary text-white' :
-                  application.status === 'Submitted' ? 'badge bg-primary text-white' :
-                  application.status === 'Under Review' ? 'badge bg-info text-dark' :
-                  application.status === 'Approved' ? 'badge bg-success text-white' :
-                  application.status === 'Rejected' ? 'badge bg-danger text-white' : ''
-                ">
+                class="badge text-white"
+                [ngClass]="{
+                  'bg-secondary': application.status === 'Draft',
+                  'bg-primary': application.status === 'Submitted',
+                  'bg-info text-dark': application.status === 'Under Review',
+                  'bg-success': application.status === 'Approved',
+                  'bg-danger': application.status === 'Rejected'
+                }"
+              >
                 {{ application.overall_status }}
               </span>
             </td>
@@ -170,7 +167,7 @@
 
             <td class="action-buttons">
               <button class="btn btn-sm btn-info">View</button>
-              <button class="btn btn-sm btn-secondary" (click)="reviewApplication(application.application_id )">Assess</button>
+              <button class="btn btn-sm btn-secondary" (click)="reviewApplication(application.application_id)">Assess</button>
             </td>
           </tr>
         </tbody>

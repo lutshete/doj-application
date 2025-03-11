@@ -99,14 +99,20 @@
 
 .show-hide-icon {
   position: absolute;
-  right: 15px; /* Align to the right of the input field */
-  top: 50%; /* Center vertically */
-  transform: translateY(-50%); /* Precise vertical centering */
-  color: #6c757d; /* Default color */
-  font-size: 1.2em; /* Adjust the icon size if needed */
-  cursor: pointer; /* Indicates that the icon is clickable */
-  pointer-events: all; /* Ensure the icon is clickable */
+  right: 5px; /* Adjust as needed */
+  top: 50%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px; /* Slightly bigger for better visibility */
+  color: #6c757d;
+  z-index: 10;
+  line-height: 1;
+  background-color: transparent;
+  border: transparent;
 }
+
+
+
 
 .show-hide-icon:hover {
   color: #007bff;

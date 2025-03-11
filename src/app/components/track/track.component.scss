@@ -1,187 +1,216 @@
 /* General Page Styling */
 body {
-    background: rgb(250, 250, 251);
-    color: #333;
-    font-family: 'Arial', sans-serif;
-  }
-  
-  .container {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
-  /* Section Titles */
-  .section-title {
-    font-size: 1.2em;
-    font-weight: bold;
-    color: #444;
-  }
-  
-  /* Current Application Dates Section */
-  .dates-section {
-    background-color: #ffffff;
-    border: 1px solid #e5e5e5;
-    border-radius: 8px;
-    padding: 15px;
-    margin-bottom: 15px;
-  }
-  
-  /* Summary Section Styling */
-  .summary-section {
-    background-color: #f8f9fb;
-    border: 1px solid #e1e4e8;
-    border-radius: 10px;
-    color: #333;
-    padding: 15px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
-  }
-  
-  .summary-item {
-    display: flex;
-    align-items: center;
-    font-size: 1rem;
-    gap: 8px;
-  }
-  
-  .summary-item .icon {
-    font-size: 1.5rem;
-  }
-  
-  .summary-item .summary-value {
-    font-weight: bold;
-    font-size: 1.2rem;
-  }
-  
-  .text-primary {
-    color: #007bff;
-  }
-  
-  .text-success {
-    color: #28a745;
-  }
-  
-  .text-warning {
-    color: #ffc107;
-  }
-  
-  .text-danger {
-    color: #dc3545;
-  }
-  
-  /* Filter and Search Section */
-  .filter-search {
-    gap: 15px;
-    flex-wrap: wrap;
-    display: flex;
-  }
-  
-  .filter-search input[type="text"],
-  .filter-search select,
-  .filter-search input[type="date"] {
-    background-color: #ffffff;
-    border: 1px solid #d9d9d9;
-    border-radius: 4px;
-    padding: 8px;
-  }
-  
-  .filter-search .btn-primary {
-    background-color: #007bff;
-    border: none;
-    border-radius: 4px;
-    padding: 8px 16px;
-    font-size: 0.9rem;
-  }
-  
-  /* Table Card Styling */
-  .table-card {
-    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
-    border-radius: 8px;
-    background-color: #ffffff;
-    margin-top: 20px;
-  }
-  
-  /* Table Styling */
-  .table thead th {
-    background-color: #fafbfc;
-    font-weight: 600;
-    color: #444;
-    border-bottom: 2px solid #e9ecef;
-    padding: 12px;
-    text-align: left;
-  }
-  
-  .table tbody tr {
-    transition: background-color 0.3s ease;
-  }
-  
-  .table tbody tr:hover {
-    background-color: #f9fafb;
-  }
-  
-  .table tbody tr td {
-    vertical-align: middle;
-    color: #555;
-    padding: 12px;
-  }
-  
-  .badge {
-    padding: 5px 10px;
-    border-radius: 8px;
-    font-size: 0.85rem;
-  }
-  
-  .badge.bg-success {
-    background-color: #28a745;
-    color: white;
-  }
-  
-  .badge.bg-warning {
-    background-color: #ffc107;
-    color: white;
-  }
-  
-  .badge.bg-danger {
-    background-color: #dc3545;
-    color: white;
-  }
-  
-  /* Progress Bar */
-  .progress-bar {
-    background-color: #e9ecef;
-    border-radius: 8px;
-    overflow: hidden;
-    height: 8px;
-    width: 100px;
-    margin: 0 auto;
-    position: relative;
-  }
-  
-  .progress-bar-fill {
-    height: 100%;
-    background-color: #007bff;
-    transition: width 0.4s ease;
-  }
-  
-  /* Action Buttons */
-  .action-buttons .btn {
-    margin: 0 5px;
-    font-size: 0.85em;
-    padding: 5px 12px;
-  }
-  
-  .action-buttons .btn-info {
-    background-color: #17a2b8;
-    border: none;
-    color: white;
-  }
-  
-  .action-buttons .btn-secondary {
-    background-color: #6c757d;
-    border: none;
-    color: white;
-  }
+  background: rgb(250, 250, 251);
+  color: #333;
+  font-family: 'Poppins', sans-serif;
+  margin: 0;
+  padding: 0;
+}
 
+.container {
+  padding: 20px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+/* Section Titles */
+.section-title {
+  font-size: 1.2em;
+  font-weight: bold;
+  color: #444;
+}
+
+/* Current Application Dates Section */
+.dates-section {
+  background-color: #ffffff;
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 15px;
+  margin-bottom: 15px;
+}
+
+/* Summary Section Styling */
+.summary-section {
+  background-color: #f8f9fb;
+  border: 1px solid #e1e4e8;
+  border-radius: 10px;
+  padding: 15px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  font-size: 1rem;
+  gap: 8px;
+}
+
+.summary-item .icon {
+  font-size: 1.5rem;
+}
+
+.summary-item .summary-value {
+  font-weight: bold;
+  font-size: 1.2rem;
+}
+
+/* Status Colors */
+.text-primary { color: #007bff; }
+.text-success { color: #28a745; }
+.text-warning { color: #ffc107; }
+.text-danger { color: #dc3545; }
+
+/* Filter & Search Section */
+.filter-search {
+  display: flex;
+  gap: 15px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-search input,
+.filter-search select {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: 14px;
+}
+
+.filter-search .btn-primary {
+  background-color: #F47F0C;
+  border: none;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.9rem;
+}
+
+.filter-search .btn-primary:hover {
+  background-color: #e76a00;
+}
+
+/* Table Card */
+.table-card {
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.05);
+  border-radius: 8px;
+  background-color: #ffffff;
+  margin-top: 20px;
+  padding: 10px;
+}
+
+/* Table Styling */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table thead {
+  background-color: #F47F0C;
+  color: white;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.table th, .table td {
+  padding: 12px;
+  text-align: center;
+  border-bottom: 1px solid #ddd;
+}
+
+.table tbody tr:hover {
+  background-color: #f1f1f1;
+}
+
+/* Status Badges */
+.badge {
+  padding: 5px 10px;
+  border-radius: 8px;
+  font-size: 0.85rem;
+}
+
+.badge.bg-success { background-color: #28a745; color: white; }
+.badge.bg-warning { background-color: #ffc107; color: white; }
+.badge.bg-danger { background-color: #dc3545; color: white; }
+.badge.bg-secondary { background-color: #6c757d; color: white; }
+
+/* Progress Bar */
+.progress {
+  height: 10px;
+  width: 100px;
+  background-color: #e9ecef;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.progress-bar {
+  height: 100%;
+  transition: width 0.4s ease;
+}
+
+.bg-success { background-color: #28a745; }
+.bg-danger { background-color: #dc3545; }
+.bg-primary { background-color: #007bff; }
+
+/* Action Buttons */
+.action-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 5px;
+}
+
+.action-buttons .btn {
+  font-size: 0.85em;
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+}
+
+.btn-info { background-color: #17a2b8; color: white; }
+.btn-secondary { background-color: #6c757d; color: white; }
+.btn-info:hover { background-color: #138496; }
+.btn-secondary:hover { background-color: #545b62; }
+
+/* Pagination */
+.pagination {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.pagination button {
+  background: #007bff;
+  color: white;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.pagination button:hover {
+  background: #0056b3;
+}
+
+.pagination button:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+
+/* Responsive Fixes */
+@media (max-width: 1024px) {
+  .summary-section, .filter-search {
+      flex-direction: column;
+      align-items: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .summary-item {
+      flex-direction: column;
+      text-align: center;
+  }
+}
