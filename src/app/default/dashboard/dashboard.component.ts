@@ -1,18 +1,7 @@
-// angular import
 import { Component } from '@angular/core';
-import { CommonModule } from '@angular/common';
-
-// project import
-
-import { MonthlyBarChartComponent } from './monthly-bar-chart/monthly-bar-chart.component';
-import { IncomeOverviewChartComponent } from './income-overview-chart/income-overview-chart.component';
-import { AnalyticsChartComponent } from './analytics-chart/analytics-chart.component';
-import { SalesReportChartComponent } from './sales-report-chart/sales-report-chart.component';
-
-// icons
-import { IconService } from '@ant-design/icons-angular';
-import { FallOutline, GiftOutline, MessageOutline, RiseOutline, SettingOutline } from '@ant-design/icons-angular/icons';
 import Chart from 'chart.js/auto';
+import { DashboardService } from 'src/app/services';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-default',
@@ -20,34 +9,32 @@ import Chart from 'chart.js/auto';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DefaultComponent {
-  applicationMetrics = [
-    { title: 'Total Applications', value: 120, subtext: 'All-time submissions' },
-    { title: 'Approved', value: 85, subtext: 'Successfully approved' },
-    { title: 'Rejected', value: 25, subtext: 'Declined applications' },
-    { title: 'Pending', value: 10, subtext: 'Awaiting review' },
-  ];
 
-  recentApplications = [
-    { trackingNo: 'LA-1001', applicantName: 'John Doe', status: 'Approved', statusClass: 'badge-success', submissionDate: 'Feb 28, 2025' },
-    { trackingNo: 'LA-1002', applicantName: 'Jane Smith', status: 'Rejected', statusClass: 'badge-danger', submissionDate: 'Feb 27, 2025' },
-    { trackingNo: 'LA-1003', applicantName: 'Robert Brown', status: 'Under Review', statusClass: 'badge-warning', submissionDate: 'Feb 26, 2025' },
-  ];
+  // recentApplications = [
+  //   { trackingNo: 'LA-1001', applicantName: 'John Doe', status: 'Approved', statusClass: 'badge-success', submissionDate: 'Feb 28, 2025' },
+  //   { trackingNo: 'LA-1002', applicantName: 'Jane Smith', status: 'Rejected', statusClass: 'badge-danger', submissionDate: 'Feb 27, 2025' },
+  //   { trackingNo: 'LA-1003', applicantName: 'Robert Brown', status: 'Under Review', statusClass: 'badge-warning', submissionDate: 'Feb 26, 2025' },
+  // ];
 
   reviewerActivity = [
     { reviewerName: 'Alice Johnson', comment: 'Reviewed & Approved', status: 'Approved', statusClass: 'badge-success' },
     { reviewerName: 'Michael Lee', comment: 'Additional documents needed', status: 'Under Review', statusClass: 'badge-warning' },
     { reviewerName: 'Sarah Williams', comment: 'Application rejected due to missing info', status: 'Rejected', statusClass: 'badge-danger' },
   ];
+  applicationCount: any[] = [];
+  applications: { title: string; value: any; subtext: string; }[];
+  recentApplications: any;
 
-  constructor() {}
+  constructor(private dashboardService: DashboardService,private toastr: ToastrService,) {}
 
   ngOnInit() {
-    this.createStatusChart();
     this.createTrendChart();
-    this.createApprovalRateChart();
+    this.getStatusCount();
+    this.getApplications();
   }
 
-  createStatusChart() {
+  createStatusChart(response: any) {
+    console.log('createStatusChart',response)
     new Chart('statusChart', {
       type: 'pie',
       options: {
@@ -55,15 +42,15 @@ export class DefaultComponent {
         maintainAspectRatio: false,  // Ensure it fills the container
       },
       data: {
-        labels: ['Approved', 'Rejected', 'Pending', 'Under Review'],
+        labels: ['Approved', 'Rejected', 'Pending'],
         datasets: [{
-          data: [85, 25, 10, 15],
+          data: [response.Approved, response.Rejected, response.Pending],
           backgroundColor: ['#28a745', '#dc3545', '#ffc107', '#007bff']
         }]
       }
     });
   }
-  
+
   createTrendChart() {
     new Chart('trendChart', {
       type: 'line',
@@ -82,18 +69,59 @@ export class DefaultComponent {
       }
     });
   }
-  
 
-  createApprovalRateChart() {
+  createApprovalRateChart(response: any) {
     new Chart('approvalRateChart', {
       type: 'doughnut',
       data: {
         labels: ['Approved', 'Rejected'],
         datasets: [{
-          data: [85, 25],
+          data: [response.Approved, response.Rejected],
           backgroundColor: ['#28a745', '#dc3545']
         }]
       }
     });
+  }
+
+  getStatusCount() {
+    this.dashboardService.getStatusCount().subscribe({
+      next: (response) => {
+        console.log('total application',response);
+        if (response) {
+          this.applicationCount = [
+            { title: 'Total Applications', value: response.total, subtext: 'All-time submissions' },
+            { title: 'Approved', value: response.Approved, subtext: 'Successfully approved' },
+            { title: 'Rejected', value: response.Rejected, subtext: 'Declined applications' },
+            { title: 'Pending', value: response.Pending, subtext: 'Awaiting review' },
+          ];
+          this.createStatusChart(response);
+          this.createApprovalRateChart(response);
+        }
+      },
+      error: (error) => {
+        this.toastr.error(error.error?.message, 'Error');
+      },
+      complete: () => {}
+    });
+  }
+
+  getApplications() {
+    this.dashboardService.recentApplications().subscribe({
+      next: (response) => {
+        console.log('applications',response);
+        if (response){
+          this.recentApplications = response
+        }
+      },
+      error: (error) => {
+        this.toastr.error(error.error?.message, 'Error');
+      },
+      complete: () => {}
+    });
+  }
+
+  viewApplication(application: any) {
+    console.log('Viewing application:', application);
+    // Navigate or open modal logic here
   }
 }

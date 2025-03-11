@@ -68,6 +68,13 @@ export class LoginComponent {
 
     this.authService.login({ email, password }).subscribe(
       (response) => {
+
+        console.log('Login successful', response);
+        localStorage.setItem('sessionToken', response.token);
+        this.isSuccess = true;
+        this.alertMessage = 'Login successful! Redirecting...';
+        setTimeout(() => this.router.navigate(['/default/dashboard']), 3000);
+
         if (response.status === 200) {
           console.log('Login successful', response);
           localStorage.setItem('sessionToken', response.accessToken);
@@ -75,6 +82,7 @@ export class LoginComponent {
           this.alertMessage = 'Login successful! Redirecting...';
           setTimeout(() => this.router.navigate(['/home']), 1000);
         }
+
       },
       (error) => {
         console.log('Login failed', error);

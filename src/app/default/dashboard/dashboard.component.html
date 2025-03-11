@@ -1,7 +1,6 @@
 <div class="container-fluid">
   <div class="row">
-    <!-- Summary Cards -->
-    <div class="col-md-6 col-xl-3" *ngFor="let metric of applicationMetrics">
+    <div class="col-md-6 col-xl-3" *ngFor="let metric of applicationCount">
       <div class="card border-0 shadow-sm p-3 mb-4 summary-card">
         <div class="card-body text-center">
           <h6 class="text-muted">{{ metric.title }}</h6>
@@ -11,6 +10,7 @@
       </div>
     </div>
   </div>
+
 
   <!-- Charts Section -->
   <div class="row mt-3">
@@ -53,14 +53,14 @@
             </thead>
             <tbody>
               <tr *ngFor="let application of recentApplications">
-                <td>{{ application.trackingNo }}</td>
-                <td>{{ application.applicantName }}</td>
+                <td>APL-{{ application.application_id }}</td>
+                <td>{{ application.firstName }} {{ application.lastName }}</td>
                 <td>
-                  <span class="badge {{ application.statusClass }}">{{ application.status }}</span>
+                  <span [ngClass]="application.statusClass">{{ application.status }}</span>
                 </td>
-                <td>{{ application.submissionDate }}</td>
+                <td>{{ application.last_saved_at | date: 'MMM d, y, h:mm a' }}</td>
                 <td class="text-end">
-                  <button class="btn btn-primary btn-sm">View</button>
+                  <button class="btn btn-primary btn-sm" (click)="viewApplication(application)">View</button>
                 </td>
               </tr>
             </tbody>
@@ -69,6 +69,7 @@
       </div>
     </div>
   </div>
+
 
   <!-- Reviewer Activity & Approval Rate -->
   <div class="row mt-4">
