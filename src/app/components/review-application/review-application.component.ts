@@ -9,6 +9,7 @@ import { LiquidatorApplicationService } from 'src/app/services/liquidator-applic
 import { TrackingService } from 'src/app/services/tracking.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subscription, debounceTime } from 'rxjs';
+import { WebSocketService } from 'src/app/services/websocket.service';
 
 
 
@@ -22,6 +23,9 @@ export class ReviewApplicationComponent {
   membershipFileUrl: SafeResourceUrl;
   isNoneOrNo: boolean;
   private subscriptions: Subscription[] = [];
+  showVotingPanel = true;
+  votes: any[] = [];
+  overallApproval = 0;
   
 viewQualificationPdf(arg0: any) {
 throw new Error('Method not implemented.');
@@ -55,7 +59,9 @@ showFileModal: boolean = false;    // Controls modal visibility
     private liquidatorApplicationService: LiquidatorApplicationService,
     private fb: FormBuilder,
     private cdr: ChangeDetectorRef,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private wsService: WebSocketService,
+    
   ) {
     this.reviewForm = this.fb.group({
       taxClearancePrivate: ['', Validators.required],
@@ -82,6 +88,21 @@ showFileModal: boolean = false;    // Controls modal visibility
     this.applicationId = +this.route.snapshot.paramMap.get('applicationId')!;
     this.userRole = this.authService.decodeToken();
     this.getAllApplicationsDeails();
+
+    this.loadDummyVotes();
+    this.listenForVotes()
+   
+  }
+
+  loadDummyVotes() {
+    this.votes = [
+      { user: "John Doe", status: "approve" },
+      { user: "Alice Smith", status: "reject" },
+      { user: "Michael Brown", status: "approve" },
+      { user: "Sarah Johnson", status: "approve" },
+      { user: "David Lee", status: "reject" },
+    ];
+    this.calculateApproval();
   }
 
   dateOrNoneValidator(): ValidatorFn {
@@ -305,6 +326,34 @@ showFileModal: boolean = false;    // Controls modal visibility
   }
   
   
-  
-  
+  castVote(status: string) {
+    const vote = {
+      user: "You", 
+      status
+    };
+
+    // ✅ Emit vote via WebSocket
+    this.wsService.sendVote(vote);
+    this.votes.push(vote);
+    this.calculateApproval();
+  }
+
+  listenForVotes() {
+    this.wsService.onVoteUpdate((vote: any) => {
+      this.votes.push(vote);
+      this.calculateApproval();
+    });
+  }
+
+  calculateApproval() {
+    const totalVotes = this.votes.length;
+    const approveVotes = this.votes.filter(v => v.status === 'approve').length;
+    this.overallApproval = totalVotes ? Math.round((approveVotes / totalVotes) * 100) : 0;
+  }
+  toggleVotingPanel() {
+   
+    this.showVotingPanel = !this.showVotingPanel;
+    this.cdr.detectChanges();
+  }
+
 }

@@ -571,5 +571,58 @@
       </div>
     </div>
   </div>
+
+  <!-- Voting Panel (Collapsible) -->
+
 </div>
 
+<div class="voting-panel position-fixed end-0 bottom-0 p-3 shadow-lg rounded bg-white">
+  
+  <!-- Panel Header with Toggle Button -->
+  <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
+    <h6 class="mb-0 text-primary fw-bold">
+      <i class="bi bi-chat-square-text me-1"></i> Voting Panel
+    </h6>
+
+ 
+    <button class="btn btn-sm btn-outline-secondary" (click)="toggleVotingPanel()">
+      <i [ngClass]="{ 'bi bi-chevron-down': showVotingPanel, 'bi bi-chevron-up': !showVotingPanel }"></i>
+    </button>
+  </div>
+
+  <!-- Voting Content (Collapsible) -->
+
+  <div *ngIf="showVotingPanel" class="voting-content mt-2">
+    
+    <!-- Overall Status -->
+    <div class="overall-status p-2 bg-light rounded text-center">
+      <strong>Overall Approval:</strong>
+      <span class="badge" [ngClass]="{
+        'bg-success': overallApproval >= 70,
+        'bg-warning': overallApproval >= 50 && overallApproval < 70,
+        'bg-danger': overallApproval < 50
+      }">
+        {{ overallApproval }}% Approved
+      </span>
+    </div>
+
+    <!-- Voting Messages (Chat Style) -->
+    <div class="voting-messages mt-3">
+      <div *ngFor="let vote of votes" class="vote-message p-2 rounded mb-2" 
+           [ngClass]="{ 'bg-success text-white': vote.status === 'approve', 'bg-danger text-white': vote.status === 'reject' }">
+        <strong>{{ vote.user }}</strong>: {{ vote.status === 'approve' ? '✅ Approved' : '❌ Rejected' }}
+      </div>
+    </div>
+
+    <!-- Vote Buttons -->
+    <div class="vote-actions mt-3">
+      <button class="btn btn-sm btn-success w-100 mb-1" (click)="castVote('approve')">
+        <i class="bi bi-hand-thumbs-up"></i> Approve
+      </button>
+      <button class="btn btn-sm btn-danger w-100" (click)="castVote('reject')">
+        <i class="bi bi-hand-thumbs-down"></i> Reject
+      </button>
+    </div>
+  </div>
+
+</div>

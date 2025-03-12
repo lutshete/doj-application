@@ -72,6 +72,21 @@ export class AdminService {
     return this.http.post(`${this.apiUrl}/respond-to-meeting`, payload);
   }
 
+
+  joinMeeting(payload){
+    return this.http.post(`${this.apiUrl}/join-meeting`, payload);
+  }
+
+  leaveMeeting(payload){
+    return this.http.post(`${this.apiUrl}/leave-meeting`, payload);
+  }
+
+
+  getMeetingAttendees(meetingId: string): Observable<any> {
+    return this.http.get(`${this.apiUrl}/get-meeting-attendees/${meetingId}`);
+  }
+  
+
   downloadExcel(barcode: string) {
     const body = { excelBarcode: barcode };
 

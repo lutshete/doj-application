@@ -36,7 +36,7 @@ export const NavigationItems: NavigationItem[] = [
       },
       {
         id: 'register',
-        title: 'Track',
+        title: 'Assessments',
         type: 'item',
         classes: 'nav-item',
         url: '/track',

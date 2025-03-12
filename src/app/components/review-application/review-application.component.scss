@@ -159,4 +159,23 @@
     pointer-events: none; /* Prevent interaction with PDFs */
   }
   
+  .voting-panel {
+    width: 300px;
+    max-height: 400px;
+    overflow-y: auto;
+    z-index: 1050;
+    border: 1px solid #ddd;
+  }
+  
+  .voting-messages {
+    max-height: 200px;
+    overflow-y: auto;
+  }
+  
+  .vote-message {
+    font-size: 14px;
+    padding: 8px;
+    border-radius: 6px;
+  }
+  
   

@@ -4,174 +4,318 @@
     <div class="d-flex justify-content-between align-items-center">
       <h5 class="section-title">Current Application Period</h5>
       <div class="fw-bold">
-        <span class="me-4"><strong>Opening Date:</strong> {{ currentPeriod?.opening_date }}</span>
-        <span><strong>Closing Date:</strong> {{ currentPeriod?.closing_date }}</span>
+        <span class="me-4"
+          ><strong>Opening Date:</strong>
+          {{ currentPeriod?.opening_date }}</span
+        >
+        <span
+          ><strong>Closing Date:</strong>
+          {{ currentPeriod?.closing_date }}</span
+        >
       </div>
     </div>
   </div>
 
-  <!-- Summary Section -->
-  <div class="summary-section d-flex justify-content-around align-items-center p-3 rounded shadow-sm">
-    <div class="summary-item text-center">
-      <div class="icon text-primary mb-1">
-        <i class="fas fa-file-alt"></i>
+ 
+  <div *ngIf="meetingDetails" class="meeting-section p-4 rounded shadow-sm bg-white border">
+    <div class="row align-items-center">
+      
+      <!-- Left Column: Meeting Details (30%) -->
+      <div class="col-md-4">
+        <div class="meeting-info">
+          <h5 class="text-primary fw-bold d-flex align-items-center">
+            <i class="bi bi-calendar-event me-2"></i> Scheduled Meeting
+          </h5>
+          <p class="mb-2">
+            <strong>📅 Date:</strong> {{ meetingDetails.startDate | date:'dd MMM yyyy' }} - {{ meetingDetails.endDate | date:'dd MMM yyyy' }}
+          </p>
+          <p class="mb-2">
+            <strong>⏰ Time:</strong> {{ meetingDetails.startTime }} - {{ meetingDetails.endTime }}
+          </p>
+          <p class="mb-2" *ngIf="shouldShowVenue">
+            <strong>📍 Venue / Link:</strong>
+            <span *ngIf="meetingDetails.meetingLink">
+              <a [href]="meetingDetails.meetingLink" target="_blank" class="text-primary fw-bold">
+                🔗 Join via Teams
+              </a>
+            </span>
+            <span *ngIf="!meetingDetails.meetingLink">
+              {{ meetingDetails.venue || "To be announced" }}
+            </span>
+          </p>
+        </div>
       </div>
-      <span>Total Applications</span>
-      <strong class="summary-value d-block">{{ summary.total }}</strong>
-    </div>
+  
+      <!-- Right Column: Summary + Join Button (70%) -->
+      <div class="col-md-8 d-flex flex-column align-items-end">
+        <!-- Summary Section (White Background, Rounded Corners) -->
+        <div class="summary-section d-flex justify-content-between align-items-center p-3 bg-light rounded shadow-sm border w-100">
+          
+          <div class="summary-item text-center">
+            <div class="icon text-primary mb-1">
+              <i class="fas fa-file-alt"></i>
+            </div>
+            <span>Total Applications</span>
+            <strong class="summary-value d-block">{{ summary.total }}</strong>
+          </div>
+  
+          <div class="summary-item text-center">
+            <div class="icon text-warning mb-1">
+              <i class="fas fa-hourglass-half"></i>
+            </div>
+            <span>Submitted</span>
+            <strong class="summary-value d-block">{{ summary.reviewed + summary.draft + summary.submitted }}</strong>
+          </div>
+  
+          <div class="summary-item text-center">
+            <div class="icon text-success mb-1">
+              <i class="fas fa-check-circle"></i>
+            </div>
+            <span>Approved</span>
+            <strong class="summary-value d-block">{{ summary.approved }}</strong>
+          </div>
+  
+          <div class="summary-item text-center">
+            <div class="icon text-danger mb-1">
+              <i class="fas fa-times-circle"></i>
+            </div>
+            <span>Rejected</span>
+            <strong class="summary-value d-block">{{ summary.rejected }}</strong>
+          </div>
+        </div>
+  
+        <!-- Join Meeting Button (Right-Aligned, Below Summary) -->
+      <!-- Join Meeting Button & Attendees Icon -->
+<!-- 🟢 Meeting Actions: Join Meeting & View Attendees -->
+<!-- 🟢 Meeting Actions: Join Meeting & View Attendees -->
+<div class="d-flex align-items-center mt-3 position-relative">
+  
+  <!-- Join Meeting Button -->
+<!-- Join Button (Shown if user has NOT joined) -->
+<div *ngFor="let attendee of attendees" class="d-flex align-items-center mt-3">
+  
+  <!-- Join Button (Shown if user has NOT joined) -->
+  <button *ngIf="attendee.isPresent === 0 && meetingDetails.meetingLink" 
+          class="btn btn-primary btn-lg px-4 py-2 shadow-sm align-self-end me-3" 
+          (click)="joinMeeting()">
+    <i class="bi bi-box-arrow-up-right me-2"></i> Join Meeting
+  </button>
 
-    <div class="summary-item text-center">
-      <div class="icon text-warning mb-1">
-        <i class="fas fa-hourglass-half"></i>
-      </div>
-      <span>Submitted</span>
-      <strong class="summary-value d-block">{{ summary.reviewed + summary.draft + summary.submitted }}</strong>
-    </div>
+  <!-- Leave Button (Shown if user HAS joined) -->
+  <button *ngIf="attendee.isPresent === 1" 
+          class="btn btn-danger btn-lg px-4 py-2 shadow-sm align-self-end me-3" (click)="leaveMeeting()"
+          >
+    <i class="bi bi-box-arrow-left me-2"></i> Leave Meeting g
+  </button>
 
-    <div class="summary-item text-center">
-      <div class="icon text-success mb-1">
-        <i class="fas fa-check-circle"></i>
-      </div>
-      <span>Approved</span>
-      <strong class="summary-value d-block">{{ summary.approved }}</strong>
-    </div>
+</div>
 
-    <div class="summary-item text-center">
-      <div class="icon text-danger mb-1">
-        <i class="fas fa-times-circle"></i>
+
+
+  <!-- Attendees Button with Tooltip -->
+  <div class="position-relative">
+    <button id="attendeesButton"
+    class="btn btn-outline-secondary btn-lg shadow-sm align-self-end"
+    [ngClass]="{ 'active': showAttendeesTooltip }"
+    (click)="toggleTooltip()">
+<i class="bi bi-people-fill"></i>
+</button>
+
+
+    <!-- Simple Tooltip (Appears on Click) -->
+    <div id="attendeesTooltip" class="tooltip-box">
+      
+      <!-- 🔄 Loading Indicator -->
+      <div *ngIf="loadingAttendees" class="text-center my-2">
+        <div class="spinner-border text-primary" role="status">
+          <span class="visually-hidden">Loading attendees...</span>
+        </div>
       </div>
-      <span>Rejected</span>
-      <strong class="summary-value d-block">{{ summary.rejected }}</strong>
+
+      <!-- 👥 Attendees List -->
+
+     
+      <ul class="list-group" *ngIf="!loadingAttendees && attendees.length > 0">
+        <ul class="list-group" *ngIf="!loadingAttendees && attendees.length > 0">
+          <li *ngFor="let attendee of attendees" 
+              class="list-group-item d-flex align-items-center p-2">
+            
+            <!-- Status Dot (Green for Present, Grey for Absent) -->
+            <span class="status-dot me-2"
+                  [ngClass]="{ 'bg-success': attendee.isPresent === 1, 'bg-secondary': attendee.isPresent === 0 }">
+            </span>
+        
+            <strong class="text-dark">{{ attendee.name }}</strong>
+          </li>
+        </ul>
+        
+    
+      </ul>
+
+      <!-- 🔍 No Attendees Message -->
+      <div *ngIf="!loadingAttendees && attendees.length === 0" class="text-center text-muted mt-2">
+        <i class="bi bi-info-circle"></i> No attendees have joined yet.
+      </div>
+      
     </div>
   </div>
 
-  <!-- Filter and Search Section -->
-  <div class="filter-search d-flex justify-content-between align-items-center mt-4 flex-wrap">
-    <input 
-      type="text" 
-      [(ngModel)]="searchQuery" 
-      (input)="onFilterChange()" 
-      class="form-control mb-2" 
-      placeholder="Search by Name, Surname, or ID" 
-      style="max-width: 200px;"
-    >
+</div>
 
-    <select 
-      [(ngModel)]="statusFilter" 
-      (change)="onFilterChange()" 
-      class="form-select mb-2" 
-      aria-label="Filter by Status" 
-      style="max-width: 200px;"
-    >
-      <option value="all">All Statuses</option>
-      <option value="Approved">Approved</option>
-      <option value="Draft">Pending</option>
-      <option value="Rejected">Rejected</option>
-    </select>
 
-    <!-- Province Filter -->
-    <select 
-      [(ngModel)]="provinceFilter" 
-      (change)="onFilterChange()" 
-      class="form-select mb-2" 
-      aria-label="Filter by Province" 
-      style="max-width: 200px;"
-    >
-      <option value="all">All Provinces</option>
-      <option *ngFor="let province of provinces" [value]="province">{{ province }}</option>
-    </select>
 
-    <div class="d-flex align-items-center mb-2">
-      <label for="openingDate" class="me-2">Opening Date:</label>
-      <input 
-        type="date" 
-        id="openingDate" 
-        [(ngModel)]="openingDate" 
-        (change)="onFilterChange()" 
-        class="form-control" 
-        style="max-width: 140px;"
-      >
+
+
+
+      </div>
+  
     </div>
-
-    <div class="d-flex align-items-center mb-2 ms-3">
-      <label for="closingDate" class="me-2">Closing Date:</label>
-      <input 
-        type="date" 
-        id="closingDate" 
-        [(ngModel)]="closingDate" 
-        (change)="onFilterChange()" 
-        class="form-control" 
-        style="max-width: 140px;"
-      >
-    </div>
-
-    <button (click)="onFilterChange()" class="btn btn-primary mb-2 px-3" style="max-width: 200px;">Search</button>
   </div>
+  
+  
+
 
   <!-- Applications Table -->
   <div class="card table-card mt-4">
-    <div class="table-responsive">
-      <table class="table table-hover mb-0">
-        <thead>
-          <tr>
-            <th>TRACKING NO.</th>
-            <th>NAME</th>
-            <th>EMAIL</th>
-            <th>CONTACT NUMBER</th>
-            <th>STATUS</th>
-            <th class="text-center">PROGRESS</th>
-            <th>ACTIONS</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let application of allApplications">
-            <td>#{{ application.application_id }}</td>
-            <td>{{ application.practitioner_name }}</td>
-            <td>{{ application.email }}</td>
-            <td>{{ application.contact_number }}</td>
-
-            <td>
-              <span 
-                class="badge text-white"
-                [ngClass]="{
-                  'bg-secondary': application.status === 'Draft',
-                  'bg-primary': application.status === 'Submitted',
-                  'bg-info text-dark': application.status === 'Under Review',
-                  'bg-success': application.status === 'Approved',
-                  'bg-danger': application.status === 'Rejected'
-                }"
-              >
-                {{ application.overall_status }}
-              </span>
-            </td>
-
-            <!-- Dynamic Progress Calculation -->
-            <td class="text-center">
-              <div class="progress" style="height: 10px;">
-                <div
-                  class="progress-bar"
-                  role="progressbar"
-                  [style.width.%]="(application.current_step / 9) * 100"
+    <div class="card-body">
+  
+      <!-- 🔍 Filter and Search Section -->
+      <div class="filter-search d-flex justify-content-between align-items-center flex-wrap p-3 bg-light rounded shadow-sm border mb-4">
+        <input 
+          type="text" 
+          [(ngModel)]="searchQuery" 
+          (input)="onFilterChange()" 
+          class="form-control mb-2" 
+          placeholder="🔍 Search by Name, Surname, or ID" 
+          style="max-width: 200px;"
+        >
+  
+        <select 
+          [(ngModel)]="statusFilter" 
+          (change)="onFilterChange()" 
+          class="form-select mb-2" 
+          aria-label="Filter by Status" 
+          style="max-width: 200px;"
+        >
+          <option value="all">All Statuses</option>
+          <option value="Approved">Approved</option>
+          <option value="Draft">Pending</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+  
+        <select 
+          [(ngModel)]="provinceFilter" 
+          (change)="onFilterChange()" 
+          class="form-select mb-2" 
+          aria-label="Filter by Province" 
+          style="max-width: 200px;"
+        >
+          <option value="all">All Provinces</option>
+          <option *ngFor="let province of provinces" [value]="province">{{ province }}</option>
+        </select>
+  
+        <div class="d-flex align-items-center mb-2">
+          <label for="openingDate" class="me-2">Opening Date:</label>
+          <input 
+            type="date" 
+            id="openingDate" 
+            [(ngModel)]="openingDate" 
+            (change)="onFilterChange()" 
+            class="form-control" 
+            style="max-width: 140px;"
+          >
+        </div>
+  
+        <div class="d-flex align-items-center mb-2 ms-3">
+          <label for="closingDate" class="me-2">Closing Date:</label>
+          <input 
+            type="date" 
+            id="closingDate" 
+            [(ngModel)]="closingDate" 
+            (change)="onFilterChange()" 
+            class="form-control" 
+            style="max-width: 140px;"
+          >
+        </div>
+  
+        <button 
+          (click)="onFilterChange()" 
+          class="btn btn-primary mb-2 px-3" 
+          style="max-width: 200px;"
+        >
+          🔎 Search
+        </button>
+      </div>
+  
+      <!-- 📌 Separation Between Filters & Table -->
+      <hr class="my-3 border-primary">
+  
+      <!-- 🏷 Applications Table -->
+      <div class="table-responsive">
+        <table class="table table-hover mb-0">
+          <thead>
+            <tr>
+              <th>TRACKING NO.</th>
+              <th>NAME</th>
+              <th>EMAIL</th>
+              <th>CONTACT NUMBER</th>
+              <th>STATUS</th>
+              <th class="text-center">PROGRESS</th>
+              <th>ACTIONS</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let application of allApplications">
+              <td>#{{ application.application_id }}</td>
+              <td>{{ application.practitioner_name }}</td>
+              <td>{{ application.email }}</td>
+              <td>{{ application.contact_number }}</td>
+  
+              <td>
+                <span 
+                  class="badge text-white"
                   [ngClass]="{
-                    'bg-success': application.current_step === 9,  
-                    'bg-danger': application.current_step < 9    
+                    'bg-secondary': application.status === 'Draft',
+                    'bg-primary': application.status === 'Submitted',
+                    'bg-info text-dark': application.status === 'Under Review',
+                    'bg-success': application.status === 'Approved',
+                    'bg-danger': application.status === 'Rejected'
                   }"
-                  [attr.aria-valuenow]="application.current_step"
-                  aria-valuemin="0"
-                  aria-valuemax="9"
-                ></div>
-              </div>
-              <small *ngIf="application.current_step === 9" class="text-success">Completed ({{application.current_step}}/9)</small>
-              <small *ngIf="application.current_step < 9" class="text-primary">In Progress ({{application.current_step}}/9)</small>
-            </td>
-
-            <td class="action-buttons">
-              <button class="btn btn-sm btn-info">View</button>
-              <button class="btn btn-sm btn-secondary" (click)="reviewApplication(application.application_id)">Assess</button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+                >
+                  {{ application.overall_status }}
+                </span>
+              </td>
+  
+              <td class="text-center">
+                <div class="progress" style="height: 10px;">
+                  <div
+                    class="progress-bar"
+                    role="progressbar"
+                    [style.width.%]="(application.current_step / 9) * 100"
+                    [ngClass]="{
+                      'bg-success': application.current_step === 9,  
+                      'bg-danger': application.current_step < 9    
+                    }"
+                    [attr.aria-valuenow]="application.current_step"
+                    aria-valuemin="0"
+                    aria-valuemax="9"
+                  ></div>
+                </div>
+                <small *ngIf="application.current_step === 9" class="text-success">Completed ({{application.current_step}}/9)</small>
+                <small *ngIf="application.current_step < 9" class="text-primary">In Progress ({{application.current_step}}/9)</small>
+              </td>
+  
+              <td class="action-buttons">
+                <button class="btn btn-sm btn-info">View</button>
+                <button class="btn btn-sm btn-secondary" (click)="reviewApplication(application.application_id)">Assess</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+  
     </div>
   </div>
+  
+  
 </div>
