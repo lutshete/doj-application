@@ -1,16 +1,21 @@
 <div class="container-fluid">
   <div class="row">
-    <div class="col-md-6 col-xl-3" *ngFor="let metric of applicationCount">
-      <div class="card border-0 shadow-sm p-3 mb-4 summary-card">
+    <div
+      class="col-md-6 col-xl-3"
+      *ngFor="let metric of applicationCount; let i = index"
+    >
+      <div
+        class="card border-0 shadow-sm p-3 mb-4 summary-card"
+        [ngClass]="getCardColor(i)"
+      >
         <div class="card-body text-center">
-          <h6 class="text-muted">{{ metric.title }}</h6>
+          <h6 class="text-white">{{ metric.title }}</h6>
           <h3 class="fw-bold">{{ metric.value }}</h3>
-          <p class="text-muted small mb-0">{{ metric.subtext }}</p>
+          <p class="text-white small mb-0">{{ metric.subtext }}</p>
         </div>
       </div>
     </div>
   </div>
-
 
   <!-- Charts Section -->
   <div class="row mt-3">
@@ -39,28 +44,36 @@
   <div class="row mt-4">
     <div class="col-md-12">
       <div class="card border-0 shadow-sm p-3 h-100">
-        <h5 class="mb-3">Recent Liquidator Applications</h5>
+        <h5 class="mb-3">Meeting Schedules</h5>
         <div class="table-container">
           <table class="table table-hover">
             <thead class="table-dark">
               <tr>
-                <th>Tracking No.</th>
-                <th>Applicant</th>
-                <th>Status</th>
-                <th>Date Submitted</th>
+                <th>Meeting No.</th>
+                <th>Start Date</th>
+                <th>Start Time</th>
+                <th>End Date</th>
+                <th>End Time</th>
+                <th>Meeting Quorum</th>
                 <th class="text-end">Actions</th>
               </tr>
             </thead>
             <tbody>
-              <tr *ngFor="let application of recentApplications">
-                <td>APL-{{ application.application_id }}</td>
-                <td>{{ application.firstName }} {{ application.lastName }}</td>
-                <td>
-                  <span [ngClass]="application.statusClass">{{ application.status }}</span>
+              <tr *ngFor="let meeting of meetings">
+                <td>MN-{{ meeting.id }}</td>
+                <td>{{ meeting.startDate | date:'yyyy/MM/dd' }}</td>
+                <td>{{ meeting.startTime}}</td>
+                <td>{{ meeting.endDate | date:'yyyy/MM/dd' }}</td>
+                <td>{{ meeting.endTime }}</td>
+                <td (click)="openPopUp(meeting)" [ngClass]="{
+                  'quorum-pending': meeting.quorum === 'Pending',
+                  'quorum-reached': meeting.quorum === 'Reached',
+                  'quorum-not-reached': meeting.quorum === 'Not Reached'
+                }">
+                  {{ meeting.quorum }}
                 </td>
-                <td>{{ application.last_saved_at | date: 'MMM d, y, h:mm a' }}</td>
                 <td class="text-end">
-                  <button class="btn btn-primary btn-sm" (click)="viewApplication(application)">View</button>
+                  <button class="btn btn-primary btn-sm" (click)="viewApplication(meeting)">View</button>
                 </td>
               </tr>
             </tbody>
@@ -69,7 +82,6 @@
       </div>
     </div>
   </div>
-
 
   <!-- Reviewer Activity & Approval Rate -->
   <div class="row mt-4">
@@ -99,3 +111,67 @@
     </div>
   </div>
 </div>
+
+<div class="modal-tooltip" *ngIf="isPanelOpen">
+  <div class="modal-overlay" (click)="close()"></div>
+  <div class="modal-content popover top">
+    <button
+      type="button"
+      class="btn-close"
+      (click)="close()"
+      aria-label="Close"
+    >
+      ×
+    </button>
+
+    <div mat-dialog-content>
+      <p><strong>Meeting no: MN-{{ isPanelOpenData.meeting_id }} Attendees</strong></p>
+
+      <!-- Status Filter -->
+      <input
+        type="text"
+        placeholder="Filter by status..."
+        [(ngModel)]="statusFilter"
+        (input)="applyFilter()"
+        class="form-control mb-2"
+      />
+
+      <table class="table table-bordered " style="table-layout: auto;">
+        <thead>
+          <tr>
+           <!--  <th><input type="checkbox" (change)="selectAll($event)" /></th> -->
+            <th>Name</th>
+            <th>Surname</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let attendee of isPanelOpenData.attendees">
+            <td>{{ attendee.firstName }}</td>
+            <td>{{ attendee.LastName }}</td>
+            <td>
+              <span
+                [ngClass]="{
+                  'badge-attendess bg-warning text-dark': attendee.acceptanceStatus === 'Pending',
+                  'badge-attendess bg-success': attendee.acceptanceStatus === 'Accepted',
+                  'badge-attendess bg-danger': attendee.acceptanceStatus === 'Declined'
+                }"
+              >
+                {{ attendee.acceptanceStatus }}
+              </span>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <button
+        (click)="sendEmail()"
+        class="btn btn-primary"
+        [disabled]="isLoading"
+      >
+        {{ isLoading ? 'Sending...' : 'Send Reminders' }}
+      </button>
+    </div>
+  </div>
+</div>
+

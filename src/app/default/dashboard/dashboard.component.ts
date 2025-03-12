@@ -1,7 +1,8 @@
 import { Component } from '@angular/core';
 import Chart from 'chart.js/auto';
-import { DashboardService } from 'src/app/services';
+import { AttendeeService, DashboardService, MeetingService, NotificationService } from 'src/app/services';
 import { ToastrService } from 'ngx-toastr';
+import { FormBuilder, FormGroup } from '@angular/forms';
 
 @Component({
   selector: 'app-default',
@@ -9,12 +10,15 @@ import { ToastrService } from 'ngx-toastr';
   styleUrls: ['./dashboard.component.scss']
 })
 export class DefaultComponent {
+isLoading: any;
+selectedAttendees: any[] = [];
+filterForm: FormGroup;
+  attendee_lists: any;
+  filteredAttendees: any;
 
-  // recentApplications = [
-  //   { trackingNo: 'LA-1001', applicantName: 'John Doe', status: 'Approved', statusClass: 'badge-success', submissionDate: 'Feb 28, 2025' },
-  //   { trackingNo: 'LA-1002', applicantName: 'Jane Smith', status: 'Rejected', statusClass: 'badge-danger', submissionDate: 'Feb 27, 2025' },
-  //   { trackingNo: 'LA-1003', applicantName: 'Robert Brown', status: 'Under Review', statusClass: 'badge-warning', submissionDate: 'Feb 26, 2025' },
-  // ];
+applyFilter() {
+throw new Error('Method not implemented.');
+}
 
   reviewerActivity = [
     { reviewerName: 'Alice Johnson', comment: 'Reviewed & Approved', status: 'Approved', statusClass: 'badge-success' },
@@ -24,13 +28,21 @@ export class DefaultComponent {
   applicationCount: any[] = [];
   applications: { title: string; value: any; subtext: string; }[];
   recentApplications: any;
-
-  constructor(private dashboardService: DashboardService,private toastr: ToastrService,) {}
+  meetings: any;
+  isPanelOpen = false;
+  isPanelOpenData
+statusFilter: any;
+  constructor(private fb: FormBuilder,private dashboardService: DashboardService,private toastr: ToastrService, private meetingService: MeetingService, private attendeeService:AttendeeService, private notificationService : NotificationService) {
+    this.filterForm = this.fb.group({
+    quorum: ['']
+  });
+}
 
   ngOnInit() {
     this.createTrendChart();
     this.getStatusCount();
     this.getApplications();
+    this.getMeetings();
   }
 
   createStatusChart(response: any) {
@@ -120,8 +132,94 @@ export class DefaultComponent {
     });
   }
 
+  getMeetings() {
+    this.meetingService.getMeetings().subscribe({
+      next: (response) => {
+        if (response){
+          this.meetings = response
+        }
+      },
+      error: (error) => {
+        this.toastr.error(error.error?.message, 'Error');
+      },
+      complete: () => {}
+    });
+  }
+
   viewApplication(application: any) {
     console.log('Viewing application:', application);
     // Navigate or open modal logic here
   }
+
+  getCardColor(index: number): string {
+    const colors = ['bg-primary', 'bg-success', 'bg-danger', 'bg-warning'];
+    return colors[index % colors.length] + ' text-white';
+  }
+
+  openPopUp(meeting: any) {
+    this.attendeeService.getMeetingAttendees(meeting.id).subscribe({
+      next: (response: any) => {
+        this.attendee_lists = response;
+        this.filteredAttendees = this.attendee_lists;
+        this.selectedAttendees = response;
+        if (response) {
+          this.isPanelOpenData = { meeting_id: meeting.id, attendees: response };
+          this.isPanelOpen = true;
+        }
+      },
+      error: (error: any) => this.toastr.error('Error fetching attendee quorum', 'Error'),
+    });
+  }
+
+  close() {
+    this.isPanelOpen = false;    // Close the panel
+  }
+
+  // Filter Logic
+  applyFilters(): void {
+    const {quorum } = this.filterForm.value;
+
+    this.filteredAttendees = this.attendee_lists.filter(attendee => {
+
+      const quorumMatch = !quorum || attendee.quorum_status === quorum;
+
+      return quorumMatch;
+    });
+  }
+
+  sendEmail(): void {
+    if (!this.selectedAttendees || !Array.isArray(this.selectedAttendees)) {
+      this.notificationService.showError('No attendees selected.', 'Error');
+      return;
+    }
+
+    const selectedAttendees = this.selectedAttendees.filter(attendee => attendee.acceptanceStatus === 'Pending');
+
+    if (selectedAttendees.length === 0) {
+      this.notificationService.showWarning('No pending attendees to notify.', 'Warning');
+      return;
+    }
+
+    const payload = { users: selectedAttendees };
+    this.isLoading = true; // Start loading state
+
+    this.attendeeService.attendeeReminder(payload).subscribe({
+      next: (response) => {
+        this.notificationService.showSuccess(response.message || 'Reminders sent successfully.', 'Success');
+      },
+      error: (error) => {
+        console.error('❌ Error:', error);
+        this.notificationService.showError('An error occurred while sending reminders.', 'Error');
+      },
+      complete: () => {
+        this.isLoading = false; // Stop loading state after completion
+      }
+    });
+  }
+
+  resetFilters(): void {
+    this.filterForm.reset();
+    this.filteredAttendees = this.attendee_lists;
+  }
+
 }
