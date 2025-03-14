@@ -152,9 +152,9 @@
             <td>
               <span
                 [ngClass]="{
-                  'badge-attendess bg-warning text-dark': attendee.acceptanceStatus === 'Pending',
-                  'badge-attendess bg-success': attendee.acceptanceStatus === 'Accepted',
-                  'badge-attendess bg-danger': attendee.acceptanceStatus === 'Declined'
+                  'badge-attendess bg-warning text-dark': attendee.acceptanceStatus === 'pending',
+                  'badge-attendess bg-success': attendee.acceptanceStatus === 'accept',
+                  'badge-attendess bg-danger': attendee.acceptanceStatus === 'decline'
                 }"
               >
                 {{ attendee.acceptanceStatus }}
