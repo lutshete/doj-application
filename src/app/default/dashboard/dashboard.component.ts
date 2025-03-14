@@ -193,7 +193,7 @@ statusFilter: any;
       return;
     }
 
-    const selectedAttendees = this.selectedAttendees.filter(attendee => attendee.acceptanceStatus === 'Pending');
+    const selectedAttendees = this.selectedAttendees.filter(attendee => attendee.acceptanceStatus === 'pending');
 
     if (selectedAttendees.length === 0) {
       this.notificationService.showWarning('No pending attendees to notify.', 'Warning');
