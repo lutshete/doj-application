@@ -87,6 +87,16 @@ export class AdminService {
   }
   
 
+  addToMeetingList(payload){
+    return this.http.post(`${this.apiUrl}/add-to-voters-list`, payload);
+  }
+
+  castVote(payload){
+    return this.http.post(`${this.apiUrl}/cast-vote`, payload);
+  }
+
+
+
   downloadExcel(barcode: string) {
     const body = { excelBarcode: barcode };
 

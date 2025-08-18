@@ -86,13 +86,14 @@
   
         <!-- Join Meeting Button (Right-Aligned, Below Summary) -->
       <!-- Join Meeting Button & Attendees Icon -->
-<!-- 🟢 Meeting Actions: Join Meeting & View Attendees -->
-<!-- 🟢 Meeting Actions: Join Meeting & View Attendees -->
+<!--  Meeting Actions: Join Meeting & View Attendees -->
+<!-- Meeting Actions: Join Meeting & View Attendees -->
 <div class="d-flex align-items-center mt-3 position-relative">
   
   <!-- Join Meeting Button -->
 <!-- Join Button (Shown if user has NOT joined) -->
-<div *ngFor="let attendee of attendees" class="d-flex align-items-center mt-3">
+
+<div *ngFor="let attendee of currentUserAttendee" class="d-flex align-items-center mt-3">
   
   <!-- Join Button (Shown if user has NOT joined) -->
   <button *ngIf="attendee.isPresent === 0 && meetingDetails.meetingLink" 
@@ -132,7 +133,7 @@
         </div>
       </div>
 
-      <!-- 👥 Attendees List -->
+      <!--  Attendees List -->
 
      
       <ul class="list-group" *ngIf="!loadingAttendees && attendees.length > 0">
@@ -179,7 +180,7 @@
   <div class="card table-card mt-4">
     <div class="card-body">
   
-      <!-- 🔍 Filter and Search Section -->
+      <!--  Filter and Search Section -->
       <div class="filter-search d-flex justify-content-between align-items-center flex-wrap p-3 bg-light rounded shadow-sm border mb-4">
         <input 
           type="text" 
@@ -247,7 +248,7 @@
         </button>
       </div>
   
-      <!-- 📌 Separation Between Filters & Table -->
+      <!--  Separation Between Filters & Table -->
       <hr class="my-3 border-primary">
   
       <!-- 🏷 Applications Table -->
@@ -305,9 +306,9 @@
                 <small *ngIf="application.current_step < 9" class="text-primary">In Progress ({{application.current_step}}/9)</small>
               </td>
   
-              <td class="action-buttons">
+              <td class="action-buttons" *ngFor="let attendee of currentUserAttendee">
                 <button class="btn btn-sm btn-info">View</button>
-                <button class="btn btn-sm btn-secondary" (click)="reviewApplication(application.application_id)">Assess</button>
+                <button class="btn btn-sm btn-secondary" (click)="reviewApplication(application.application_id)"  *ngIf="attendee.isPresent === 1">Assess</button>
               </td>
             </tr>
           </tbody>
