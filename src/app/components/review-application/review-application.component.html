@@ -145,7 +145,7 @@
 
             <div class="col-md-6">
               <label for="reviewStatus">Review Status</label>
-              <select id="reviewStatus" class="form-select" formControlName="reviewStatus">
+              <select id="reviewStatus" class="form-select" formControlName="reviewStatus" (change)="onReviewStatusChange($event)">
                 <option value="Draft" disabled>Select status</option>
              
                 <option value="Approved">Approved</option>
@@ -538,64 +538,39 @@
   </div>
 </div>
 
-<div class="modal" tabindex="-1" [class.show]="showFileModal" [style.display]="showFileModal ? 'block' : 'none'">
-  <div class="modal-dialog modal-xl">
-    <div class="modal-content" (contextmenu)="$event.preventDefault()">
-      <div class="modal-header">
-        <h5 class="modal-title">File Preview - {{ fileName }}</h5>
-        <button type="button" class="btn-close" (click)="closeFileModal()"></button>
-      </div>
-      <div class="modal-body" (mousedown)="startPanning($event)" (mouseup)="stopPanning()" (mouseleave)="stopPanning()" (mousemove)="pan($event)">
-        <div class="zoom-container" [style.transform]="'scale(' + zoomLevel + ')'" [style.cursor]="isPanning ? 'grabbing' : 'grab'">
-          <!-- Render Image -->
-          <img
-            *ngIf="fileType.startsWith('image/')"
-            [src]="qualificationFileUrl"
-            alt="Preview"
-            class="img-fluid"
-            draggable="true"
-          />
+<!-- 🗳️ Voting Panel (Chat-Style) -->
+<div class="voting-panel position-fixed end-0 bottom-0 p-3 shadow-lg rounded bg-white" style="width: 300px;">
 
-          <!-- Render PDF -->
-          <object
-            *ngIf="fileType === 'application/pdf'"
-            [data]="qualificationFileUrl"
-            type="application/pdf"
-            width="100%"
-            height="700px"
-            style="pointer-events: none; user-select: none;"
-          >
-            <p>Cannot display the PDF file.</p>
-          </object>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Voting Panel (Collapsible) -->
-
-</div>
-
-<div class="voting-panel position-fixed end-0 bottom-0 p-3 shadow-lg rounded bg-white">
-  
-  <!-- Panel Header with Toggle Button -->
+  <!-- 🔘 Panel Header with Toggle Button -->
   <div class="d-flex justify-content-between align-items-center p-2 border-bottom">
     <h6 class="mb-0 text-primary fw-bold">
       <i class="bi bi-chat-square-text me-1"></i> Voting Panel
     </h6>
-
- 
     <button class="btn btn-sm btn-outline-secondary" (click)="toggleVotingPanel()">
       <i [ngClass]="{ 'bi bi-chevron-down': showVotingPanel, 'bi bi-chevron-up': !showVotingPanel }"></i>
     </button>
   </div>
 
-  <!-- Voting Content (Collapsible) -->
+  <!-- 🔥 Voting Content (Collapsible) -->
+  <div *ngIf="showVotingPanel" class="voting-content mt-2" style="max-height: 400px; overflow-y: auto;">
 
-  <div *ngIf="showVotingPanel" class="voting-content mt-2">
-    
-    <!-- Overall Status -->
-    <div class="overall-status p-2 bg-light rounded text-center">
+    <!-- ✅ Voting Title with Vote Buttons -->
+    <div class="voting-title p-2 bg-primary text-white rounded d-flex justify-content-between align-items-center mb-2">
+      <strong>{{ votingDecision }}</strong> <!-- ✅ Displays "Approval Decision" -->
+
+      <!-- 🎯 Vote Buttons -->
+      <div class="d-flex">
+        <button class="btn btn-sm btn-light text-success me-2" (click)="castVote('Yes')">
+          <i class="bi bi-hand-thumbs-up"></i>
+        </button>
+        <button class="btn btn-sm btn-light text-danger" (click)="castVote('No')">
+          <i class="bi bi-hand-thumbs-down"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- 🏆 Overall Approval Status -->
+    <div class="overall-status p-2 bg-light rounded d-flex justify-content-between align-items-center mb-3">
       <strong>Overall Approval:</strong>
       <span class="badge" [ngClass]="{
         'bg-success': overallApproval >= 70,
@@ -606,23 +581,25 @@
       </span>
     </div>
 
-    <!-- Voting Messages (Chat Style) -->
-    <div class="voting-messages mt-3">
-      <div *ngFor="let vote of votes" class="vote-message p-2 rounded mb-2" 
-           [ngClass]="{ 'bg-success text-white': vote.status === 'approve', 'bg-danger text-white': vote.status === 'reject' }">
-        <strong>{{ vote.user }}</strong>: {{ vote.status === 'approve' ? '✅ Approved' : '❌ Rejected' }}
+    <!-- 💬 Voting Messages (Chat-Style) -->
+    <div class="voting-messages">
+      <div *ngFor="let vote of votes" 
+           class="vote-message p-2 rounded mb-2 d-flex justify-content-between align-items-center"
+           >
+        <strong>{{ vote.user }}</strong> 
+        <i [ngClass]="{ 
+          'bi bi-hand-thumbs-up-fill text-success': vote.status === 'Yes', 
+          'bi bi-hand-thumbs-down-fill text-danger': vote.status === 'No' 
+        }">
+    </i>
+    
       </div>
     </div>
 
-    <!-- Vote Buttons -->
-    <div class="vote-actions mt-3">
-      <button class="btn btn-sm btn-success w-100 mb-1" (click)="castVote('approve')">
-        <i class="bi bi-hand-thumbs-up"></i> Approve
-      </button>
-      <button class="btn btn-sm btn-danger w-100" (click)="castVote('reject')">
-        <i class="bi bi-hand-thumbs-down"></i> Reject
-      </button>
-    </div>
   </div>
 
 </div>
+
+
+
+

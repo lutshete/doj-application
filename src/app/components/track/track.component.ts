@@ -38,6 +38,7 @@ export class TrackComponent {
   showAttendees: boolean;
   showAttendeesTooltip: boolean = false;
   tooltipPosition = { top: 0, left: 0 };
+  currentUserAttendee: any[];
 
   constructor(
     private iconService: IconService,
@@ -103,7 +104,18 @@ export class TrackComponent {
   }
 
   reviewApplication(id: string | number) {
-    this.router.navigate([`/review-application/${id}`]);
+
+    const payload = {
+      userId: this.userData.userId, 
+      applicationId:id
+    }
+    this.adminService.addToMeetingList(payload).subscribe((response) => {
+      if(response){
+         this.router.navigate([`/review-application/${id}`]);
+      }
+    } )
+
+   
   }
 
   joinMeeting() {
@@ -184,6 +196,7 @@ export class TrackComponent {
         // ✅ Listen for WebSocket updates on attendees
         this.wsService.onMeetingUpdates((data: any) => {
           this.attendees = data.attendees;
+      
           console.log(this.attendees)
           this.cdr.detectChanges(); // Force UI update
         });
@@ -217,6 +230,7 @@ export class TrackComponent {
     this.adminService.getMeetingAttendees(meetingId).subscribe(
       (response: any) => {
         this.attendees = response.attendees || [];
+        this.currentUserAttendee = this.attendees.filter((attendee) => attendee.id === this.userData.userId)
         this.loadingAttendees = false; // Hide loading spinner
       },
       (error) => {

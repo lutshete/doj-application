@@ -10,6 +10,7 @@ import { TrackingService } from 'src/app/services/tracking.service';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { Subscription, debounceTime } from 'rxjs';
 import { WebSocketService } from 'src/app/services/websocket.service';
+import { AdminService } from 'src/app/services/admin.service';
 
 
 
@@ -26,6 +27,11 @@ export class ReviewApplicationComponent {
   showVotingPanel = true;
   votes: any[] = [];
   overallApproval = 0;
+votingDecision 
+
+
+
+
   
 viewQualificationPdf(arg0: any) {
 throw new Error('Method not implemented.');
@@ -61,6 +67,7 @@ showFileModal: boolean = false;    // Controls modal visibility
     private cdr: ChangeDetectorRef,
     private sanitizer: DomSanitizer,
     private wsService: WebSocketService,
+    private adminService:AdminService
     
   ) {
     this.reviewForm = this.fb.group({
@@ -95,13 +102,14 @@ showFileModal: boolean = false;    // Controls modal visibility
   }
 
   loadDummyVotes() {
-    this.votes = [
+/*     this.votes = [
       { user: "John Doe", status: "approve" },
       { user: "Alice Smith", status: "reject" },
       { user: "Michael Brown", status: "approve" },
       { user: "Sarah Johnson", status: "approve" },
       { user: "David Lee", status: "reject" },
-    ];
+      
+    ]; */
     this.calculateApproval();
   }
 
@@ -172,7 +180,21 @@ showFileModal: boolean = false;    // Controls modal visibility
     }
   }
   
-  
+  onReviewStatusChange(status) {
+    const selectedValue = (event.target as HTMLSelectElement).value;
+    console.log("Selected Review Status:", selectedValue);
+
+    // ✅ Perform actions based on selection
+    if (selectedValue === "Approved") {
+        this.votingDecision = "Approve"
+    } else if (selectedValue === "Rejected") {
+    this.votingDecision = "Reject"
+    }
+
+ 
+
+
+}
 
   initializeForm() {
     this.reviewForm = this.fb.group({
@@ -326,17 +348,7 @@ showFileModal: boolean = false;    // Controls modal visibility
   }
   
   
-  castVote(status: string) {
-    const vote = {
-      user: "You", 
-      status
-    };
 
-    // ✅ Emit vote via WebSocket
-    this.wsService.sendVote(vote);
-    this.votes.push(vote);
-    this.calculateApproval();
-  }
 
   listenForVotes() {
     this.wsService.onVoteUpdate((vote: any) => {
@@ -351,9 +363,29 @@ showFileModal: boolean = false;    // Controls modal visibility
     this.overallApproval = totalVotes ? Math.round((approveVotes / totalVotes) * 100) : 0;
   }
   toggleVotingPanel() {
-   
     this.showVotingPanel = !this.showVotingPanel;
-    this.cdr.detectChanges();
   }
+  
+  castVote(vote: "Yes" | "No") {
 
+    const payload = {
+      userId:this.userRole.userId,
+      applicationId:this.applicationId ,
+      status:this.votingDecision,
+      vote:vote
+    }
+
+    this.adminService.castVote(payload).subscribe((response) => {
+      if(response){
+            this.votes.push({ user: `${this.userRole.firstName} ${this.userRole.lastName}`, status: vote });
+    this.updateOverallApproval();
+      }
+    })
+
+  }
+  
+  updateOverallApproval() {
+    const approveCount = this.votes.filter(v => v.status === "approve").length;
+    this.overallApproval = Math.round((approveCount / this.votes.length) * 100);
+  }
 }
