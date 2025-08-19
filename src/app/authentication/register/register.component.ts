@@ -8,7 +8,7 @@ import { SharedModule } from 'src/shared/shared.module';
 import { AlertComponent } from 'src/shared/components/alert/alert.component';
 
 @Component({
-  selector: 'app-register', 
+  selector: 'app-register',
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
@@ -102,9 +102,26 @@ export default class RegisterComponent {
           this.showAlert(response.message, 'success');
           setTimeout(() => {
             this.closeAlert();
-            this.dialog.open(OtpComponent, {
+            const dialogRef = this.dialog.open(OtpComponent, {
               data: {
                 email: this.signUpForm.get('emailAddress')?.value,
+              }
+            });
+            // After OTP verification success
+            dialogRef.afterClosed().subscribe((otpVerified: boolean) => {
+              if (otpVerified) {
+                const role = this.signUpForm.get('role')?.value;
+                if (role === 'official') {
+                  this.showAlert(
+                    'Your email is verified. Your account is pending administrator approval.',
+                    'success'
+                  );
+                } else {
+                  this.showAlert(
+                    'Your email is verified. You can now log in.',
+                    'success'
+                  );
+                }
               }
             });
           }, 3000);

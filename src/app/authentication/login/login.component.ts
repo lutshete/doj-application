@@ -70,18 +70,10 @@ export class LoginComponent {
       (response) => {
 
         console.log('Login successful', response);
-        localStorage.setItem('sessionToken', response.token);
+        localStorage.setItem('sessionToken', response.accessToken);
         this.isSuccess = true;
         this.alertMessage = 'Login successful! Redirecting...';
         setTimeout(() => this.router.navigate(['/default/dashboard']), 3000);
-
-        if (response.status === 200) {
-          console.log('Login successful', response);
-          localStorage.setItem('sessionToken', response.accessToken);
-          this.isSuccess = true;
-          this.alertMessage = 'Login successful! Redirecting...';
-          setTimeout(() => this.router.navigate(['/home']), 1000);
-        }
 
       },
       (error) => {
