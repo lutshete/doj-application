@@ -24,17 +24,17 @@ export class TrackComponent {
   closingDate: string = '';
   provinceFilter: string = 'all';
   provinces: string[] = [
-    'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo', 
+    'Eastern Cape', 'Free State', 'Gauteng', 'KwaZulu-Natal', 'Limpopo',
     'Mpumalanga', 'Northern Cape', 'North West', 'Western Cape'
   ];
-  
+
   meetingDetails: any = null;
   currentApplicationDate: any;
   shouldShowVenue: boolean = false;
   userData: any;
   attendees: any[] = [];
   isJoined = false;
-  loadingAttendees: boolean = false; 
+  loadingAttendees: boolean = false;
   showAttendees: boolean;
   showAttendeesTooltip: boolean = false;
   tooltipPosition = { top: 0, left: 0 };
@@ -105,17 +105,16 @@ export class TrackComponent {
 
   reviewApplication(id: string | number) {
 
-    const payload = {
-      userId: this.userData.userId, 
-      applicationId:id
-    }
-    this.adminService.addToMeetingList(payload).subscribe((response) => {
-      if(response){
-         this.router.navigate([`/review-application/${id}`]);
-      }
-    } )
-
-   
+    // const payload = {
+    //   userId: this.userData.userId,
+    //   applicationId:id
+    // }
+    // this.adminService.addToMeetingList(payload).subscribe((response) => {
+    //   if(response){
+    //      this.router.navigate([`/review-application/${id}`]);
+    //   }
+    // } )
+    this.router.navigate([`/review-application/${id}`]);
   }
 
   joinMeeting() {
@@ -173,34 +172,34 @@ export class TrackComponent {
       console.warn("No application date available.");
       return;
     }
-  
+
     this.adminService.getMeeting(this.currentApplicationDate.id).subscribe({
       next: (data) => {
         this.meetingDetails = data;
-  
+
         if (!this.meetingDetails) {
           console.warn("No meeting details found.");
           return;
         }
-  
+
         const now = new Date();
         const startDate = new Date(this.meetingDetails.startDate);
         const endDate = new Date(this.meetingDetails.endDate);
-  
+
         // ✅ Show venue if within meeting duration
         this.shouldShowVenue = now >= startDate && now <= endDate;
-  
+
         // ✅ Fetch attendees when meeting details load
         this.getMeetingAttendees(this.meetingDetails.id);
-  
+
         // ✅ Listen for WebSocket updates on attendees
         this.wsService.onMeetingUpdates((data: any) => {
           this.attendees = data.attendees;
-      
+
           console.log(this.attendees)
           this.cdr.detectChanges(); // Force UI update
         });
-  
+
       },
       error: (error) => {
         console.error("Error fetching meeting details:", error);
@@ -208,7 +207,7 @@ export class TrackComponent {
       }
     });
   }
-  
+
 
   loadCurrentApplicationDate() {
     this.adminService.getCurrentApplicationDate().subscribe({
@@ -248,14 +247,14 @@ export class TrackComponent {
     }
 
     this.getMeetingAttendees(this.meetingDetails.id);
-    
+
     // ✅ Position tooltip to the LEFT of the button
     const rect = element.getBoundingClientRect();
-    this.tooltipPosition = { 
-      top: rect.top + window.scrollY, 
+    this.tooltipPosition = {
+      top: rect.top + window.scrollY,
       left: rect.left + window.scrollX - 220 // Adjust left for correct positioning
     };
-    
+
     this.showAttendeesTooltip = true;
   }
 
@@ -270,9 +269,9 @@ export class TrackComponent {
       tooltip.classList.toggle("show");
     }
   }
-  
-  
-  
+
+
+
 
 
 }
