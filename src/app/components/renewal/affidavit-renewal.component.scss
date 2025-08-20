@@ -1,0 +1,263 @@
+/* Re-use your existing palette */
+:host {
+  display: block;
+}
+
+.form-container {
+  max-width: 980px;
+  margin: auto;
+  background: #fff;
+  padding: 20px;
+  border-radius: 12px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.07);
+}
+
+h2 {
+  text-align: center;
+  color: #f47f0c;
+  margin-bottom: 12px;
+}
+.section {
+  margin-top: 24px;
+}
+.section-title {
+  font-size: 1.2rem;
+  border-bottom: 2px solid #f47f0c;
+  padding-bottom: 6px;
+  margin-bottom: 10px;
+}
+
+label {
+  font-weight: 600;
+  color: #f47f0c;
+  display: block;
+  margin-top: 10px;
+}
+input[type="text"],
+textarea,
+input[type="file"] {
+  width: 100%;
+  padding: 10px;
+  margin-top: 6px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+}
+textarea {
+  resize: vertical;
+}
+.inline {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+.block {
+  display: block;
+  margin: 6px 0;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.muted {
+  color: #555;
+}
+
+.error {
+  color: #dc3545;
+  font-size: 0.9rem;
+  margin-top: 4px;
+}
+
+.form-footer {
+  text-align: center;
+  margin-top: 22px;
+}
+button {
+  background: #f47f0c;
+  color: #fff;
+  border: 0;
+  border-radius: 6px;
+  padding: 10px 18px;
+  cursor: pointer;
+}
+button:hover {
+  background: #d56f09;
+}
+.btn {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 0;
+  cursor: pointer;
+}
+.btn.secondary {
+  background: #eee;
+  color: #333;
+}
+.btn.danger {
+  background: #dc3545;
+  color: #fff;
+}
+.file-name {
+  margin-left: 10px;
+  color: #333;
+}
+
+.grid-2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+}
+@media (max-width: 768px) {
+  .grid-2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+.sat-table {
+  width: 100%;
+  margin-top: 10px;
+}
+.sat-header,
+.sat-row {
+  display: grid;
+  grid-template-columns: 160px 160px 1fr 1fr 180px;
+  gap: 10px;
+  align-items: center;
+}
+.sat-header {
+  font-weight: 700;
+  color: #115093;
+  border-bottom: 1px dashed #ddd;
+  padding-bottom: 6px;
+}
+.sat-row {
+  padding: 6px 0;
+  border-bottom: 1px dashed #eee;
+}
+.city {
+  font-weight: 600;
+}
+.tnc-launch {
+  cursor: pointer;
+}
+
+/* Terms & Conditions Modal — themed */
+#termsModal {
+  --brand: #F47F0C;
+  --brand-dark: #d56f09;
+  --ink: #115093;
+  --border-soft: #f1e7de;
+  --thead-bg: #fff6ee;
+  --row-hover: #fffaf4;
+
+  .modal-dialog {
+    max-width: 900px;
+  }
+
+  .modal-content {
+    border: 0;
+    border-radius: 16px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, .18);
+    overflow: hidden;
+  }
+
+  .modal-header {
+    background: linear-gradient(135deg, var(--brand) 0%, #ffb165 100%);
+    color: #fff;
+    padding: 16px 20px;
+    border-bottom: none;
+  }
+
+  .modal-title {
+    font-weight: 700;
+    letter-spacing: .2px;
+  }
+
+  .btn-close {
+    filter: invert(1);
+    opacity: .85;
+  //  background: (135deg, var(--brand) 0%, #ffb165 100%);
+    color: #333;
+  }
+
+  .modal-body {
+    background: #fff;
+    padding: 18px 20px;
+  }
+
+  h6 {
+    font-weight: 800;
+    color: var(--ink);
+    margin-bottom: 6px;
+  }
+
+  a {
+    color: var(--ink);
+    text-decoration: underline;
+  }
+  a:hover { color: var(--brand-dark); }
+
+  /* Table styling */
+  .table {
+    border-color: var(--border-soft);
+    --bs-border-color: var(--border-soft);
+    margin-bottom: 0;
+  }
+  .table thead th {
+    background: var(--thead-bg);
+    color: #333;
+    border-bottom-color: var(--border-soft);
+    font-weight: 700;
+  }
+  .table tbody tr:hover { background: var(--row-hover); }
+
+  /* Brand the checkboxes (modern browsers support accent-color) */
+  .form-check-input {
+    width: 1.15rem;
+    height: 1.15rem;
+    cursor: pointer;
+    accent-color: var(--brand);
+    border-color: var(--brand);
+  }
+  .form-check-input:focus {
+    box-shadow: 0 0 0 .2rem rgba(244, 127, 12, .25);
+    border-color: var(--brand);
+  }
+
+  /* Validation text already uses .error from your sheet */
+  .error { margin-top: 6px; }
+
+  /* Sticky footer when body scrolls */
+  .modal-footer {
+    position: sticky;
+    bottom: 0;
+    background: #fff;
+    border-top: 1px solid var(--border-soft);
+    padding: 12px 16px;
+  }
+
+  /* Buttons */
+  .btn-primary {
+    background: var(--brand);
+    border-color: var(--brand);
+  }
+  .btn-primary:hover {
+    background: var(--brand-dark);
+    border-color: var(--brand-dark);
+  }
+  .btn-outline-secondary:hover {
+    background: #f2f2f2;
+  }
+}
+
+/* Subtle entrance animation */
+#termsModal .modal-dialog {
+  transform: translateY(6%);
+  transition: transform .25s ease;
+}
+#termsModal.show .modal-dialog {
+  transform: translateY(0);
+}
+

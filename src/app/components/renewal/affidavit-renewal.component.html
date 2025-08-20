@@ -1,0 +1,683 @@
+<div class="form-container" *ngIf="isBetweenOpeningAndClosing; else closedTpl">
+  <h2>Renewal Affidavit — Remain on the National List of Liquidators</h2>
+
+  <form [formGroup]="form" (ngSubmit)="submit()">
+    <!-- Section 1 + 2 -->
+    <div class="section" formGroupName="section1">
+      <h3 class="section-title">1. I, the undersigned</h3>
+
+      <label>Full names</label>
+      <input
+        type="text"
+        formControlName="fullName"
+        [class.is-invalid]="
+          form.get('section1.fullName')?.invalid &&
+          form.get('section1.fullName')?.touched
+        "
+      />
+      <div
+        class="error"
+        *ngIf="
+          form.get('section1.fullName')?.invalid &&
+          form.get('section1.fullName')?.touched
+        "
+      >
+        Full names are required.
+      </div>
+
+      <label>Identity number</label>
+      <input type="text" formControlName="identityNumber" maxlength="13" />
+      <div
+        class="error"
+        *ngIf="
+          form.get('section1.identityNumber')?.invalid &&
+          form.get('section1.identityNumber')?.touched
+        "
+      >
+        Identity number must be a 13-digit number.
+      </div>
+
+      <p class="muted">
+        2. All the information herein contained is within my personal knowledge
+        and belief to be true and correct.
+      </p>
+    </div>
+
+    <!-- Section 3 -->
+    <div class="section">
+      <h3 class="section-title">3. Verification Consent</h3>
+      <p>
+        I hereby grant the Department of Justice and Constitutional Development
+        and/or the Master of the High Court (or any authorised person) authority
+        to verify the information herein, including site visits, interviews,
+        document verification and further document requests.
+      </p>
+    </div>
+
+    <!-- Section 4 -->
+    <div class="section" formGroupName="section1">
+      <h3 class="section-title">4. National List Details</h3>
+
+      <div class="radio-group">
+        <label>
+          <input
+            type="radio"
+            formControlName="tickNationalList"
+            value="confirm"
+          />
+          I confirm my details on the National List are correct as at date of
+          signature.
+        </label>
+        <label>
+          <input
+            type="radio"
+            formControlName="tickNationalList"
+            value="update"
+          />
+          I submit the following updated information:
+        </label>
+      </div>
+
+      <textarea
+        *ngIf="s1_updatedInfoSelected()"
+        formControlName="updatedInfo"
+        rows="3"
+        placeholder="Updated information..."
+      ></textarea>
+      <div
+        class="error"
+        *ngIf="
+          s1_updatedInfoSelected() &&
+          form.get('section1.updatedInfo')?.invalid &&
+          form.get('section1.updatedInfo')?.touched
+        "
+      >
+        Please provide the updated information.
+      </div>
+    </div>
+
+    <!-- Section 5 + 6 -->
+    <div class="section" formGroupName="section5">
+      <h3 class="section-title">5. Main Business Details</h3>
+
+      <div class="radio-group">
+        <label>
+          <input
+            type="radio"
+            formControlName="businessDetailsChange"
+            value="unchanged"
+          />
+          My main business details (location, contact details & infrastructure)
+          have not changed.
+        </label>
+        <label>
+          <input
+            type="radio"
+            formControlName="businessDetailsChange"
+            value="changed"
+          />
+          My main business details have changed as follows:
+        </label>
+      </div>
+
+      <textarea
+        *ngIf="s5_changedSelected()"
+        formControlName="businessChangeDetails"
+        rows="3"
+        placeholder="Describe the changes..."
+      ></textarea>
+      <div
+        class="error"
+        *ngIf="
+          s5_changedSelected() &&
+          form.get('section5.businessChangeDetails')?.invalid &&
+          form.get('section5.businessChangeDetails')?.touched
+        "
+      >
+        Please describe the changes.
+      </div>
+
+      <label class="mt-2">6. Physical address (main place of business)</label>
+      <textarea
+        formControlName="mainBusinessPhysical"
+        rows="2"
+        placeholder="Physical address"
+      ></textarea>
+      <div
+        class="error"
+        *ngIf="
+          form.get('section5.mainBusinessPhysical')?.invalid &&
+          form.get('section5.mainBusinessPhysical')?.touched
+        "
+      >
+        Main business physical address is required.
+      </div>
+    </div>
+
+    <!-- Section 7: Satellite Offices -->
+    <div class="section">
+      <h3 class="section-title">
+        7. Satellite Offices (where taking appointments)
+      </h3>
+      <p class="muted">
+        Complete details only for offices where you are taking appointments.
+      </p>
+
+      <div formArrayName="offices" class="sat-table">
+        <div class="sat-header">
+          <div>Office</div>
+          <div>Taking Appointments</div>
+          <div>Physical Address</div>
+          <div>Postal Address</div>
+          <div>Telephone</div>
+        </div>
+
+        <div
+          class="sat-row"
+          *ngFor="let row of officesFA.controls; index as i"
+          [formGroupName]="i"
+        >
+          <div class="city">{{ row.get("city")?.value }}</div>
+          <div>
+            <input
+              type="checkbox"
+              formControlName="takingAppointments"
+              (change)="enforceOfficeValidators()"
+            />
+          </div>
+          <div>
+            <textarea
+              formControlName="physicalAddress"
+              rows="1"
+              placeholder="Physical address"
+            ></textarea>
+          </div>
+          <div>
+            <textarea
+              formControlName="postalAddress"
+              rows="1"
+              placeholder="Postal address"
+            ></textarea>
+          </div>
+          <div>
+            <input
+              type="text"
+              formControlName="telephone"
+              placeholder="e.g. 011 123 4567"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 7 (good standing with insurers) -->
+    <div class="section">
+      <h3 class="section-title">Good Standing with Insurers</h3>
+      <p>
+        Attach letter(s) of good standing (not older than 3 months) from
+        applicable insurers.
+      </p>
+
+      <div formArrayName="insurersLetters" class="dyn-list">
+        <div
+          *ngFor="let g of insurersLettersFA.controls; let i = index"
+          [formGroupName]="i"
+          class="dyn-row"
+        >
+          <input
+            type="file"
+            (change)="
+              onArrayFileChange(
+                $event,
+                'insurersLetters',
+                i,
+                'file',
+                'fileName'
+              )
+            "
+          />
+          <span class="file-name">{{ g.get("fileName")?.value }}</span>
+          <button
+            type="button"
+            class="btn danger"
+            (click)="removeInsurerLetter(i)"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+      <button type="button" class="btn secondary" (click)="addInsurerLetter()">
+        + Add insurer letter
+      </button>
+    </div>
+
+    <!-- Section 8: Professional/insolvency organisations -->
+    <div class="section">
+      <h3 class="section-title">8. Professional / Insolvency Organisations</h3>
+      <p>
+        Add each organisation and attach current certificate/confirmation of
+        good standing.
+      </p>
+
+      <div formArrayName="memberships" class="dyn-list">
+        <div
+          *ngFor="let m of membershipsFA.controls; let i = index"
+          [formGroupName]="i"
+          class="dyn-row"
+        >
+          <input
+            type="text"
+            formControlName="organisation"
+            placeholder="e.g., SAICA, SARIPA, ABRIPSA, Law Society..."
+          />
+          <label class="inline"
+            ><input type="checkbox" formControlName="inGoodStanding" /> In good
+            standing</label
+          >
+          <input
+            type="file"
+            (change)="
+              onArrayFileChange(
+                $event,
+                'memberships',
+                i,
+                'certificate',
+                'certificateName'
+              )
+            "
+          />
+          <span class="file-name">{{ m.get("certificateName")?.value }}</span>
+          <button
+            type="button"
+            class="btn danger"
+            (click)="removeMembership(i)"
+          >
+            Remove
+          </button>
+        </div>
+      </div>
+      <button type="button" class="btn secondary" (click)="addMembership()">
+        + Add organisation
+      </button>
+    </div>
+
+    <!-- Section 9 -->
+    <div class="section">
+      <h3 class="section-title">9. Disqualification Provision</h3>
+      <p class="muted">
+        I have perused the disqualification provision attached and am not
+        disqualified. I bring the following to the Master’s attention (state
+        “not applicable” if none):
+      </p>
+      <textarea
+        formControlName="disqualificationNote"
+        rows="3"
+        placeholder="Enter details or 'Not applicable'"
+      ></textarea>
+    </div>
+
+    <!-- Section 10 -->
+    <div class="section">
+      <h3 class="section-title">
+        10. Employment / Activities (Current Financial Year)
+      </h3>
+      <label
+        >a) Activities for gain/income (state “not applicable” if none)</label
+      >
+      <textarea
+        formControlName="currentYearActivities"
+        rows="3"
+        placeholder="Describe..."
+      ></textarea>
+      <label class="inline mt-1">
+        <input type="checkbox" formControlName="willInformIfUnavailable" />
+        b) I will inform the Master if I am no longer available to take
+        appointments.
+      </label>
+    </div>
+
+    <!-- Section 11 -->
+    <div class="section" formGroupName="relationship">
+      <h3 class="section-title">11. Relationship Disclosure</h3>
+
+      <label class="block">
+        <input type="radio" formControlName="relation" value="not_related" />
+        I am not related to any official employed at any Master’s office by
+        affinity/family/business/partnership.
+      </label>
+      <label class="block">
+        <input type="radio" formControlName="relation" value="related" />
+        I do have a relationship — nature of relationship:
+      </label>
+
+      <textarea
+        *ngIf="relationshipIsRelated()"
+        formControlName="relationDetails"
+        rows="2"
+        placeholder="Describe the relationship"
+      ></textarea>
+      <div
+        class="error"
+        *ngIf="
+          relationshipIsRelated() &&
+          form.get('relationship.relationDetails')?.invalid &&
+          form.get('relationship.relationDetails')?.touched
+        "
+      >
+        Relationship details are required.
+      </div>
+    </div>
+
+    <!-- Section 12 -->
+    <div class="section">
+      <h3 class="section-title">12. Tax Clearance Certificates</h3>
+      <div class="grid-2">
+        <div>
+          <label>Personal tax clearance (PDF)</label>
+          <input
+            type="file"
+            (change)="onFileChange($event, 'taxClearancePersonal')"
+            accept="application/pdf,image/*"
+          />
+          <a
+            *ngIf="taxClearancePersonalUrl"
+            [href]="taxClearancePersonalUrl"
+            target="_blank"
+            rel="noopener"
+            >Preview</a
+          >
+          <div
+            class="error"
+            *ngIf="
+              form.get('taxClearancePersonal')?.invalid &&
+              form.get('taxClearancePersonal')?.touched
+            "
+          >
+            Personal tax clearance is required.
+          </div>
+        </div>
+        <div>
+          <label>Business tax clearance (PDF)</label>
+          <input
+            type="file"
+            (change)="onFileChange($event, 'taxClearanceBusiness')"
+            accept="application/pdf,image/*"
+          />
+          <a
+            *ngIf="taxClearanceBusinessUrl"
+            [href]="taxClearanceBusinessUrl"
+            target="_blank"
+            rel="noopener"
+            >Preview</a
+          >
+          <div
+            class="error"
+            *ngIf="
+              form.get('taxClearanceBusiness')?.invalid &&
+              form.get('taxClearanceBusiness')?.touched
+            "
+          >
+            Business tax clearance is required.
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Section 16 -->
+    <div class="section">
+      <h3 class="section-title">16. Bond Facility</h3>
+      <p>
+        Attach written confirmation of bond facility from an approved bond
+        company (provide upon being informed of successful assessment).
+      </p>
+      <input
+        type="file"
+        (change)="onFileChange($event, 'bondFacility')"
+        accept="application/pdf,image/*"
+      />
+      <a
+        *ngIf="bondFacilityUrl"
+        [href]="bondFacilityUrl"
+        target="_blank"
+        rel="noopener"
+        >Preview</a
+      >
+      <div
+        class="error"
+        *ngIf="
+          form.get('bondFacility')?.invalid && form.get('bondFacility')?.touched
+        "
+      >
+        Bond facility confirmation is required.
+      </div>
+    </div>
+
+    <!-- Optional: Bank account proof -->
+    <div class="section">
+      <h3 class="section-title">Bank Account Documentation (Optional)</h3>
+      <input
+        type="file"
+        (change)="onFileChange($event, 'bankAccountProof')"
+        accept="application/pdf,image/*"
+      />
+    </div>
+
+    <!-- Declaration -->
+    <div class="section">
+      <h3 class="section-title">Declaration</h3>
+
+      <!-- Click anywhere on this line to open the T&C modal -->
+      <label class="inline tnc-launch" (click)="openTnC($event)">
+        <input
+          type="checkbox"
+          [checked]="form.get('declaration')?.value"
+          disabled
+        />
+        I declare that the information provided is true and correct.
+      </label>
+
+      <div
+        class="error"
+        *ngIf="
+          form.get('declaration')?.invalid && form.get('declaration')?.touched
+        "
+      >
+        You must agree to the declaration.
+      </div>
+    </div>
+
+    <!-- Submit -->
+    <div class="form-footer">
+      <button type="submit">Submit Renewal Affidavit</button>
+    </div>
+
+<!--     <button
+      type="button"
+      class="link-button"
+      data-bs-toggle="modal"
+      data-bs-target="#termsModal"
+    >
+      Terms and Conditions.
+    </button> -->
+  </form>
+
+  <!-- Annexure: Disqualifications (read-only) -->
+  <div class="section">
+    <h3 class="section-title">Annexure — Disqualifications (Read-only)</h3>
+    <p class="muted">
+      See attached annexure text (Insolvency Act s55; Companies Act 1973 s372)
+      for persons disqualified from appointment as trustee / liquidator. Keep a
+      copy with your submission for reference.
+    </p>
+  </div>
+</div>
+
+<ng-template #closedTpl>
+  <div class="placeholder-container">
+    <div class="placeholder-card">
+      <div class="placeholder-title">Applications Closed</div>
+      <div class="placeholder-text">
+        This form is not accepting submissions at the moment.
+      </div>
+    </div>
+  </div>
+</ng-template>
+
+<!-- Terms & Conditions Modal -->
+<div class="modal fade" id="termsModal" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog modal-lg modal-dialog-scrollable">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Terms & Conditions / Acknowledgements</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+
+      <!-- ✅ Bind modal body to the same reactive form -->
+      <div class="modal-body" [formGroup]="form">
+        <!-- Quick access to Annexure PDF -->
+        <div class="annexure-bar mb-3">
+          <a class="pdf-link" [href]="disqualificationsPdfUrl" target="_blank" rel="noopener">
+            Annexure: Disqualifications (PDF)
+          </a>
+        </div>
+
+        <!-- 13 -->
+        <div class="mb-3">
+          <h6>13.</h6>
+          <p class="mb-2">
+            Should there be any change in my details I undertake to inform the Office of The Chief Master within
+            7 (seven) days at the following email address:
+            <!-- ✅ fixed visible text -->
+            <a href="mailto:liqrenewal@justice.gov.za">liqrenewaljustice.gov.za</a>.
+          </p>
+          <label class="form-check">
+            <input type="checkbox" class="form-check-input" formControlName="ackChangeNotice" />
+            <span class="ms-2">I acknowledge the 7-day change notice requirement.</span>
+          </label>
+          <div class="error" *ngIf="ctrl('ackChangeNotice')?.invalid && ctrl('ackChangeNotice')?.touched">
+            Please acknowledge item 13.
+          </div>
+        </div>
+
+        <!-- 14 -->
+        <div class="mb-4">
+          <h6>14.</h6>
+          <p class="mb-2">
+            I am aware that punitive measures, including but not limited to suspension/removal from the panel of liquidators,
+            may be instituted should it be found that I provided false or misleading information in this affidavit.
+          </p>
+          <label class="form-check">
+            <input type="checkbox" class="form-check-input" formControlName="ackPunitiveNotice" />
+            <span class="ms-2">I acknowledge the punitive measures notice.</span>
+          </label>
+          <div class="error" *ngIf="ctrl('ackPunitiveNotice')?.invalid && ctrl('ackPunitiveNotice')?.touched">
+            Please acknowledge item 14.
+          </div>
+        </div>
+
+        <!-- 15 -->
+        <div class="mb-3">
+          <h6>15.</h6>
+          <p class="mb-3">
+            I hereby confirm that I have enclosed <strong>ALL</strong> the following documents in the under-mentioned
+            sequential order, in PDF format as required:
+          </p>
+
+          <div formGroupName="enclosures" class="table-responsive">
+            <table class="table table-bordered align-middle">
+              <thead class="table-light">
+                <tr>
+                  <th style="width: 100px">Tick</th>
+                  <th style="width: 100px">Annexure</th>
+                  <th>Document</th>
+                  <th style="width: 150px">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="text-center">
+                    <input type="checkbox" class="form-check-input" formControlName="annexA_personal" />
+                  </td>
+                  <td class="text-center">A</td>
+                  <td>Tax Clearance (Personal)</td>
+                  <td>
+                    <span *ngIf="taxClearancePersonalUrl; else missingA">Attached</span>
+                    <ng-template #missingA><span class="text-muted">Not attached</span></ng-template>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="text-center">
+                    <input type="checkbox" class="form-check-input" formControlName="annexB_business" />
+                  </td>
+                  <td class="text-center">B</td>
+                  <td>Tax Clearance (Business)</td>
+                  <td>
+                    <span *ngIf="taxClearanceBusinessUrl; else missingB">Attached</span>
+                    <ng-template #missingB><span class="text-muted">Not attached</span></ng-template>
+                  </td>
+                </tr>
+                <tr>
+                  <td class="text-center">
+                    <input type="checkbox" class="form-check-input" formControlName="annexC_bond" />
+                  </td>
+                  <td class="text-center">C</td>
+                  <td>Written Confirmation of Bond Facility (Approved Bond Company)</td>
+                  <td>
+                    <span *ngIf="bondFacilityUrl; else missingC">Attached</span>
+                    <ng-template #missingC><span class="text-muted">Not attached</span></ng-template>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="error mt-1" *ngIf="
+              (ctrl('enclosures.annexA_personal')?.invalid && ctrl('enclosures.annexA_personal')?.touched) ||
+              (ctrl('enclosures.annexB_business')?.invalid && ctrl('enclosures.annexB_business')?.touched) ||
+              (ctrl('enclosures.annexC_bond')?.invalid && ctrl('enclosures.annexC_bond')?.touched)
+            ">
+            Please tick all required Annexure items.
+          </div>
+        </div>
+
+        <!-- ✅ NEW: Attach Signed Affidavit -->
+        <div class="mb-2">
+          <h6 class="mb-2">Attach Signed Affidavit</h6>
+          <p class="small text-muted mb-2">Upload the signed affidavit (PDF). Max 10MB.</p>
+          <input
+            type="file"
+            accept="application/pdf,image/*"
+            (change)="onFileChange($event, 'affidavitFile')"
+          />
+          <div class="mt-1">
+            <a *ngIf="affidavitFileUrl" [href]="affidavitFileUrl" target="_blank" rel="noopener">Preview affidavit</a>
+            <span *ngIf="!affidavitFileUrl" class="text-muted">No file selected</span>
+          </div>
+          <div class="error" *ngIf="form.get('affidavitFile')?.invalid && form.get('affidavitFile')?.touched">
+            Please attach your signed affidavit (PDF).
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button class="btn btn-outline-secondary" type="button" data-bs-dismiss="modal">Close</button>
+        <button
+          class="btn btn-primary"
+          type="button"
+          (click)="acceptTnC()"
+          [disabled]="
+            ctrl('ackChangeNotice')?.invalid ||
+            ctrl('ackPunitiveNotice')?.invalid ||
+            ctrl('enclosures.annexA_personal')?.invalid ||
+            ctrl('enclosures.annexB_business')?.invalid ||
+            ctrl('enclosures.annexC_bond')?.invalid ||
+            ctrl('affidavitFile')?.invalid
+          "
+          data-bs-dismiss="modal">
+          Accept & Continue
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+

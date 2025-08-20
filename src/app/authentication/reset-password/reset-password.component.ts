@@ -1,24 +1,18 @@
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { ActivatedRoute, Router,RouterModule } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
-import { AlertComponent } from 'src/shared/components/alert/alert.component';
-import { SharedModule } from 'src/shared/shared.module';
-
 
 @Component({
   selector: 'app-reset-password',
   templateUrl: './reset-password.component.html',
-  styleUrl: './reset-password.component.scss'
+  styleUrls: ['./reset-password.component.scss'] // <-- plural
 })
-export class ResetPasswordComponent implements OnInit{
-  resetPasswordForm: FormGroup | any;
+export class ResetPasswordComponent implements OnInit {
+  resetPasswordForm!: FormGroup;
   alertMessage: string | null = null;
-  isSuccess: boolean = false;
-  loading: boolean = false;
-  token: string | null = null;
-  isValidToken: boolean = false;
-  errorMessage: string | null = null;
+  isSuccess = false;
+  loading = false;
 
   constructor(
     private fb: FormBuilder,
@@ -26,107 +20,79 @@ export class ResetPasswordComponent implements OnInit{
     private route: ActivatedRoute,
     private router: Router,
     private cdr: ChangeDetectorRef
-  ) {
-    this.resetPasswordForm = this.fb.group({
-      newPassword: ['', [Validators.required, Validators.minLength(6)]],
-      confirmPassword: ['', [Validators.required]]
-    }, { validator: this.passwordMatchValidator });
+  ) {}
 
-      // Listen for form changes and update UI dynamically
-      this.resetPasswordForm.valueChanges.subscribe(() => {
-        this.cdr.detectChanges();
-      });
+  ngOnInit(): void {
+    const emailFromQuery = this.route.snapshot.queryParamMap.get('email') || '';
+
+    this.resetPasswordForm = this.fb.group(
+      {
+        email: [emailFromQuery, [Validators.required, Validators.email]],
+        code: ['', [Validators.required, Validators.pattern(/^\d{6}$/)]],
+        newPassword: ['', [Validators.required, Validators.minLength(8)]],
+        confirmPassword: ['', [Validators.required]]
+      },
+      { validators: this.passwordMatchValidator }
+    );
+
+    // react to form changes for UI updates
+    this.resetPasswordForm.valueChanges.subscribe(() => this.cdr.detectChanges());
   }
 
-  ngOnInit() {
-    // Extract token from URL
-    this.token = this.route.snapshot.queryParamMap.get('token');
-
-    if (this.token) {
-      // Call the backend to check if the token is valid
-      this.authService.verifyResetToken(this.token).subscribe(
-        () => {
-          this.isValidToken = true;
-          this.loading = false;
-          this.cdr.detectChanges();
-        },
-        error => {
-          this.isValidToken = false;
-          this.loading = false;
-          this.errorMessage = error.error.error || 'Invalid or expired reset token.';
-          setTimeout(() => this.router.navigate(['/forgot-password']), 3000); // Redirect after 3s
-          this.cdr.detectChanges();
-        }
-      );
-    } else {
-      this.loading = false;
-      this.errorMessage = 'Invalid reset link.';
-      setTimeout(() => this.router.navigate(['/forgot-password']), 3000);
-      this.cdr.detectChanges();
-    }
-  }
-
-  passwordMatchValidator(form: FormGroup) {
-    return form.get('newPassword')?.value === form.get('confirmPassword')?.value
-      ? null : { mismatch: true };
-  }
+  private passwordMatchValidator = (form: FormGroup) => {
+    const a = form.get('newPassword')?.value;
+    const b = form.get('confirmPassword')?.value;
+    return a === b ? null : { mismatch: true };
+  };
 
   isFieldInvalid(field: string): boolean {
     const control = this.resetPasswordForm.get(field);
-    return control?.invalid && (control?.dirty || control?.touched);
+    return !!(control && control.invalid && (control.dirty || control.touched));
   }
 
   getErrorMessages(field: string): string[] {
     const control = this.resetPasswordForm.get(field);
     if (!control || !control.errors) return [];
-
-    const errorMessages: { [key: string]: string } = {
+    const msg: Record<string, string> = {
       required: 'This field is required.',
+      email: 'Enter a valid email address.',
       minlength: `Must be at least ${control.errors?.['minlength']?.requiredLength} characters.`,
-      maxlength: `Must be less than ${control.errors?.['maxlength']?.requiredLength} characters.`
+      maxlength: `Must be less than ${control.errors?.['maxlength']?.requiredLength} characters.`,
+      pattern: 'Enter the 6‑digit code.'
     };
-
-    return Object.keys(control.errors).map(error => errorMessages[error] || 'Invalid input.');
+    return Object.keys(control.errors).map(k => msg[k] || 'Invalid input.');
   }
 
-  onSubmit() {
-    // Check if the form is invalid or the token is missing
-    console.log(this.resetPasswordForm)
-    if (this.resetPasswordForm.invalid || !this.token) {
-        alert('Please fill in all fields correctly.');
-        return;
+  onSubmit(): void {
+    if (this.resetPasswordForm.invalid || this.loading) {
+      this.alertMessage = 'Please fill in all fields correctly.';
+      this.isSuccess = false;
+      return;
     }
 
-    // Check if passwords match
-    if (this.resetPasswordForm.value.newPassword !== this.resetPasswordForm.value.confirmPassword) {
-        this.alertMessage = 'Passwords do not match.';
-        return;
-    }
-
-    // Show loading indicator
     this.loading = true;
-    this.alertMessage = null; // Clear any previous messages
+    this.alertMessage = null;
 
-    this.authService.resetPassword(this.token, this.resetPasswordForm.value.newPassword).subscribe(
-        response => {
-            this.loading = false;
-            this.isSuccess = true;
-            this.alertMessage = 'Password successfully reset. Redirecting...';
+    const payload = {
+      email: this.resetPasswordForm.value.email,
+      code: this.resetPasswordForm.value.code,
+      newPassword: this.resetPasswordForm.value.newPassword
+    };
 
-            // Redirect to login after success
-            setTimeout(() => {
-                this.router.navigate(['/login']);
-            }, 3000);
-        },
-        error => {
-            this.loading = false;
-            this.isSuccess = false;
-            this.alertMessage = error.error.message || 'Failed to reset password.';
-
-            // Optional: Log error to console for debugging
-            console.error('Password Reset Error:', error);
-        }
-    );
-}
-
+    // New backend: POST /api/auth/password/reset/confirm
+    this.authService.resetPasswordWithOtp(payload).subscribe({
+      next: () => {
+        this.loading = false;
+        this.isSuccess = true;
+        this.alertMessage = 'Password successfully reset. Redirecting…';
+        setTimeout(() => this.router.navigate(['/login']), 1200);
+      },
+      error: (err) => {
+        this.loading = false;
+        this.isSuccess = false;
+        this.alertMessage = err?.error?.message || 'Failed to reset password. Check your code and try again.';
+        // console.error('Password Reset Error:', err);
+      }
+    });
+  }
 }

@@ -62,63 +62,91 @@ export class LoginComponent {
   }
 
   onSubmit() {
-    if (this.loginForm.invalid || this.isLocked) return;
+  if (this.loginForm.invalid || this.isLocked) return;
 
-    const { email, password } = this.loginForm.value;
+  const { email, password } = this.loginForm.value;
 
-    this.authService.login({ email, password }).subscribe(
-      (response) => {
+  this.authService.login({ email, password }).subscribe({
+    next: (response) => {
+      // Backend shape: { token, user }
+      this.authService.setSessionToken(response.token);
+      if (response.user) this.authService.setUserFromMe(response.user);
 
-        console.log('Login successful', response);
-        localStorage.setItem('sessionToken', response.token);
-        this.isSuccess = true;
-        this.alertMessage = 'Login successful! Redirecting...';
-        setTimeout(() => this.router.navigate(['/default/dashboard']), 3000);
+      this.isSuccess = true;
+      this.alertMessage = 'Login successful! Redirecting...';
 
-        if (response.status === 200) {
-          console.log('Login successful', response);
-          localStorage.setItem('sessionToken', response.accessToken);
-          this.isSuccess = true;
-          this.alertMessage = 'Login successful! Redirecting...';
-          setTimeout(() => this.router.navigate(['/home']), 1000);
-        }
+      // Optional: support returnUrl (?returnUrl=/somewhere)
+      const urlTree = this.router.parseUrl(this.router.url);
+      const returnUrl = urlTree.queryParams['returnUrl'];
 
-      },
-      (error) => {
-        console.log('Login failed', error);
+      setTimeout(() => {
+        this.router.navigateByUrl(returnUrl || '/default/dashboard');
+      }, 800);
+    },
 
-        // ✅ Handle Account Lockout Message
-        if (error.error.status === 403 && error.error.message.includes('locked')) {
-          this.isLocked = true;
-          this.unlockTime = error.error.unlockTime; // Get unlock time from backend
-          this.startCountdown();
-          this.alertMessage = `Your account is locked. Try again in ${this.calculateRemainingTime()} minutes.`;
-          this.cdr.detectChanges();
-          return;
-        }
+    error: (error) => {
+      console.log('Login failed', error);
 
-        // ✅ Handle Pending Verification
-        if (
-          error.error.status === 403 &&
-          error.error.verificationStatus === 'pending'
-        ) {
+      const status = error.status;
+      const message: string = error?.error?.message || 'Login failed';
+
+      // 423: account locked (server returns human-readable minutes remaining)
+      if (status === 423) {
+        this.isLocked = true;
+        this.alertMessage = message; // e.g., "Account locked. Try again in 14 minute(s)."
+        this.cdr.detectChanges();
+        // If you have a countdown implementation, you can start it here.
+        return;
+      }
+
+      // 429: too many attempts / rate limit
+      if (status === 429) {
+        this.isSuccess = false;
+        this.alertMessage = message || 'Too many attempts. Please try again later.';
+        this.cdr.detectChanges();
+        this.startAlertTimeout?.();
+        return;
+      }
+
+      // 401: invalid credentials
+      if (status === 401) {
+        this.isSuccess = false;
+        this.alertMessage = message || 'Invalid credentials';
+        this.cdr.detectChanges();
+        this.startAlertTimeout?.();
+        return;
+      }
+
+      // 403 cases:
+      // - "Email not verified"
+      // - "Official account not approved (status: PENDING)"
+      // - "Account is deactivated"
+      if (status === 403) {
+        if (/Email not verified/i.test(message)) {
+          // Open OTP dialog so user can verify
           setTimeout(() => {
             this.dialog.open(OtpComponent, {
-              data: {
-                email: email,
-                status: error.error.verificationStatus,
-              },
+              data: { email, status: 'pending' }
             });
-          }, 3000);
-        } else {
-          this.isSuccess = false;
-          this.alertMessage = error.error.message;
-          this.cdr.detectChanges();
-          this.startAlertTimeout();
+          }, 300);
         }
+
+        this.isSuccess = false;
+        this.alertMessage = message;
+        this.cdr.detectChanges();
+        this.startAlertTimeout?.();
+        return;
       }
-    );
-  }
+
+      // Fallback
+      this.isSuccess = false;
+      this.alertMessage = message;
+      this.cdr.detectChanges();
+      this.startAlertTimeout?.();
+    }
+  });
+}
+
 
   // ✅ Start countdown for account unlock
   private startCountdown() {

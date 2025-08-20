@@ -1,86 +1,75 @@
 import { ChangeDetectorRef, Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { Router,RouterModule } from '@angular/router';
+import { Router } from '@angular/router';
 import { AuthService } from 'src/app/services/auth.service';
-import { SharedModule } from 'src/shared/shared.module';
-import { AlertComponent } from 'src/shared/components/alert/alert.component';
 
 @Component({
   selector: 'app-forgot-password',
   templateUrl: './forgot-password.component.html',
-  styleUrl: './forgot-password.component.scss'
+  styleUrls: ['./forgot-password.component.scss'] // <-- fix: styleUrls (plural)
 })
 export class ForgotPasswordComponent {
-  forgotPasswordForm: FormGroup | any;
+  forgotPasswordForm!: FormGroup;
   alertMessage: string | null = null;
-  isSuccess: boolean = false;
-  loading: boolean = false;
+  isSuccess = false;
+  loading = false;
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-   private authService: AuthService,
+    private authService: AuthService,
     private cdr: ChangeDetectorRef
   ) {
     this.forgotPasswordForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]]
     });
 
-    // Detect validation changes dynamically
-    this.forgotPasswordForm.valueChanges.subscribe(() => {
-      this.cdr.detectChanges(); // Force UI update on form state change
-    });
+    this.forgotPasswordForm.valueChanges.subscribe(() => this.cdr.detectChanges());
   }
 
+  get email() { return this.forgotPasswordForm.get('email'); }
 
-  get email() {
-    return this.forgotPasswordForm.get('email');
-  }
-
-
-
-  // Check if a field is invalid
   isFieldInvalid(field: string): boolean {
-    const control = this.forgotPasswordForm.get(field);
-    return control?.invalid && (control?.dirty || control?.touched);
+    const c = this.forgotPasswordForm.get(field);
+    return !!(c && c.invalid && (c.dirty || c.touched));
   }
 
-  // Get dynamic error messages
   getErrorMessages(field: string): string[] {
-    const control = this.forgotPasswordForm.get(field);
-    if (!control || !control.errors) return [];
-
-    const errorMessages: { [key: string]: string } = {
+    const c = this.forgotPasswordForm.get(field);
+    if (!c?.errors) return [];
+    const map: Record<string, string> = {
       required: 'This field is required.',
       email: 'Enter a valid email address.',
-      minlength: `Must be at least ${control.errors?.['minlength']?.requiredLength} characters.`,
-      maxlength: `Must be less than ${control.errors?.['maxlength']?.requiredLength} characters.`
+      minlength: `Must be at least ${c.errors?.['minlength']?.requiredLength} characters.`,
+      maxlength: `Must be less than ${c.errors?.['maxlength']?.requiredLength} characters.`
     };
-
-    return Object.keys(control.errors).map(error => errorMessages[error] || 'Invalid input.');
+    return Object.keys(c.errors).map(k => map[k] || 'Invalid input.');
   }
 
   onSubmit() {
-    if (this.forgotPasswordForm.invalid) {
-      return;
-    }
+    if (this.forgotPasswordForm.invalid || this.loading) return;
 
     this.loading = true;
-    this.authService.forgotPassword(this.forgotPasswordForm.value.email).subscribe(
-      response => {
+    const email = this.forgotPasswordForm.value.email;
+
+    // New backend: POST /api/auth/password/reset/request { email }
+    this.authService.requestPasswordReset(email).subscribe({
+      next: () => {
         this.loading = false;
         this.isSuccess = true;
-        this.alertMessage = 'Password reset link sent to your email.';
+        // Backend always returns 200 for privacy, so show neutral success text
+        this.alertMessage = 'If that account exists, a 6‑digit code has been sent.';
+        // Optionally route to the reset page with email prefilled
+        setTimeout(() => this.router.navigate(['/reset-password'], { queryParams: { email } }), 800);
       },
-      error => {
+      error: (err) => {
         this.loading = false;
         this.isSuccess = false;
-        this.alertMessage = error.error.message || 'Error sending reset link.';
+        // Keep response generic to avoid enumeration
+        this.alertMessage = err?.error?.message || 'If that account exists, a 6‑digit code has been sent.';
       }
-    );
+    });
   }
 
-  resetAlert() {
-    this.alertMessage = null;
-  }
+  resetAlert() { this.alertMessage = null; }
 }

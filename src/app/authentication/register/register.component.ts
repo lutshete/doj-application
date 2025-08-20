@@ -1,147 +1,115 @@
-import { ChangeDetectorRef, Component, ViewChild } from '@angular/core';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import { ChangeDetectorRef, Component } from '@angular/core';
+import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
-import { RouterModule } from '@angular/router';
-import { AuthService } from 'src/app/services/auth.service';
 import { OtpComponent } from '../otp/otp.component';
-import { SharedModule } from 'src/shared/shared.module';
-import { AlertComponent } from 'src/shared/components/alert/alert.component';
+import { AuthService } from 'src/app/services/auth.service';
 
 @Component({
-  selector: 'app-register', 
+  selector: 'app-register',
   templateUrl: './register.component.html',
   styleUrls: ['./register.component.scss']
 })
 export default class RegisterComponent {
-  signUpForm: FormGroup | any;
-  showPassword: boolean = false;
-  showConfirmPassword: boolean = false;
+  signUpForm!: FormGroup;
+  showPassword = false;
+  showConfirmPassword = false;
 
-  alertMessage: string = '';
+  alertMessage = '';
   alertType: 'success' | 'danger' = 'danger';
-  alertVisible: boolean = false;
-  alertTimeout: any;
+  alertVisible = false;
+  private alertTimeout: any;
 
   constructor(
-    private formBuilder: FormBuilder,
-    private authService: AuthService,
+    private fb: FormBuilder,
+    private auth: AuthService,
     private dialog: MatDialog,
     private cdr: ChangeDetectorRef
   ) {}
 
   ngOnInit(): void {
-    this.initializeForm();
-    this.onFormChanges();
-  }
-
-  // Initialize the form with default controls and validators
-  initializeForm(): void {
-    this.signUpForm = this.formBuilder.group(
+    this.signUpForm = this.fb.group(
       {
-        firstName: ['', Validators.required],
-        lastName: ['', Validators.required],
+        firstName: ['', [Validators.required, Validators.minLength(2)]],
+        lastName: ['', [Validators.required, Validators.minLength(2)]],
         emailAddress: ['', [Validators.required, Validators.email]],
-        role: ['', Validators.required],
-        password: ['', [Validators.required, Validators.minLength(6)]],
+        password: ['', [Validators.required, Validators.minLength(8)]],
         confirmPassword: ['', Validators.required]
       },
-      { validator: this.passwordMatchValidator }
+      { validators: this.passwordMatchValidator }
     );
 
-    // Enable/disable role based on email validity
-    this.signUpForm.get('emailAddress')?.valueChanges.subscribe((email:any) => {
-      const roleControl = this.signUpForm.get('role');
-      if (this.signUpForm.get('emailAddress')?.valid) {
-        roleControl?.enable();
-        if (email.endsWith('@justice.gov.za')) {
-          roleControl?.setValue('official');
-          roleControl?.disable();
-        } else {
-          roleControl?.setValue('liquidator');
-          roleControl?.disable();
-        }
-      } else {
-        roleControl?.disable();
-        roleControl?.setValue('');
-      }
-    });
+    this.signUpForm.valueChanges.subscribe(() => this.cdr.detectChanges());
   }
 
-  // Detect changes and trigger manual change detection for error updates
-  private onFormChanges(): void {
-    this.signUpForm.valueChanges.subscribe(() => {
-      this.cdr.detectChanges();
-    });
+  private passwordMatchValidator = (form: FormGroup) => {
+    const pw = form.get('password')?.value;
+    const cpw = form.get('confirmPassword')?.value;
+    return pw === cpw ? null : { mismatch: true };
+  };
+
+  emailIsJustice(): boolean {
+    const email = this.signUpForm.get('emailAddress')?.value || '';
+    return typeof email === 'string' && email.toLowerCase().endsWith('@justice.gov.za');
   }
 
-  // Custom validator to check if passwords match
-  passwordMatchValidator(form: FormGroup) {
-    const password = form.get('password')?.value;
-    const confirmPassword = form.get('confirmPassword')?.value;
-    return password === confirmPassword ? null : { mismatch: true };
-  }
-
-  togglePasswordVisibility() {
-    this.showPassword = !this.showPassword;
-  }
-
-  toggleConfirmPasswordVisibility() {
-    this.showConfirmPassword = !this.showConfirmPassword;
-  }
+  togglePasswordVisibility() { this.showPassword = !this.showPassword; }
+  toggleConfirmPasswordVisibility() { this.showConfirmPassword = !this.showConfirmPassword; }
 
   onSubmit() {
-    if (this.signUpForm.valid) {
-      this.authService.register({
-        firstName: this.signUpForm.get('firstName')?.value,
-        lastName: this.signUpForm.get('lastName')?.value,
-        email: this.signUpForm.get('emailAddress')?.value,
-        password: this.signUpForm.get('password')?.value,
-        role: this.signUpForm.get('role')?.value
-      }).subscribe({
-        next: (response) => {
-          this.showAlert(response.message, 'success');
-          setTimeout(() => {
-            this.closeAlert();
-            this.dialog.open(OtpComponent, {
-              data: {
-                email: this.signUpForm.get('emailAddress')?.value,
-              }
-            });
-          }, 3000);
-        },
-        error: (error) => {
-          this.showAlert(error.error.message, 'danger');
-        }
-      });
-    } else {
+    if (this.signUpForm.invalid) {
       this.showAlert('Please fill in all required fields correctly.', 'danger');
+      return;
     }
+
+    const payload = {
+      firstName: this.f.firstName.value,
+      lastName: this.f.lastName.value,
+      email: this.f.emailAddress.value,
+      password: this.f.password.value
+      // NOTE: role is not sent; backend derives it from email domain
+    };
+
+    this.auth.register(payload).subscribe({
+      next: (res) => {
+        this.showAlert(res?.message || 'Registered. Check your email for the OTP.', 'success');
+        // open OTP dialog for email verification
+        setTimeout(() => {
+          this.closeAlert();
+          this.dialog.open(OtpComponent, {
+            width: '420px',
+            disableClose: true,
+            data: {
+              email: this.f.emailAddress.value,
+              onVerified: () => {
+                // optional: navigate to login, or auto-login prompt
+              }
+            }
+          });
+        }, 800);
+      },
+      error: (err) => {
+        const msg = err?.error?.message || 'Registration failed.';
+        this.showAlert(msg, 'danger');
+      }
+    });
   }
 
   showAlert(message: string, type: 'success' | 'danger') {
     this.alertMessage = message;
     this.alertType = type;
     this.alertVisible = true;
-
-    if (this.alertTimeout) {
-      clearTimeout(this.alertTimeout);
-    }
-
+    if (this.alertTimeout) clearTimeout(this.alertTimeout);
     this.alertTimeout = setTimeout(() => {
       this.alertVisible = false;
-      this.cdr.detectChanges(); // Ensure the view updates when the alert disappears
+      this.cdr.detectChanges();
     }, 3000);
   }
 
   closeAlert() {
     this.alertVisible = false;
-    if (this.alertTimeout) {
-      clearTimeout(this.alertTimeout);
-    }
+    if (this.alertTimeout) clearTimeout(this.alertTimeout);
     this.cdr.detectChanges();
   }
 
-  get f() {
-    return this.signUpForm.controls;
-  }
+  get f() { return this.signUpForm.controls; }
 }
