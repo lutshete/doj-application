@@ -5,7 +5,7 @@ import { AppRoutingModule } from './app-routing.module';
 import { AppComponent } from './app.component';
 import { AuthService } from './services/auth.service';
 import { SharedModule } from 'src/shared/shared.module';
-import { HttpClientModule } from '@angular/common/http';
+import { HTTP_INTERCEPTORS, HttpClientModule } from '@angular/common/http';
 import { LoginComponent } from './authentication/login/login.component';
 import { ForgotPasswordComponent } from './authentication/forgot-password/forgot-password.component';
 import { ResetPasswordComponent } from './authentication/reset-password/reset-password.component';
@@ -22,6 +22,9 @@ import { ApprovalStatusComponent } from './components/approval-status/approval-s
 import RegisterComponent from './authentication/register/register.component';
 import { AdminPanelComponent } from './components/admin-panel/admin-panel.component';
 import { MeetingResponseComponent } from './components/meeting-response/meeting-response.component';
+import { AffidavitRenewalComponent } from './components/renewal/affidavit-renewal.component';
+import { AuthInterceptorService } from './services/auth-interceptor.service';
+import { AdminRenewalReviewComponent } from './components/admin-renewal/admin-renewal-review.component';
 
 
 @NgModule({
@@ -37,7 +40,9 @@ import { MeetingResponseComponent } from './components/meeting-response/meeting-
     ApprovalStatusComponent,
     RegisterComponent,
     AdminPanelComponent,
-    MeetingResponseComponent
+    MeetingResponseComponent,
+    AffidavitRenewalComponent,
+    AdminRenewalReviewComponent
   ],
   imports: [
     BrowserModule,
@@ -50,7 +55,7 @@ import { MeetingResponseComponent } from './components/meeting-response/meeting-
     SalesReportChartComponent,
     AdminComponent
 ],
-  providers: [AuthService],
+  providers: [AuthService,  { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true },],
   bootstrap: [AppComponent]
 })
 export class AppModule { }

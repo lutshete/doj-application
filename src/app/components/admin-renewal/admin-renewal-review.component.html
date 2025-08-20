@@ -1,0 +1,163 @@
+<div class="wrap" *ngIf="!loading && snap; else loadingTpl">
+  <header class="head">
+    <div>
+      <h2>Renewal #{{ snap?.renewal?.renewal_id }}</h2>
+      <div class="muted">
+        Applicant: <strong>{{ snap?.personal?.full_name || 'Unknown' }}</strong>
+        &nbsp;|&nbsp; Status: <strong>{{ snap?.renewal?.status }}</strong>
+        &nbsp;|&nbsp; Window:
+       <!--  {{ snap?.renewal?.opening_date || '—' }} – {{ snap?.renewal?.closing_date || '—' }} -->
+      </div>
+    </div>
+    <div class="actions">
+      <button class="btn" (click)="setUnderReview()">Mark Under Review</button>
+      <button class="btn success" (click)="approve()">Approve</button>
+      <button class="btn danger" (click)="reject()">Reject</button>
+    </div>
+  </header>
+
+  <section class="grid">
+    <div class="card">
+      <h3>Personal</h3>
+      <div><b>Full name:</b> {{ snap?.personal?.full_name || '—' }}</div>
+      <div><b>ID no:</b> {{ snap?.personal?.identity_number || '—' }}</div>
+      <div class="mt"><b>Relationship:</b>
+        <span *ngIf="snap?.renewal?.relationship_relation === 'related'">
+          Related — {{ snap?.renewal?.relationship_details || 'n/a' }}
+        </span>
+        <span *ngIf="!snap?.renewal?.relationship_relation || snap?.renewal?.relationship_relation === 'not_related'">
+          Not related
+        </span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>Main Business</h3>
+      <div><b>Change:</b> {{ snap?.business?.business_details_change || '—' }}</div>
+      <div *ngIf="snap?.business?.business_change_details"><b>Changes:</b> {{ snap?.business?.business_change_details }}</div>
+      <div class="mt"><b>Main Address:</b> {{ snap?.business?.main_business_physical || '—' }}</div>
+    </div>
+
+    <div class="card">
+      <h3>Docs </h3>
+      <table class="mini">
+        <tr><td>Personal Tax</td><td>{{ hasDocs?.has_tax_personal ? 'Attached' : 'Missing' }}</td><td>{{ snap?.documents?.tax_clearance_personal_name || '' }}</td></tr>
+        <tr><td>Business Tax</td><td>{{ hasDocs?.has_tax_business ? 'Attached' : 'Missing' }}</td><td>{{ snap?.documents?.tax_clearance_business_name || '' }}</td></tr>
+        <tr><td>Bond Facility</td><td>{{ hasDocs?.has_bond ? 'Attached' : 'Missing' }}</td><td>{{ snap?.documents?.bond_facility_name || '' }}</td></tr>
+        <tr><td>Bank Proof</td><td>{{ hasDocs?.has_bank ? 'Attached' : 'Missing' }}</td><td>{{ snap?.documents?.bank_account_proof_name || '' }}</td></tr>
+        <tr><td>Affidavit</td><td>{{ hasDocs?.has_affidavit ? 'Attached' : 'Missing' }}</td><td>{{ snap?.documents?.affidavit_file_name || '' }}</td></tr>
+      </table>
+      <div class="hint">Note: admin binary download endpoints exist for insurer letters & membership certs; singletons are view-only unless you add admin download routes.</div>
+    </div>
+
+    <div class="card wide">
+      <h3>Satellite Offices (taking appointments)</h3>
+      <table class="list">
+        <thead><tr><th>City</th><th>Taking</th><th>Physical</th><th>Postal</th><th>Tel</th></tr></thead>
+        <tbody>
+          <tr *ngFor="let o of snap?.offices">
+            <td>{{ o.city }}</td>
+            <td>{{ o.taking_appointments ? 'Yes' : 'No' }}</td>
+            <td>{{ o.physical_address || '—' }}</td>
+            <td>{{ o.postal_address || '—' }}</td>
+            <td>{{ o.telephone || '—' }}</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h3>Insurer Letters</h3>
+      <div *ngIf="!snap?.insurerLetters?.length" class="muted">None</div>
+      <ul class="files" *ngIf="snap?.insurerLetters?.length">
+        <li *ngFor="let r of snap?.insurerLetters">
+          <span>{{ r.file_name }}</span>
+          <button class="link" (click)="downloadInsurerLetter(r)">Download</button>
+          <small class="muted">({{ r.uploaded_at | date:'medium' }})</small>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h3>Memberships</h3>
+      <div *ngIf="!snap?.memberships?.length" class="muted">None</div>
+      <ul class="files" *ngIf="snap?.memberships?.length">
+        <li *ngFor="let m of snap?.memberships">
+          <span><b>{{ m.organisation }}</b> — {{ m.in_good_standing ? 'Good Standing' : 'Not in Good Standing' }}</span>
+          <button *ngIf="m.certificate_name" class="link" (click)="downloadMembershipCert(m)">
+            Download Certificate
+          </button>
+          <small class="muted">({{ m.uploaded_at | date:'medium' }})</small>
+        </li>
+      </ul>
+    </div>
+
+    <div class="card wide">
+      <h3>Applicant Statements</h3>
+      <div><b>Disqualification Note:</b> {{ snap?.renewal?.disqualification_note || '—' }}</div>
+      <div class="mt"><b>Current Year Activities:</b> {{ snap?.renewal?.current_year_activities || '—' }}</div>
+      <div class="mt">
+        <b>Will inform if unavailable:</b> {{ snap?.renewal?.will_inform_if_unavailable ? 'Yes' : 'No' }}
+      </div>
+    </div>
+  </section>
+
+  <section class="review">
+    <h3>Review Decision</h3>
+    <form [formGroup]="form" (ngSubmit)="submitReview()">
+      <div class="row">
+        <label>Status</label>
+        <select formControlName="review_status">
+          <option value="Under Review">Under Review</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Submitted">Submitted</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>Outcome</label>
+        <select formControlName="outcome">
+          <option value="Pending">Pending</option>
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+        </select>
+      </div>
+
+      <div class="row">
+        <label>Further Comments</label>
+        <textarea rows="3" formControlName="further_comments" placeholder="Notes to applicant or internal remarks"></textarea>
+      </div>
+
+      <div class="row">
+        <label>Annex A Comment</label>
+        <input type="text" formControlName="annexA_comment" />
+      </div>
+      <div class="row">
+        <label>Annex B Comment</label>
+        <input type="text" formControlName="annexB_comment" />
+      </div>
+      <div class="row">
+        <label>Annex C Comment</label>
+        <input type="text" formControlName="annexC_comment" />
+      </div>
+
+      <div class="actions">
+        <button type="submit" class="btn primary" [disabled]="saving">
+          {{ saving ? 'Saving…' : 'Save Review' }}
+        </button>
+        <button type="button" class="btn" (click)="load()" [disabled]="saving">Refresh</button>
+      </div>
+
+      <div class="error" *ngIf="error">{{ error }}</div>
+    </form>
+  </section>
+</div>
+
+<!-- Loading / empty template -->
+<ng-template #loadingTpl>
+  <div class="loading-block">
+    <div *ngIf="loading">Loading renewal…</div>
+    <div *ngIf="!loading && !snap">No data.</div>
+  </div>
+</ng-template>

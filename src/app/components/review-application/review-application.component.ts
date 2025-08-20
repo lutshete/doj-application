@@ -141,7 +141,7 @@ showFileModal: boolean = false;    // Controls modal visibility
  
   
     if (this.reviewForm.valid) {
-      this.liquidatorApplicationService
+      /* this.liquidatorApplicationService
         .updateApplicationStatus(this.applicationId, {
           review_status: this.reviewForm.get('reviewStatus')?.value,
           outcome: this.reviewForm.get('reviewStatus')?.value,
@@ -171,7 +171,7 @@ showFileModal: boolean = false;    // Controls modal visibility
           error: (error) => {
             this.toastr.error(error.error?.message, 'Error');
           }
-        });
+        }); */
     } else {
       Object.keys(this.reviewForm.controls).forEach((controlName) => {
         const control = this.reviewForm.get(controlName);

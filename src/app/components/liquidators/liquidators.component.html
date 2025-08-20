@@ -23,6 +23,7 @@
       </div>
 
       <!--Step 1-->
+     
       <div class="form-container">
         <h2 class="text-center">Declaration Form</h2>
         <p class="text-center text-danger attention-grabber" *ngIf="isBetweenOpeningAndClosing">
@@ -51,7 +52,7 @@
           </ng-template>
         </p>
 
-      
+      <ng-template #closedStateTpl>
        <div class="placeholder-container" *ngIf="nextOpeningYear">
         <div class="placeholder-card">
           <h4 class="placeholder-title">📢 New Liquidators Intake Applications</h4>
@@ -68,8 +69,8 @@
           </p>
         </div>
       </div>
-      
-        
+      </ng-template>
+        <ng-container *ngIf="isBetweenOpeningAndClosing; else closedStateTpl">
         <form [formGroup]="personalInfoForm" *ngIf="isBetweenOpeningAndClosing">
           <div class="section" *ngIf="group1Section">
             <label for="full-name">Full Names and Surname</label>
@@ -110,9 +111,13 @@
 
             </div>
 
-            <a *ngIf="idDocumentFileUrl" [href]="fileUrl" target="_blank" rel="noopener noreferrer">
-              {{ section1Details.id_document_file_name }}
-            </a>
+        <a *ngIf="idDocumentFileUrl" 
+   [href]="idDocumentFileUrl" 
+   target="_blank" 
+   rel="noopener noreferrer">
+  {{ section1Details.id_document_file_name }}
+</a>
+
           </div>
 
           <div class="section" *ngIf="group1Section">
@@ -991,7 +996,7 @@
             </div>
           </form>
         </div>
-
+</ng-container>
         <!-- Continue adding sections for paragraphs 6-22 similarly -->
       </div>
       <!--End of step 8-->
@@ -1364,7 +1369,8 @@
 
 
 <!-- Placeholder for Minimum Requirements (Visible When No Opening Date) -->
-<div class="col-4" id="requirements-placeholder" *ngIf="nextOpeningYear || (openingDaysRemaining > 0 || showOpeningHours)">
+ <ng-template #closedStateTpl>
+<div class="col-4" id="requirements-placeholder" *ngIf="!isBetweenOpeningAndClosing">
   <div class="card border-primary requirements-card">
     <div class="card-header bg-primary text-white text-center">
       <strong>📌 Minimum Requirements</strong>
@@ -1409,7 +1415,7 @@
     </div>
   </div>
 </div>
-
+</ng-template>
 
 
 

@@ -1,100 +1,126 @@
-import { Injectable } from '@angular/core';
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from 'src/environments/environment';
 
-@Injectable({
-  providedIn: 'root',
-})
+export type SectionKey =
+  | 'personal'
+  | 'business'
+  | 'employment_trading'
+  | 'infrastructure_offices'
+  | 'qualifications_memberships'
+  | 'relationship'
+  | 'appointments_employment'
+  | 'tax_bond_bank';
+
+export interface LiquidatorApplication {
+  _id: string;
+  window_id: string;
+  status: 'DRAFT' | 'SUBMITTED' | string;
+  editable_until?: string | null;
+  sections?: any;
+  progress_percent?: number;
+  form_complete?: boolean;
+  submitted_at?: string | null;
+  decided_at?: string | null;
+  is_locked?: boolean;
+}
+
+@Injectable({ providedIn: 'root' })
 export class LiquidatorApplicationService {
-  private apiUrl = 'http://localhost:3000/api/liquidator'; // Replace with your actual API base URL
+  private http = inject(HttpClient);
 
-  constructor(private http: HttpClient) {}
+  private readonly API = 'http://localhost:3000';
+  private readonly BASE = `${this.API}/api/liquidator-apps`;
 
-  // Create a new application
-  createApplication(userId: number): Observable<any> {
-    return this.http.post(`${this.apiUrl}/application`, { user_id: userId });
+  /** Applicant: create or fetch draft for a window */
+  upsertDraft(windowId: string): Observable<LiquidatorApplication> {
+    return this.http.post<LiquidatorApplication>(`${this.BASE}/draft`, { windowId });
   }
 
-  // Get application by ID
-  getApplication(user_id: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/application/${user_id}`);
+  /** Applicant: my apps */
+  getMine(): Observable<LiquidatorApplication[]> {
+    return this.http.get<LiquidatorApplication[]>(`${this.BASE}/mine`);
   }
 
-  // Update a specific section in the application
-  updateSection(applicationId: number, section: number, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/application-no-attachment/${applicationId}/section`, { section, data });
+  /** Get one app (applicant can see own; officials/chief/admin can see any) */
+  getById(id: string): Observable<LiquidatorApplication> {
+    return this.http.get<LiquidatorApplication>(`${this.BASE}/${encodeURIComponent(id)}`);
   }
 
-  updateSection2(applicationId: number, section: number, formData: FormData): Observable<any> {
-    // Append the section number as a field in FormData
-    formData.append('section', section.toString());
-  
-    // Send FormData directly as the body of the request
-    return this.http.put(`${this.apiUrl}/application/${applicationId}/section`, formData);
+  /**
+   * Update ONE section (PATCH multipart).
+   * IMPORTANT: send FormData; don't set Content-Type manually.
+   */
+  updateSection(id: string, sectionKey: SectionKey, formData: FormData): Observable<LiquidatorApplication> {
+    const url = `${this.BASE}/${encodeURIComponent(id)}/sections/${encodeURIComponent(sectionKey)}`;
+    return this.http.patch<LiquidatorApplication>(url, formData);
   }
 
-  // Submit the application
-  submitApplication(applicationId: number): Observable<any> {
-    return this.http.put(`${this.apiUrl}/application/${applicationId}/submit`, {});
+  /** Applicant: submit the full application */
+  submit(id: string): Observable<{ message: string; id: string; status: string }> {
+    return this.http.post<{ message: string; id: string; status: string }>(
+      `${this.BASE}/${encodeURIComponent(id)}/submit`,
+      {}
+    );
   }
 
-  // Check application review status
-  getReviewStatus(applicationId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/application/${applicationId}/status`);
+  /** Officials: list with filters/pagination */
+  list(params?: {
+    page?: number;
+    limit?: number;
+    q?: string;
+    status?: string;
+    windowId?: string;
+    applicantId?: string;
+    isLocked?: boolean;
+    dateFrom?: string; // ISO
+    dateTo?: string;   // ISO
+    sort?: 'createdAt' | 'decided_at' | 'submitted_at' | 'progress_percent' | 'status';
+    dir?: 'asc' | 'desc';
+  }): Observable<{ page: number; limit: number; total: number; pages: number; items: LiquidatorApplication[] }> {
+    return this.http.get<{ page: number; limit: number; total: number; pages: number; items: LiquidatorApplication[] }>(
+      this.BASE,
+      { params: this.objToHttpParams(params || {}) }
+    );
   }
 
-  getSectionDetails(applicationId: number, section: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/application/${applicationId}/section/${section}`);
+  /** Officials: mark under review */
+  markUnderReview(id: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.BASE}/${encodeURIComponent(id)}/under-review`, {});
   }
 
-  editSection2(personalInfoId: number, section: number, data: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/application-no-attachment/${personalInfoId}/edit-section`, {
-      section,
-      data,
-    });
+  /** Officials: approve (for exam invitation) */
+  approve(id: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.BASE}/${encodeURIComponent(id)}/approve`, {});
   }
 
-  editSection(personalInfoId: number, section: number, formData: FormData): Observable<any> {
- 
-    formData.append('section', section.toString());
-
-    return this.http.put(`${this.apiUrl}/application/${personalInfoId}/edit-section`, formData);
-  }
-  
-
-  updateApplicationStatus(application_id: number, statusData: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/application/status/${application_id}`, statusData);
-  }
-  
-  
-  addTradingPartners(applicationId: number, tradingPartners: any[]): Observable<any> {
-    return this.http.post(`${this.apiUrl}/tradingpartners`, {
-      application_id: applicationId,
-      trading_partners: tradingPartners,
-    });
+  /** Officials: reject */
+  reject(id: string, reason?: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.BASE}/${encodeURIComponent(id)}/reject`, { reason });
   }
 
-  getTradingPartners(applicationId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/tradingpartners/${applicationId}`);
+  /** Officials: add review note */
+  addReviewNote(id: string, note: string): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.BASE}/${encodeURIComponent(id)}/review-note`, { note });
   }
 
-  updateTradingPartners(applicationId: number, tradingPartners: any[]): Observable<any> {
-    return this.http.put(`${this.apiUrl}/tradingpartners/${applicationId}`, {
-      trading_partners: tradingPartners,
-    });
+  /**
+   * Officials: record exam outcome
+   * body example: { outcome: 'PASS' | 'FAIL', score?: number }
+   */
+  recordExamOutcome(id: string, body: { outcome: 'PASS' | 'FAIL'; score?: number; comment?: string }): Observable<{ message: string }> {
+    return this.http.post<{ message: string }>(`${this.BASE}/${encodeURIComponent(id)}/exam-outcome`, body);
   }
 
-  submitDeclarationForm(applicationId: number, applicationStatus: any): Observable<any> {
-    return this.http.post(`${this.apiUrl}/submit-declaration-form/${applicationId}`, applicationStatus);
+  // ---- utils
+  private objToHttpParams(obj: Record<string, any>): HttpParams {
+    let p = new HttpParams();
+    for (const [k, v] of Object.entries(obj)) {
+      if (v === undefined || v === null || v === '') continue;
+      if (Array.isArray(v)) v.forEach((vv) => (p = p.append(k, String(vv))));
+      else p = p.set(k, String(v));
+    }
+    return p;
   }
-
-  getApplicationStatus(applicationId: number): Observable<any> {
-    return this.http.get(`${this.apiUrl}/application-status/${applicationId}`);
-  }
-  
-  updateDeclarationForm(applicationId: number, statusData: any): Observable<any> {
-    return this.http.put(`${this.apiUrl}/update-application-status/${applicationId}`, statusData);
-  }
-
-
 }
