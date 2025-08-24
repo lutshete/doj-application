@@ -407,7 +407,7 @@ export class LiquidatorsComponent implements OnInit {
     this.setStep(6);
   }
   movebackGroupEightSection() {
-    this.setStep(8);
+    this.setStep(7);
   }
   moveGroupNineSection() {
     // purely UI toggle — you could scroll to submission section if needed

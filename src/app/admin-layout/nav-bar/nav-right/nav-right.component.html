@@ -5,10 +5,10 @@
     </a> -->
   </li>
   <li class="dropdown pc-h-item" ngbDropdown>
-    <a class="pc-head-link dropdown-toggle arrow-none me-0 bg-gray-200" data-bs-toggle="dropdown" ngbDropdownToggle>
+   <!--  <a class="pc-head-link dropdown-toggle arrow-none me-0 bg-gray-200" data-bs-toggle="dropdown" ngbDropdownToggle>
       <i antIcon type="bell" theme="outline"></i>
       <span class="badge bg-primary pc-h-badge">3</span>
-    </a>
+    </a> -->
     <div class="dropdown-menu dropdown-notification dropdown-menu-end pc-h-dropdown" ngbDropdownMenu>
       <div class="dropdown-header d-flex align-items-center justify-content-between">
         <h5 class="m-0">Notification</h5>
@@ -91,15 +91,32 @@
   </li>
   <li class="dropdown pc-h-item header-user-profile" ngbDropdown>
     <a class="pc-head-link dropdown-toggle arrow-none me-0" ngbDropdownToggle>
-      <img src="assets/images/user/avatar-2.jpg" alt="user-image" class="user-avatar me-2" />
+     <!-- replace the <img ...> -->
+<span class="user-avatar me-2" aria-label="User">
+  <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+    <circle cx="12" cy="12" r="10" stroke="currentColor" opacity=".25"></circle>
+    <path fill="currentColor"
+      d="M12 12a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5Zm0 1.5c-3.06 0-5.5 2.13-5.5 4.75v.25h11v-.25c0-2.62-2.44-4.75-5.5-4.75Z">
+    </path>
+  </svg>
+</span>
+
       <span class="f-w-600">{{userData.firstName}} {{userData.lastName}}</span>
     </a>
     <div class="dropdown-menu dropdown-user-profile dropdown-menu-end pc-h-dropdown" ngbDropdownMenu>
       <div class="dropdown-header">
         <div class="d-flex mb-1">
-          <div class="flex-shrink-0">
-            <img src="assets/images/user/avatar-2.jpg" alt="user-image" class="user-avatar wid-35" />
-          </div>
+      <div class="flex-shrink-0">
+  <span class="user-avatar wid-35" aria-label="User">
+    <svg viewBox="0 0 24 24" role="img" aria-hidden="true">
+      <circle cx="12" cy="12" r="10" stroke="currentColor" opacity=".25"></circle>
+      <path fill="currentColor"
+            d="M12 12a3.25 3.25 0 1 0 0-6.5 3.25 3.25 0 0 0 0 6.5Zm0 1.5c-3.06 0-5.5 2.13-5.5 4.75v.25h11v-.25c0-2.62-2.44-4.75-5.5-4.75Z">
+      </path>
+    </svg>
+  </span>
+</div>
+
           <div class="flex-grow-1 ms-3 text-start">
             <h6 class="mb-0">Role</h6>
             <span>{{userData.role}}</span>

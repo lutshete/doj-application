@@ -1,4 +1,4 @@
-<div class="row">
+<div class="row g-3">
   <!--     <div class="row">
         <div class="col-6">
             <button class="btn btn-primary btn1" (click)="generatePDF()">Print</button>
@@ -10,13 +10,13 @@
 
   <p></p>
 
-  <div class="col-8" id="a4">
+  <div class="col-12 col-xl-8" id="a4">
     <app-card cardTitle="Affidavit/Liquidators" blockClass="pc-component">
       <div class="row">
         <div class="col-4">
           <img src="assets/images/logo-dark.gif" alt="logo" width="290" />
         </div>
-        <div class="col-8 shaded-block">
+        <div class="col-12 col-xl-8 shaded-block">
           AFFIDAVIT PROVIDING REQUIRED INFORMATION FOR PERSONS APPLYING TO BE
           PLACED ON THE NATIONAL LIST OF LIQUIDATORS
         </div>
@@ -1839,7 +1839,7 @@
       </div>
     </app-card>
   </div>
-  <div class="col-4" id="a4" *ngIf="isBetweenOpeningAndClosing">
+  <div class="col-12 col-xl-4"  *ngIf="isBetweenOpeningAndClosing">
     <div class="card border-danger progress-card">
       <div class="card-header bg-danger text-white text-center">
         <strong>Progress Tracker</strong>

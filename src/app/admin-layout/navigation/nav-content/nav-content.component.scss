@@ -1,0 +1,8 @@
+/* hide the left rail on phones */
+@media (max-width: 767.98px){
+  #nav-ps-mantis.nav-rail{
+    display: none !important;
+    visibility: hidden;
+    pointer-events: none;
+  }
+}

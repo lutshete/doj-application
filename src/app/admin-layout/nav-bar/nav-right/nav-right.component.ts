@@ -78,7 +78,7 @@ export class NavRightComponent {
 
 
   profile = [
-    {
+/*     {
       icon: 'edit',
       title: 'Edit Profile'
     },
@@ -86,7 +86,7 @@ export class NavRightComponent {
       icon: 'user',
       title: 'View Profile'
     },
-
+ */
 
   ];
 
