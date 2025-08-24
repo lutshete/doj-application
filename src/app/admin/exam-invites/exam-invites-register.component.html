@@ -1,0 +1,228 @@
+<!-- Header -->
+<header class="hdr">
+  <div class="hdr__title">
+    <h2>Exam Invites & Register</h2>
+    <div class="hdr__meta" aria-live="polite">
+      <span class="pill">
+        Showing <strong>{{ range().start }}</strong>–<strong>{{ range().end }}</strong>
+        of <strong>{{ total() }}</strong>
+      </span>
+      <span class="sep">•</span>
+      <span class="muted">Page {{ page() }} / {{ pageCount() }}</span>
+    </div>
+  </div>
+  <div class="hdr__actions">
+    <button type="button" class="btn ghost" (click)="load()" title="Refresh">
+      <span class="material-icons">refresh</span><span class="hide-sm">Refresh</span>
+    </button>
+    <button type="button" class="btn outline" (click)="resetFilters()" title="Reset filters">
+      <span class="material-icons">filter_alt_off</span><span class="hide-sm">Reset</span>
+    </button>
+  </div>
+</header>
+
+<!-- Filters -->
+<div class="filters">
+  <div class="field field--search">
+    <span class="material-icons" aria-hidden="true">search</span>
+    <input class="inp" placeholder="Search name or email"
+           [ngModel]="q()"
+           (ngModelChange)="q.set($event); page.set(1); load()" />
+    <button type="button" class="clear" *ngIf="q()" (click)="q.set(''); page.set(1); load()" title="Clear">
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <div class="field">
+    <label for="f-status">Status</label>
+    <select id="f-status" class="sel" [ngModel]="status()"
+            (ngModelChange)="status.set($event); page.set(1); load()">
+      <option value="">All</option>
+      <option value="PENDING">Pending</option>
+      <option value="ACCEPTED">Accepted</option>
+      <option value="DECLINED">Declined</option>
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="f-sort">Sort</label>
+    <select id="f-sort" class="sel" [ngModel]="sort()" (ngModelChange)="sortBy($event)">
+      <option value="createdAt">Created</option>
+      <option value="updatedAt">Updated</option>
+      <option value="status">Status</option>
+      <option value="respondedAt">Responded</option>
+      <!-- token removed -->
+    </select>
+  </div>
+
+  <div class="field">
+    <label for="f-dir">Direction</label>
+    <select id="f-dir" class="sel" [ngModel]="dir()" (ngModelChange)="dir.set($event); page.set(1); load()">
+      <option value="desc">Desc</option>
+      <option value="asc">Asc</option>
+    </select>
+  </div>
+</div>
+
+<div class="layout">
+  <!-- Invites table -->
+  <div class="card corp petit">
+    <div class="table-wrap">
+      <table class="corp-table" aria-label="Exam invites">
+        <colgroup>
+          <col style="width: 36%" />
+          <col style="width: 36%" />
+          <col style="width: 14%" />
+          <col style="width: 14%" />
+        </colgroup>
+
+        <thead>
+          <tr>
+            <th>Applicant</th>
+            <th>Email</th>
+            <th>Status</th>
+            <th class="text-right">Actions</th>
+          </tr>
+        </thead>
+
+        <!-- Loading -->
+        <tbody *ngIf="loading(); else bodySwitch">
+          <tr *ngFor="let s of skeletonRows"><td colspan="4"><div class="skeleton"></div></td></tr>
+        </tbody>
+
+        <ng-template #bodySwitch>
+          <tbody *ngIf="invites() as list; else emptyState">
+            <tr *ngFor="let it of list; trackBy: trackById">
+              <td>
+                <div class="cell-name">
+              <!--     <div class="avatar xs">
+                    {{ ((it.applicant_id?.firstName?.[0]||'') + (it.applicant_id?.lastName?.[0]||'')) | uppercase }}
+                  </div> -->
+                  <div class="stack">
+                    <div class="name">
+                      {{ it.applicant_id?.firstName }} {{ it.applicant_id?.lastName }}
+                    </div>
+              <!--       <div class="sub muted">
+                      App Ref: {{ it.application_id?.referenceNo || '—' }}
+                    </div> -->
+                  </div>
+                </div>
+              </td>
+
+              <td>
+                <div class="cell-email">
+                  <span class="truncate" [title]="it.applicant_id?.email">{{ it.applicant_id?.email }}</span>
+                  <button class="icon-btn subtle" (click)="copy(it.applicant_id?.email)" title="Copy email">
+               <!--      <span class="material-icons">content_copy</span> -->
+                  </button>
+                </div>
+              </td>
+
+              <td>
+                <span class="badge xs"
+                      [class.warn]="it.status==='PENDING'"
+                      [class.ok]="it.status==='ACCEPTED'"
+                      [class.bad]="it.status==='DECLINED'">
+                  {{ it.status }}
+                </span>
+              </td>
+
+              <td class="text-right">
+                <div class="acts">
+                  <button class="icon-btn ico blue" title="Check-in" (click)="quickCheckIn(it)">
+                    <span class="material-icons">login</span>
+                  </button>
+                  <button class="icon-btn ico red" title="Check-out" (click)="quickCheckOut(it)">
+                    <span class="material-icons">logout</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+
+          <ng-template #emptyState>
+            <tbody>
+              <tr>
+                <td colspan="4">
+                  <div class="empty">
+                    <span class="material-icons empty__icon">mail_lock</span>
+                    <div class="empty__title">No invites found</div>
+                    <div class="empty__text muted">Try adjusting filters or clearing the search.</div>
+                    <button class="btn outline" (click)="resetFilters()">
+                      <span class="material-icons">filter_alt_off</span>Reset filters
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </ng-template>
+        </ng-template>
+      </table>
+    </div>
+
+    <!-- Pager -->
+    <footer class="pager">
+      <div class="pager__left">
+        <span class="muted">Page {{ page() }} / {{ pageCount() }}</span>
+      </div>
+      <div class="pager__right">
+        <label class="muted small" for="rows">Rows:</label>
+        <select id="rows" class="sel size" [ngModel]="limit()" (ngModelChange)="limit.set($event); page.set(1); load()">
+          <option [ngValue]="10">10</option>
+          <option [ngValue]="20">20</option>
+          <option [ngValue]="50">50</option>
+          <option [ngValue]="100">100</option>
+        </select>
+        <button class="btn outline" (click)="changePage(-1)" [disabled]="page() <= 1">Prev</button>
+        <button class="btn outline" (click)="changePage(1)" [disabled]="page() >= pageCount()">Next</button>
+      </div>
+    </footer>
+  </div>
+
+  <!-- Register panel -->
+  <aside class="card side">
+    <h3 class="card-title">Register</h3>
+
+    <div class="field">
+      <label>Token</label>
+      <input class="inp" [ngModel]="token()" (ngModelChange)="token.set($event)"
+             placeholder="Scan or paste token" (keyup.enter)="findByToken()" />
+    </div>
+
+    <div class="grid2">
+      <div class="field">
+        <label>Seat (optional)</label>
+        <input class="inp" [ngModel]="seat()" (ngModelChange)="seat.set($event)" placeholder="e.g., A-12" />
+      </div>
+      <div class="field">
+        <label>Note (optional)</label>
+        <input class="inp" [ngModel]="note()" (ngModelChange)="note.set($event)" placeholder="Anything noteworthy" />
+      </div>
+    </div>
+
+    <div class="btns">
+      <button class="btn outline" (click)="findByToken()" [disabled]="regBusy()">Find</button>
+      <button class="btn" (click)="checkIn()" [disabled]="!token() || regBusy()">Check-in</button>
+      <button class="btn outline" (click)="checkOut()" [disabled]="!token() || regBusy()">Check-out</button>
+    </div>
+
+    <div class="lookup" *ngIf="lookup() as l">
+      <div class="kv"><span>Applicant</span><strong>{{ l?.applicant?.firstName }} {{ l?.applicant?.lastName }}</strong></div>
+      <div class="kv"><span>Email</span><strong>{{ l?.applicant?.email }}</strong></div>
+  <!--     <div class="kv"><span>Ref</span><strong>{{ l?.application?.referenceNo || '—' }}</strong></div> -->
+      <div class="kv">
+        <span>Status</span>
+        <strong>
+          <span class="badge xs"
+                [class.warn]="l?.status==='PENDING'"
+                [class.ok]="l?.status==='ACCEPTED'"
+                [class.bad]="l?.status==='DECLINED'">{{ l?.status }}</span>
+        </strong>
+      </div>
+      <div class="kv"><span>Created</span><strong>{{ l?.createdAt | date:'dd MMM yyyy, HH:mm':'Africa/Johannesburg' }}</strong></div>
+      <div class="kv"><span>Responded</span><strong>{{ l?.respondedAt ? (l?.respondedAt | date:'dd MMM yyyy, HH:mm':'Africa/Johannesburg') : '—' }}</strong></div>
+    </div>
+
+    <div class="toast" *ngIf="toast()">{{ toast() }}</div>
+  </aside>
+</div>

@@ -1,0 +1,90 @@
+<!-- admin-shell.component.html -->
+<section class="admin-landing">
+  <header class="header">
+    <div class="title">
+      <h1>Admin</h1>
+      <div class="subtitle">
+        <span class="greeting">Welcome{{ me?.firstName ? ', ' + me.firstName : '' }}</span>
+        <span class="dot">•</span>
+        <span class="role">{{ roleBadge() }}</span>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="btn" (click)="go('/admin/windows')">
+        <span class="mi">calendar_month</span>
+        Manage Windows
+      </button>
+      <button class="btn outline" (click)="go('/admin/users')">
+        <span class="mi">people</span>
+        Users
+      </button>
+    </div>
+  </header>
+
+  <div class="grid kpis">
+    <div class="kpi blue">
+      <div class="kpi-title">Total Users</div>
+      <div class="kpi-value" [class.skeleton]="loading">{{ stats.totalUsers }}</div>
+    </div>
+    <div class="kpi green">
+      <div class="kpi-title">Admin Officials</div>
+      <div class="kpi-value" [class.skeleton]="loading">{{ stats.adminOfficials }}</div>
+    </div>
+    <div class="kpi amber">
+      <div class="kpi-title">Liquidators</div>
+      <div class="kpi-value" [class.skeleton]="loading">{{ stats.liquidators }}</div>
+    </div>
+    <div class="kpi red">
+      <div class="kpi-title">Chief Masters</div>
+      <div class="kpi-value" [class.skeleton]="loading">{{ stats.chiefs }}</div>
+    </div>
+  </div>
+
+  <div class="panel" *ngIf="canAdmin()">
+    <div class="panel-head">
+      <h2>Officials pending approval</h2>
+      <button class="btn small" (click)="go('/admin/users')">
+        Review
+        <span class="badge">{{ stats.officialsPending }}</span>
+      </button>
+    </div>
+    <p class="muted" *ngIf="stats.officialsPending === 0">No officials waiting for approval right now.</p>
+  </div>
+
+  <div class="grid two">
+    <div class="panel">
+      <div class="panel-head">
+        <h2>Application Window</h2>
+        <button class="btn small" (click)="go('/admin/windows')">Open</button>
+      </div>
+      <ng-container *ngIf="currentWindow; else noWin">
+        <div class="win">
+          <div>
+            <div class="muted">Opening</div>
+            <div class="big">{{ currentWindow?.openingDate | date:'dd MMM yyyy' }}</div>
+          </div>
+          <div>
+            <div class="muted">Closing</div>
+            <div class="big">{{ currentWindow?.closingDate | date:'dd MMM yyyy' }}</div>
+          </div>
+        </div>
+        <div class="hint">You can extend the closing date by up to one week.</div>
+      </ng-container>
+      <ng-template #noWin>
+        <p class="muted">No application window is active. Create a new period.</p>
+      </ng-template>
+    </div>
+
+    <div class="panel quick">
+      <h2>Quick links</h2>
+      <div class="links">
+        <button class="lnk" (click)="go('/admin/users')"><span class="mi">people</span>Users</button>
+        <button class="lnk" (click)="go('/admin/officials')"><span class="mi">badge</span>Officials</button>
+        <button class="lnk" (click)="go('/admin/windows')"><span class="mi">calendar_month</span>Windows</button>
+        <button class="lnk" (click)="go('/admin/applications-review')"><span class="mi">dashboard_customize</span>Assessments</button>
+      </div>
+      <p class="muted small">Tip: use search at the top navbar to find users by email.</p>
+    </div>
+  </div>
+</section>

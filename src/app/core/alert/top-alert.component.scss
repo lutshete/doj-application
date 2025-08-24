@@ -1,0 +1,70 @@
+/* components/top-alert/top-alert.component.scss */
+
+/* Overlay container (top-right) */
+.topalert-wrap {
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  left: auto;
+  bottom: auto;
+  z-index: 2147483000; /* very high so it’s above toolbars */
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  pointer-events: none; /* container doesn't block clicks */
+}
+
+/* Base card */
+.topalert {
+  pointer-events: auto; /* card is clickable */
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  background: #fff;
+  border: 1px solid #e6e8eb;
+  border-left-width: 4px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  min-width: 320px;
+  max-width: 420px;
+  box-shadow: 0 12px 32px rgba(0,0,0,.14);
+  animation: toast-in .16s ease-out;
+}
+
+/* Optional full-width banner mode (if you ever set ui:'banner') */
+.topalert.banner {
+  position: sticky;
+  top: 0;
+  right: auto; left: auto;
+  width: min(960px, calc(100vw - 32px));
+  margin: 0 auto;
+  border-left-width: 4px;
+}
+
+/* Type colors (left border + icon tint) */
+.topalert.ok    { border-left-color: #28a745; }
+.topalert.warn  { border-left-color: #ffb020; }
+.topalert.bad,
+.topalert.error { border-left-color: #dc3545; }
+.topalert.brand { border-left-color: #f47f0c; }
+.topalert.info  { border-left-color: #3b82f6; }
+
+.topalert__icon .material-icons { font-size: 20px; opacity: .9; }
+
+.topalert__body { flex: 1; }
+.topalert__msg  { font-weight: 700; color: #0b1220; }
+.topalert__acts { margin-top: 4px; display: flex; gap: 10px; }
+.topalert__acts a { font-weight: 800; text-decoration: none; }
+.topalert__acts a:hover { text-decoration: underline; }
+
+.topalert__close {
+  appearance: none; border: 0; background: transparent; cursor: pointer;
+  padding: 4px; border-radius: 8px; color: #6b7280;
+}
+.topalert__close:hover { background: #f6f7f9; }
+
+/* Slide-in micro animation */
+@keyframes toast-in {
+  from { transform: translateY(-6px); opacity: 0; }
+  to   { transform: translateY(0);    opacity: 1; }
+}

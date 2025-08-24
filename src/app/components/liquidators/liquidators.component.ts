@@ -11,6 +11,8 @@ import {
   FormBuilder,
   FormControl,
   FormGroup,
+  ValidationErrors,
+  ValidatorFn,
   Validators,
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
@@ -144,10 +146,21 @@ export class LiquidatorsComponent implements OnInit {
     { value: 'NA', label: 'Not applicable' },
   ];
 
+  private readonly stepToSection: Record<number, SectionKey> = {
+    1: 'personal',
+    2: 'business',
+    3: 'employment_trading',
+    4: 'infrastructure_offices',
+    5: 'qualifications_memberships',
+    6: 'relationship',
+    7: 'appointments_employment',
+    8: 'tax_bond_bank',
+  };
+
   // ===== Forms (exactly what your HTML binds to)
   personalInfoForm = this.fb.group({
     fullName: ['', Validators.required],
-    identityNumber: ['', [Validators.required, this.saIdValidator]],
+    identityNumber: ['', [Validators.required, this.southAfricanIdValidator]],
     identityDocument: [null as File | null, Validators.required],
     race: ['', Validators.required],
     gender: ['', Validators.required],
@@ -211,7 +224,7 @@ export class LiquidatorsComponent implements OnInit {
     taxClearance: [null as File | null, Validators.required], // file
     bondFacility: [null as File | null, Validators.required], // file
     bankAccountDocumentation: [null as File | null, Validators.required], // file
-    declaration: [false, Validators.requiredTrue],
+    declaration: [false],
   });
 
   // ===== File Preview URLs used in template
@@ -245,6 +258,9 @@ export class LiquidatorsComponent implements OnInit {
   hasTradingPartners = false;
   showRelationshipDetails = false;
   membershipConfirmationFileName?: string;
+  isEditable: boolean;
+  isLocked: boolean;
+  editableUntil: any;
 
   // ====== Lifecycle
   async ngOnInit() {
@@ -266,6 +282,7 @@ export class LiquidatorsComponent implements OnInit {
 
       await this.refreshSnapshot(); // pulls sections, file URLs, completion flags
     } catch (e: any) {
+      console.log(e)
       this.toast.error(e?.error?.message || 'Failed to load application');
     } finally {
       this.loading = false;
@@ -480,30 +497,30 @@ export class LiquidatorsComponent implements OnInit {
 
   // ======= Relationship disclosure toggle
   onRelationshipChange(value: 'not_related' | 'related') {
+    const detailsCtrl = this.disqualRelationshipForm.get('relationshipDetails');
+    const cityCtrl = this.disqualRelationshipForm.get('relationshipCity');
+
     this.showRelationshipDetails = value === 'related';
+
     if (this.showRelationshipDetails) {
-      this.disqualRelationshipForm
-        .get('relationshipDetails')
-        ?.setValidators([Validators.required]);
-      this.disqualRelationshipForm
-        .get('relationshipCity')
-        ?.setValidators([Validators.required]);
+      detailsCtrl?.setValidators([Validators.required]);
+      cityCtrl?.setValidators([Validators.required]);
+      detailsCtrl?.enable({ emitEvent: false });
+      cityCtrl?.enable({ emitEvent: false });
     } else {
-      this.disqualRelationshipForm
-        .get('relationshipDetails')
-        ?.clearValidators();
-      this.disqualRelationshipForm.get('relationshipCity')?.clearValidators();
-      this.disqualRelationshipForm.patchValue({
-        relationshipDetails: '',
-        relationshipCity: '',
-      });
+      // Clear validators + value + errors; disable so they won't submit
+      detailsCtrl?.clearValidators();
+      cityCtrl?.clearValidators();
+
+      detailsCtrl?.reset('', { emitEvent: false });
+      cityCtrl?.reset('', { emitEvent: false });
+
+      detailsCtrl?.disable({ emitEvent: false });
+      cityCtrl?.disable({ emitEvent: false });
     }
-    this.disqualRelationshipForm
-      .get('relationshipDetails')
-      ?.updateValueAndValidity();
-    this.disqualRelationshipForm
-      .get('relationshipCity')
-      ?.updateValueAndValidity();
+
+    detailsCtrl?.updateValueAndValidity({ emitEvent: false });
+    cityCtrl?.updateValueAndValidity({ emitEvent: false });
   }
 
   // ======= Appointment locations (checkbox list)
@@ -718,7 +735,7 @@ export class LiquidatorsComponent implements OnInit {
     await this.sendSection('relationship', fd, 6);
   }
   async editSection6() {
-    return this.disqualRelationshipSubmit();
+   // return this.disqualRelationshipSubmit();
   }
 
   // Step 7 — appointments & employment history (+ CV)
@@ -761,7 +778,7 @@ export class LiquidatorsComponent implements OnInit {
         'bank_account_documentation',
         v.bankAccountDocumentation as File,
       );
-
+ fd.append('declaration_agreed', v.declaration ? 'true' : 'false');
     // do not flip declaration here; the final button does it
     fd.append('status', 'SAVED');
 
@@ -800,6 +817,7 @@ export class LiquidatorsComponent implements OnInit {
   async submitApplication() {
     try {
       await this.appSvc.submit(this.appId).toPromise();
+      this.updateDeclarationStatus()
       this.toast.success('Application submitted.');
       await this.refreshSnapshot();
     } catch (e: any) {
@@ -868,35 +886,137 @@ export class LiquidatorsComponent implements OnInit {
   }
 
   // ======= Snapshot from server to refresh file links, statuses, etc.
+
   private snapshot?: LiquidatorApplication;
+
+private goToNextStepIfCurrentSaved(): void {
+  // Walk forward from currentStep until we hit the first incomplete section
+  let step = this.currentStep;
+
+  while (step <= 8) {
+    const key = this.stepToSection[step];
+    if (!key) break;
+
+    if (this.isSectionSavedOrComplete(key)) {
+      step++; // keep going
+    } else {
+      break;  // stop at first incomplete
+    }
+  }
+
+  // If all were complete, you'll land on 9 → clamp to last step (8)
+  this.setStep(Math.min(step, 8));
+}
+
 
   private async refreshSnapshot() {
     const snap = await this.appSvc.getById(this.appId).toPromise();
     this.snapshot = snap;
-
     // Map section-file previews & names for your template
     const sec = snap.sections || {};
-
     // --- Step 1
     const personal = sec.personal || {};
     this.section1Details = {
-      id_document_file_name: personal?.id_document?.file_name,
-      id_document: personal?.id_document,
+      id_document_file_name: personal?.id_document?.file_name || '',
+      id_document: personal?.id_document || '',
     };
     this.idDocumentFileUrl = personal?.id_document?.url || undefined;
 
+    console.log(personal);
+
+    this.personalInfoForm.patchValue(
+      {
+        fullName: personal.full_name ?? '',
+        identityNumber: personal?.identity_number ?? '',
+        race: personal?.race ?? '',
+        gender: personal?.gender ?? '',
+        // identityDocument: keep whatever the user selected (File), server returns metadata only
+      },
+      { emitEvent: false },
+    );
+
     // --- Step 2
-    this.section2Details = sec.business;
+    this.section2Details = sec.business || {};
+
+    this.businessForm.patchValue({
+      businessType: this.section2Details.business_type || '',
+      businessStatus: this.section2Details.business_status || '',
+    });
 
     // --- Step 3
-    this.section3Details = sec.employment_trading;
+    this.section3Details = sec.employment_trading || {};
+
+    this.hasTradingPartners = this.section3Details.has_trading_partners || {};
+    this.empBusTradingForm.patchValue({
+      employerName: this.section3Details.employer_name || '',
+      businessTelephone: this.section3Details.business_telephone || '',
+      businessAddress: this.section3Details.business_address || '',
+      firmName: this.section3Details.firm_name || '',
+      partnersOrDirectors: this.section3Details.partners_or_directors || '',
+      businessName: this.section3Details.business_name || '',
+      businessDetails: this.section3Details.business_details || '',
+    });
+
+    // 🔑 simple fix: rebuild FormArray instead of patchValue
+    if (
+      Array.isArray(this.section3Details.trading_partners) &&
+      this.section3Details.trading_partners.length > 0
+    ) {
+      this.hasTradingPartners = true;
+
+      const fa = this.tradingPartners;
+      fa.clear(); // remove any existing
+
+      this.section3Details.trading_partners.forEach((p) => {
+        fa.push(
+          this.fb.group({
+            name: [p.name || ''],
+            address: [p.address || ''],
+          }),
+        );
+      });
+
+      this.empBusTradingForm.patchValue({ hasTradingPartners: true });
+    }
 
     // --- Step 4
-    this.section4Details = sec.infrastructure_offices;
+
+    this.section4Details = sec.infrastructure_offices || {};
+
+    this.businessDetailsOfficeForm.patchValue({
+      proofOfRental: this.section4Details.proof_of_rental_text || '',
+      staffDetails: this.section4Details.staff_details || '',
+      numComputers: this.section4Details.num_computers || '',
+      numPrinters: this.section4Details.num_printers_scanners_faxes || '',
+      additionalInfo: this.section4Details.additional_info || '',
+    });
+
+    const baddress = this.section4Details.other_province_offices || {}
+
+    this.businessAdressDetailsForm.patchValue({
+      provinceOfficeAddress1:
+        baddress.province_office_address1 ||
+        '',
+      provinceDetails1:
+        baddress.province_details1 || '',
+      provinceOfficeAddress2:
+        baddress.province_office_address2 ||
+        '',
+      provinceDetails2:
+        baddress.province_details2 || '',
+      provinceOfficeAddress3:
+        baddress.province_office_address3 ||
+        '',
+      provinceDetails3:
+        baddress.province_details3 || '',
+    });
+
     this.section5Details = sec.infrastructure_offices;
 
     // --- Step 5
     const qm = sec.qualifications_memberships || {};
+
+    console.log(qm);
     this.section6Details = {
       qualification_file_name: qm?.qualification_file?.file_name,
       membership_file_name: qm?.membership_confirmation_file?.file_name,
@@ -904,15 +1024,42 @@ export class LiquidatorsComponent implements OnInit {
     this.qualificationFileUrl = qm?.qualification_file?.url || undefined;
     this.membershipFileUrl = qm?.membership_confirmation_file?.url || undefined;
 
+    this.qualProMembershipForm.patchValue({
+      qualifications: qm.qualification_choice || '',
+
+      professionalMemberships: qm.professional_membership_choice || '',
+    });
+
     // --- Step 6
     this.section7Details = sec.relationship;
+    console.log(this.section7Details);
+    this.disqualRelationshipForm.patchValue({
+      disqualification: this.section7Details.disqualification_note,
+      relationshipDetails: this.section7Details.relationship_details,
+      relationshipCity: this.section7Details.relationship_city,
+    });
 
+    this.disqualRelationshipForm
+      .get('relationshipDisclosure')!
+      .valueChanges.subscribe((v: 'related' | 'not_related') =>
+        this.onRelationshipChange(v),
+      );
+
+    // After you load "sec", call this:
+    this.prefillFromSnapshot(sec);
+
+    this.onRelationshipChange(this.section7Details.relationship_disclosure);
     // --- Step 7
     const ae = sec.appointments_employment || {};
     this.section8Details = {
       curriculum_vitae_file_name: ae?.curriculum_vitae?.file_name,
     };
     this.curriculumVitaeFileUrl = ae?.curriculum_vitae?.url || undefined;
+    console.log(ae);
+    this.appEmpHistoryForm.patchValue({
+      appointmentLocations: ae.appointment_locations,
+      employmentHistory: ae.employment_history,
+    });
 
     // --- Step 8
     const tbb = sec.tax_bond_bank || {};
@@ -925,6 +1072,13 @@ export class LiquidatorsComponent implements OnInit {
     this.bondFacilityFileUrl = tbb?.bond_facility?.url || undefined;
     this.bankAccountProofFileUrl =
       tbb?.bank_account_documentation?.url || undefined;
+
+      console.log(tbb)
+
+        this.taxBondBankForm.patchValue({
+          declaration:tbb.declaration_agreed ,
+        }) 
+
 
     // Progress flags
     this.group1SectionValid = this.isSectionSavedOrComplete('personal');
@@ -943,11 +1097,87 @@ export class LiquidatorsComponent implements OnInit {
     );
     this.group8SectionValid = this.isSectionSavedOrComplete('tax_bond_bank');
 
-    this.formIsComplete = !!snap.form_complete;
 
+const requiredSections: Array<keyof typeof sec> = [
+  'personal',
+  'business',
+  'employment_trading',
+  'infrastructure_offices',
+  'qualifications_memberships',
+  'relationship',
+  'appointments_employment',
+  'tax_bond_bank',
+];
+
+ const allSectionsOk = requiredSections.every((s:any) =>
+  this.isSectionSavedOrComplete(s)
+);
+
+// Declaration must be true
+const declarationOk = !!sec?.tax_bond_bank?.declaration_agreed;
+
+// Status must be SUBMITTED
+const submittedOk = snap?.status === 'SUBMITTED';
+console.log(allSectionsOk && declarationOk && submittedOk)
+// Final condition
+this.formIsComplete = allSectionsOk && declarationOk && submittedOk;
+
+// --- Submitted-but-editable / locked flags for alerts
+this.editableUntil =
+  snap?.editable_until ? new Date(snap.editable_until) : null;
+const now = new Date();
+
+// true when submitted, not locked, and still before editable_until
+this.isEditable =
+  !!this.formIsComplete &&
+  !snap?.is_locked &&
+  !!this.editableUntil &&
+  this.editableUntil.getTime() > now.getTime();
+
+// true when submitted but no longer editable (either locked or expired)
+this.isLocked =
+  !!this.formIsComplete &&
+  (!!snap?.is_locked ||
+    !this.editableUntil ||
+    this.editableUntil.getTime() <= now.getTime());
+
+
+
+
+
+    this.goToNextStepIfCurrentSaved();
     // Keep step in range
     if (this.currentStep < 1 || this.currentStep > 8) this.currentStep = 1;
     this.cdr.markForCheck();
+  }
+
+  
+
+  prefillFromSnapshot(sec: any) {
+    // You had: this.section7Details = sec.relationship;
+    const s = sec?.relationship ?? null;
+    this.section7Details = s;
+    console.log('section7Details', s);
+
+    // Decide what to tick on the radio:
+    const disclosure: 'related' | 'not_related' =
+      s?.relationship_disclosure === 'related' ||
+      s?.relationship_disclosure === 'not_related'
+        ? s.relationship_disclosure
+        : s?.relationship_details
+          ? 'related'
+          : 'not_related';
+
+    // Patch ALL matching form controls (including the radio)
+    this.disqualRelationshipForm.patchValue({
+      relationshipDisclosure: disclosure, // <<<< important
+      relationshipDetails: s?.relationship_details ?? '',
+      relationshipCity: s?.relationship_city ?? '',
+      disqualification: s?.disqualification_note ?? '',
+    });
+
+    // Align validators/UI immediately (optional if you rely on valueChanges above)
+    this.onRelationshipChange(disclosure);
   }
 
   ngOnDestroy() {
@@ -964,52 +1194,84 @@ export class LiquidatorsComponent implements OnInit {
       .forEach((u) => URL.revokeObjectURL(u as string));
   }
 
-  // ===== SA ID validator (format + DOB + checksum)
-  private saIdValidator(ctrl: AbstractControl) {
-    const raw = String(ctrl.value || '').trim();
-    if (!/^\d{13}$/.test(raw)) {
-      return { invalidFormat: true };
-    }
-    // YYMMDD
-    const yy = +raw.slice(0, 2);
-    const mm = +raw.slice(2, 4);
-    const dd = +raw.slice(4, 6);
-    const now = new Date();
-    const currentCentury = Math.floor(now.getFullYear() / 100) * 100;
-    const year =
-      yy +
-      (yy <= now.getFullYear() % 100 ? currentCentury : currentCentury - 100);
+  southAfricanIdValidator(): ValidatorFn {
+    return (control: AbstractControl): ValidationErrors | null => {
+      const idNumber = control.value;
 
-    const dob = new Date(year, mm - 1, dd);
-    const validDob =
-      dob.getFullYear() === year &&
-      dob.getMonth() === mm - 1 &&
-      dob.getDate() === dd;
-    if (!validDob) return { invalidDateOfBirth: true };
+      // Check if ID number is a 13-digit number
+      if (!/^\d{13}$/.test(idNumber)) {
+        return { invalidFormat: true };
+      }
 
-    // Luhn checksum
-    if (!this.luhnCheck(raw)) return { invalidChecksum: true };
+      // Check date of birth part (first 6 digits represent YYMMDD)
+      const year = parseInt(idNumber.slice(0, 2), 10);
+      const month = parseInt(idNumber.slice(2, 4), 10);
+      const day = parseInt(idNumber.slice(4, 6), 10);
+      const fullYear = year >= 0 && year <= 21 ? 2000 + year : 1900 + year;
 
-    return null;
+      const date = new Date(fullYear, month - 1, day);
+      if (
+        date.getFullYear() !== fullYear ||
+        date.getMonth() + 1 !== month ||
+        date.getDate() !== day
+      ) {
+        return { invalidDateOfBirth: true };
+      }
+
+      // Validate checksum using the Luhn algorithm
+      const checkSum = this.calculateLuhnChecksum(idNumber);
+      if (checkSum !== 0) {
+        return { invalidChecksum: true };
+      }
+
+      return null; // Valid ID number
+    };
   }
 
-  private luhnCheck(id: string): boolean {
+  // Luhn algorithm for checksum validation
+  calculateLuhnChecksum(idNumber: string): number {
     let sum = 0;
-    let alt = false;
-    for (let i = id.length - 1; i >= 0; i--) {
-      let n = parseInt(id.charAt(i), 10);
-      if (alt) {
-        n *= 2;
-        if (n > 9) n = (n % 10) + 1;
+    let alternate = false;
+
+    for (let i = idNumber.length - 1; i >= 0; i--) {
+      let digit = parseInt(idNumber[i], 10);
+
+      if (alternate) {
+        digit *= 2;
+        if (digit > 9) {
+          digit -= 9;
+        }
       }
-      sum += n;
-      alt = !alt;
+
+      sum += digit;
+      alternate = !alternate;
     }
-    return sum % 10 === 0;
+
+    return sum % 10;
   }
 
   // ===== Modal scroll hook (optional, used by template)
   onScroll() {
     // No-op, but kept because your HTML calls it. Add tracking if needed.
+  }
+
+  /** Rebuild a FormArray of {name,address} from plain array */
+  private setTradingPartners(rows: Array<{ name?: string; address?: string }>) {
+    const fa = this.tradingPartners;
+    while (fa.length) fa.removeAt(0);
+    (rows || []).forEach((r) => {
+      fa.push(
+        this.fb.group({
+          name: [r?.name || '', Validators.required],
+          address: [r?.address || '', Validators.required],
+        }),
+      );
+    });
+    const has = (rows || []).length > 0;
+    this.hasTradingPartners = has;
+    this.empBusTradingForm.patchValue(
+      { hasTradingPartners: has },
+      { emitEvent: false },
+    );
   }
 }

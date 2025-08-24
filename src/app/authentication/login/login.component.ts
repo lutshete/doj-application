@@ -7,7 +7,7 @@ import {
 } from '@angular/forms';
 import { MatDialog } from '@angular/material/dialog';
 import { Router, RouterModule } from '@angular/router';
-import { AuthService } from 'src/app/services/auth.service';
+import { AuthService, ROLES } from 'src/app/services/auth.service';
 import { AlertComponent } from 'src/shared/components/alert/alert.component';
 import { SharedModule } from 'src/shared/shared.module';
 import { OtpComponent } from '../otp/otp.component';
@@ -32,7 +32,7 @@ export class LoginComponent {
     private authService: AuthService,
     private router: Router,
     private cdr: ChangeDetectorRef,
-    private dialog: MatDialog
+    private dialog: MatDialog,
   ) {
     this.loginForm = this.fb.group({
       email: ['', [Validators.required, Validators.email]],
@@ -62,91 +62,127 @@ export class LoginComponent {
   }
 
   onSubmit() {
-  if (this.loginForm.invalid || this.isLocked) return;
+    if (this.loginForm.invalid || this.isLocked) return;
 
-  const { email, password } = this.loginForm.value;
+    const { email, password } = this.loginForm.value;
 
-  this.authService.login({ email, password }).subscribe({
-    next: (response) => {
-      // Backend shape: { token, user }
-      this.authService.setSessionToken(response.token);
-      if (response.user) this.authService.setUserFromMe(response.user);
+    this.authService.login({ email, password }).subscribe({
+      next: (response) => {
+        // Save session + user
+        this.authService.setSessionToken(response.token);
+        if (response.user) this.authService.setUserFromMe(response.user);
 
-      this.isSuccess = true;
-      this.alertMessage = 'Login successful! Redirecting...';
+        this.isSuccess = true;
+        this.alertMessage = 'Login successful! Redirecting...';
 
-      // Optional: support returnUrl (?returnUrl=/somewhere)
-      const urlTree = this.router.parseUrl(this.router.url);
-      const returnUrl = urlTree.queryParams['returnUrl'];
+        // Decide default landing by role
+        const role = this.authService.user?.role as ROLES | string;
+        const defaultRoute =
+          role === ROLES.OFFICIAL || role === ROLES.CHIEF_MASTER
+            ? '/admin'
+            : '/liquidators';
 
-      setTimeout(() => {
-        this.router.navigateByUrl(returnUrl || '/default/dashboard');
-      }, 800);
-    },
+        // Optional: support returnUrl (?returnUrl=/somewhere) if safe & allowed for this role
+        const urlTree = this.router.parseUrl(this.router.url);
+        const rawReturnUrl = urlTree.queryParams['returnUrl'] as
+          | string
+          | undefined;
 
-    error: (error) => {
-      console.log('Login failed', error);
+        const isInternal = (u?: string) =>
+          !!u &&
+          u.startsWith('/') &&
+          !/^(https?:)?\/\//i.test(u) &&
+          !/\/login\b/i.test(u);
 
-      const status = error.status;
-      const message: string = error?.error?.message || 'Login failed';
+        const isAllowedForRole = (u: string) => {
+          // Block Liquidators from /admin
+          if (
+            u.startsWith('/admin') &&
+            !(role === ROLES.OFFICIAL || role === ROLES.CHIEF_MASTER)
+          )
+            return false;
+          // (Optional) Block Officials/Chief from /liquidators:
+          // if (u.startsWith('/liquidators') && (role === ROLES.OFFICIAL || role === ROLES.CHIEF_MASTER)) return false;
+          return true;
+        };
 
-      // 423: account locked (server returns human-readable minutes remaining)
-      if (status === 423) {
-        this.isLocked = true;
-        this.alertMessage = message; // e.g., "Account locked. Try again in 14 minute(s)."
-        this.cdr.detectChanges();
-        // If you have a countdown implementation, you can start it here.
-        return;
-      }
+        const safeReturnUrl =
+          isInternal(rawReturnUrl) && isAllowedForRole(rawReturnUrl!)
+            ? rawReturnUrl!
+            : null;
 
-      // 429: too many attempts / rate limit
-      if (status === 429) {
-        this.isSuccess = false;
-        this.alertMessage = message || 'Too many attempts. Please try again later.';
-        this.cdr.detectChanges();
-        this.startAlertTimeout?.();
-        return;
-      }
+        const finalTarget = safeReturnUrl || defaultRoute;
 
-      // 401: invalid credentials
-      if (status === 401) {
-        this.isSuccess = false;
-        this.alertMessage = message || 'Invalid credentials';
-        this.cdr.detectChanges();
-        this.startAlertTimeout?.();
-        return;
-      }
+        // Navigate (no duplicate timeouts)
+        this.router.navigateByUrl(finalTarget, { replaceUrl: true });
+      },
 
-      // 403 cases:
-      // - "Email not verified"
-      // - "Official account not approved (status: PENDING)"
-      // - "Account is deactivated"
-      if (status === 403) {
-        if (/Email not verified/i.test(message)) {
-          // Open OTP dialog so user can verify
-          setTimeout(() => {
-            this.dialog.open(OtpComponent, {
-              data: { email, status: 'pending' }
-            });
-          }, 300);
+      error: (error) => {
+        console.log('Login failed', error);
+
+        const status = error.status;
+        const message: string = error?.error?.message || 'Login failed';
+
+        // 423: account locked
+        if (status === 423) {
+          this.isLocked = true;
+          this.alertMessage = message;
+          this.cdr.detectChanges();
+          return;
         }
 
+        // 429: too many attempts
+        if (status === 429) {
+          this.isSuccess = false;
+          this.alertMessage =
+            message || 'Too many attempts. Please try again later.';
+          this.cdr.detectChanges();
+          this.startAlertTimeout?.();
+          return;
+        }
+
+        // 401: invalid credentials
+        if (status === 401) {
+          this.isSuccess = false;
+          this.alertMessage = message || 'Invalid credentials';
+          this.cdr.detectChanges();
+          this.startAlertTimeout?.();
+          return;
+        }
+
+        // 403: verification/approval/deactivated
+        if (status === 403) {
+          if (/Email not verified/i.test(message)) {
+            setTimeout(() => {
+              this.dialog.open(OtpComponent, {
+                panelClass: 'dlg--flush', // ⬅️ ensures it uses the same style as other modals
+                data: {
+                  email,
+                  status: 'pending',
+                  title: 'Enter One-Time Pin',
+                  subtitle:
+                    'We sent a 6-digit code to your email. Enter it below to continue.',
+                },
+                width: 'auto', // optional, lets CSS control sizing
+                maxWidth: '520px', // matches your other dialogs
+              });
+            }, 300);
+          }
+          this.isSuccess = false;
+          this.alertMessage = message;
+          this.cdr.detectChanges();
+          this.startAlertTimeout?.();
+          return;
+        }
+
+        // Fallback
         this.isSuccess = false;
         this.alertMessage = message;
         this.cdr.detectChanges();
         this.startAlertTimeout?.();
-        return;
-      }
-
-      // Fallback
-      this.isSuccess = false;
-      this.alertMessage = message;
-      this.cdr.detectChanges();
-      this.startAlertTimeout?.();
-    }
-  });
-}
-
+      },
+    });
+  }
 
   // ✅ Start countdown for account unlock
   private startCountdown() {

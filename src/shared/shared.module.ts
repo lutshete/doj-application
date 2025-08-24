@@ -24,6 +24,19 @@ import { AnalyticsChartComponent } from 'src/app/default/dashboard/analytics-cha
 import { IncomeOverviewChartComponent } from 'src/app/default/dashboard/income-overview-chart/income-overview-chart.component';
 import { MonthlyBarChartComponent } from 'src/app/default/dashboard/monthly-bar-chart/monthly-bar-chart.component';
 import { SalesReportChartComponent } from 'src/app/default/dashboard/sales-report-chart/sales-report-chart.component';
+import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
+import { MatDividerModule } from '@angular/material/divider';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatListModule } from '@angular/material/list';
+import { MatPaginatorModule } from '@angular/material/paginator';
+import { MatSelectModule } from '@angular/material/select';
+import { MatSidenavModule } from '@angular/material/sidenav';
+import { MatSortModule } from '@angular/material/sort';
+import { MatTableModule } from '@angular/material/table';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 
 @NgModule({
@@ -66,6 +79,12 @@ import { SalesReportChartComponent } from 'src/app/default/dashboard/sales-repor
     NgScrollbarModule,
     CardComponent,
     IconModule,
+
+
+    
+        MatTableModule, MatPaginatorModule, MatSortModule, MatIconModule, MatButtonModule,
+        MatFormFieldModule, MatInputModule, MatSelectModule, MatChipsModule, MatDividerModule,
+        MatSidenavModule, MatListModule, MatTooltipModule
   
   
    /*  MonthlyBarChartComponent,

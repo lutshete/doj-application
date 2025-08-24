@@ -1,0 +1,238 @@
+<!-- Header -->
+<header class="hdr">
+  <div class="hdr__title">
+    <h2>Application Windows</h2>
+    <div class="hdr__meta">
+      <span class="pill"
+        >Total: <strong>{{ windows.length }}</strong></span
+      >
+    </div>
+  </div>
+
+  <div class="hdr__actions">
+    <button class="btn ghost" (click)="load()" title="Refresh">
+      <span class="material-icons">refresh</span>
+      <span class="hide-sm">Refresh</span>
+    </button>
+    <button class="btn" (click)="createWindow()">
+      <span class="material-icons">add_circle</span>
+      New Window
+    </button>
+  </div>
+</header>
+
+<!-- KPIs -->
+<section class="kpis">
+  <div class="kpi">
+    <div class="kpi__label">Open</div>
+    <div class="kpi__value">{{ counts.open }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi__label">Upcoming</div>
+    <div class="kpi__value">{{ counts.upcoming }}</div>
+  </div>
+  <div class="kpi">
+    <div class="kpi__label">Closed</div>
+    <div class="kpi__value">{{ counts.closed }}</div>
+  </div>
+</section>
+
+<!-- Table -->
+<div class="card corp petit">
+  <div class="table-wrap">
+    <table class="corp-table" aria-label="Application Windows">
+      <colgroup>
+        <col style="width: 22%" />
+        <col style="width: 18%" />
+        <col style="width: 18%" />
+        <col style="width: 16%" />
+        <col style="width: 18%" />
+        <col style="width: 8%" />
+      </colgroup>
+
+      <thead>
+        <tr>
+          <th scope="col">Window</th>
+          <th scope="col">Opening</th>
+          <th scope="col">Closing</th>
+          <th scope="col">Status</th>
+          <th scope="col">Meeting</th>
+          <th scope="col" class="text-right">Actions</th>
+        </tr>
+      </thead>
+
+      <tbody *ngIf="!loading && windows.length; else loadingOrEmpty">
+        <tr *ngFor="let w of windows; trackBy: trackByWindow">
+          <!-- WINDOW -->
+          <td>
+            <div class="cell-window">
+              <div class="stack">
+                <div class="name">
+                  FY {{ w.windowYear || (w.openingDate | date: "yyyy") }}
+                </div>
+                <div class="sub muted">
+                  {{ countdownLabel(w) }}
+                  <span
+                    *ngIf="w.isExtended"
+                    class="chip xs warn"
+                    title="Closing date was extended"
+                  >
+                    <span class="material-icons">update</span> Extended
+                    {{ w.extendedDays || 0 }}d
+                  </span>
+                </div>
+              </div>
+            </div>
+          </td>
+
+          <!-- OPENING -->
+          <td>
+            <div class="date">{{ w.openingDate | date: "dd MMM yyyy" }}</div>
+          </td>
+
+          <!-- CLOSING -->
+          <td>
+            <div class="date">{{ w.closingDate | date: "dd MMM yyyy" }}</div>
+          </td>
+
+          <!-- STATUS -->
+          <td>
+            <span
+              class="badge xs"
+              [class.ok]="statusFor(w) === 'OPEN'"
+              [class.warn]="statusFor(w) === 'UPCOMING'"
+              [class.bad]="statusFor(w) === 'CLOSED'"
+            >
+              <span
+                class="dot"
+                [class.ok]="statusFor(w) === 'OPEN'"
+                [class.bad]="statusFor(w) === 'CLOSED'"
+              ></span>
+              {{ statusFor(w) }}
+            </span>
+          </td>
+
+          <!-- MEETING SNAPSHOT -->
+          <td>
+            <ng-container
+              *ngIf="(meetingsByWindow[w._id] || []).length; else noMeeting"
+            >
+              <div
+                class="meet-mini"
+                *ngFor="
+                  let m of meetingsByWindow[w._id] | slice: 0 : 1;
+                  trackBy: trackByMeeting
+                "
+              >
+                <div class="muted">
+                  {{ m.start | date: "dd MMM yyyy, HH:mm" : "+0000" }}
+                </div>
+                <div class="chips">
+                  <span class="chip xs acc" title="Accepted"
+                    >{{ acceptedCount(m) }} ✓</span
+                  >
+                  <span class="chip xs pend" title="Pending"
+                    >{{ pendingCount(m) }} …</span
+                  >
+                  <span class="chip xs dec" title="Declined"
+                    >{{ declinedCount(m) }} ✕</span
+                  >
+                </div>
+              </div>
+            </ng-container>
+            <ng-template #noMeeting
+              ><span class="muted">No meeting</span></ng-template
+            >
+          </td>
+
+          <!-- ACTIONS -->
+          <td class="text-right">
+            <div class="acts">
+              <button
+                class="icon-btn"
+                title="Extend closing"
+                (click)="extendClosing(w)"
+              >
+                <span class="material-icons">schedule</span>
+              </button>
+              <button
+                class="icon-btn"
+                title="Schedule meeting"
+                (click)="scheduleMeeting(w)"
+              >
+                <span class="material-icons">event_available</span>
+              </button>
+              <!-- windows.component.html, Actions column -->
+             <button
+  class="icon-btn"
+  *ngIf="statusFor(w) === 'UPCOMING' || statusFor(w) === 'PLANNED'"
+  title="Open now"
+  (click)="openNow(w)"
+  [disabled]="busy[w._id]"
+>
+  <span class="material-icons">lock_open</span>
+</button>
+
+<button
+  class="icon-btn"
+  *ngIf="statusFor(w) === 'OPEN'"
+  title="Close now"
+  (click)="closeNow(w)"
+  [disabled]="busy[w._id]"
+>
+  <span class="material-icons">lock_clock</span>
+</button>
+
+            </div>
+          </td>
+        </tr>
+
+        <!-- Expand row: Quorum panel -->
+        <tr class="expand" *ngFor="let w of windows; trackBy: trackByWindow">
+          <td colspan="6" class="expand__cell">
+            <app-quorum-panel
+              [meetings]="meetingsByWindow[w._id] || []"
+              (editMeeting)="editMeeting($event)"
+              (inviteQuorum)="inviteQuorum($event)"
+            >
+            </app-quorum-panel>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- Loading / Empty -->
+<ng-template #loadingOrEmpty>
+  <tbody>
+    <tr>
+      <td colspan="6">
+        <div class="loading-wrap" *ngIf="loading; else emptyTpl">
+          <div class="spinner"></div>
+          <div class="muted">Loading application windows…</div>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</ng-template>
+
+<ng-template #emptyTpl>
+  <tbody>
+    <tr>
+      <td colspan="6">
+        <div class="empty">
+          <span class="material-icons empty__icon">calendar_month</span>
+          <div class="empty__title">No application windows</div>
+          <div class="empty__text muted">
+            Create a new window to get started.
+          </div>
+          <button class="btn outline" (click)="createWindow()">
+            <span class="material-icons">add_circle</span>
+            Create Window
+          </button>
+        </div>
+      </td>
+    </tr>
+  </tbody>
+</ng-template>

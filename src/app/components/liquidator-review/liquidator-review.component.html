@@ -1,0 +1,932 @@
+<div class="shell">
+  <!-- Drawer (plain HTML) -->
+  <div
+    class="drawer-overlay"
+    *ngIf="drawerOpened()"
+    (click)="drawerOpened.set(false)"
+  ></div>
+
+  <aside class="drawer corp petit" [class.open]="drawerOpened()">
+    <div class="drawer-header hdr drawer__hdr">
+      <div class="hdr__title">
+        <h2>Application Details</h2>
+        <!-- ====== Application Details (petite pills) ====== -->
+        <div class="hdr__meta hdr__meta--wrap" *ngIf="selected as a">
+          <!--     <span class="pill">ID: {{ a._id }}</span>
+          <span class="pill">Window: {{ a.window_id }}</span>
+          <span class="pill"
+            >Submitted: {{ a.submitted_at | date: "medium" }}</span
+          > -->
+          <span class="pill"
+            >Name: {{ a.sections?.personal?.full_name || "—" }}</span
+          >
+          <span class="pill"
+            >ID No: {{ a.sections?.personal?.identity_number || "—" }}</span
+          >
+          <span class="pill"
+            >Race: {{ a.sections?.personal?.race || "—" }}</span
+          >
+          <span class="pill"
+            >Gender: {{ a.sections?.personal?.gender || "—" }}</span
+          >
+        </div>
+      </div>
+      <div class="hdr__actions">
+        <button
+          class="btn ghost xs"
+          (click)="refreshSelected()"
+          title="Refresh"
+        >
+          <span class="material-icons">refresh</span
+          ><span class="hide-sm">Refresh</span>
+        </button>
+        <button class="btn outline xs" (click)="closeDrawer()">
+          <span class="material-icons">close</span>
+          <span class="hide-sm">Close</span>
+        </button>
+      </div>
+    </div>
+
+    <ng-container *ngIf="selected as a">
+      <!-- KPIs -->
+      <div class="kpis kpis--petit">
+        <div class="kpi">
+          <div class="kpi__label">Status</div>
+          <div class="kpi__value">{{ a.status }}</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Progress</div>
+          <div class="kpi__value">{{ a.progress_percent || 0 }}%</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi__label">Submitted</div>
+          <div class="kpi__value">{{ a.submitted_at | date: "medium" }}</div>
+        </div>
+      </div>
+
+      <!-- Applicant quick card -->
+      <!-- <div class="card corp petit" style="margin-bottom: 10px; padding: 10px">
+        <h4 class="card-title" style="margin: 0 0 6px">Applicant</h4>
+        <div class="meta">
+          <div>
+            <strong>Name:</strong> {{ a.sections?.personal?.full_name || "—" }}
+          </div>
+          <div>
+            <strong>ID No:</strong>
+            {{ a.sections?.personal?.identity_number || "—" }}
+          </div>
+          <div>
+            <strong>Employer:</strong>
+            {{ a.sections?.employment_trading?.employer_name || "—" }}
+          </div>
+          <div>
+            <strong>Locked:</strong>
+            <span
+              class="badge xs"
+              [ngClass]="{ ok: !a.is_locked, bad: a.is_locked }"
+            >
+              <span
+                class="dot"
+                [ngClass]="{ ok: !a.is_locked, bad: a.is_locked }"
+              ></span>
+              {{ a.is_locked ? "LOCKED" : "UNLOCKED" }}
+            </span>
+          </div>
+        </div>
+      </div> -->
+
+      <!-- Sections (with Review column) -->
+      <ng-container *ngIf="selected as a">
+        <div class="card corp petit" style="margin-bottom: 10px">
+          <div class="table-wrap">
+            <div class="muted lock-banner" *ngIf="!inputsDisabled(a)">
+              <span class="material-icons" style="vertical-align: middle"
+                >lock</span
+              >
+              <span>
+                Another reviewer is editing. This view is read-only.
+                <ng-container *ngIf="activeReview?.editor_lock_until as until">
+                  &nbsp;Lock expires ~ {{ until | date: "shortTime" }}.
+                </ng-container>
+              </span>
+
+              <button
+                class="btn xs icon-only"
+                style="margin-left: auto"
+                *ngIf="activeReview?._id"
+                [disabled]="reacqInFlight()"
+                [attr.title]="
+                  reacqInFlight()
+                    ? 'Trying to acquire lock…'
+                    : 'Attempt to take the lock now'
+                "
+                [attr.aria-label]="
+                  reacqInFlight()
+                    ? 'Trying to acquire lock'
+                    : 'Attempt to take the lock now'
+                "
+                (click)="tryReacquireLock()"
+              >
+                <span class="material-icons" *ngIf="!reacqInFlight()"
+                  >sync</span
+                >
+                <span class="material-icons" *ngIf="reacqInFlight()"
+                  >hourglass_empty</span
+                >
+              </button>
+            </div>
+            <!-- Sign-off banner: shows only when a decision was proposed and outcome is still Pending -->
+            <!-- Only show while decision is proposed & still Pending, and only to quorum members who may sign -->
+            <!-- Show only while a decision is proposed & pending, and NOT to the proposer -->
+            <ng-container *ngIf="canSeeSignoffBanner()">
+              <ng-container *ngIf="signoffState() as s">
+                <div class="muted signoff-banner">
+                  <span class="material-icons" aria-hidden="true"
+                    >how_to_vote</span
+                  >
+                  <strong>Decision proposed:</strong>
+                  {{ activeReview?.review_status }}
+                  &nbsp;•&nbsp; Approvals {{ s.approvals }}/{{ s.required }}
+
+                  <span style="flex: 1"></span>
+
+                  <button
+                    class="btn xs"
+                    (click)="doSignoff(true)"
+                    [disabled]="signoffBusy() || s.yourSign !== 'PENDING'"
+                    title="Approve the proposed decision"
+                  >
+                    Approve proposal
+                  </button>
+
+                  <button
+                    class="btn xs outline"
+                    (click)="doSignoff(false)"
+                    [disabled]="signoffBusy() || s.yourSign !== 'PENDING'"
+                    title="Decline the proposed decision"
+                    style="margin-left: 6px"
+                  >
+                    Decline
+                  </button>
+                </div>
+              </ng-container>
+            </ng-container>
+
+            <fieldset [disabled]="!youHoldLock()" class="review-fieldset">
+              <table class="corp-table">
+                <thead>
+                  <tr>
+                    <th>Section</th>
+                    <th>Status</th>
+                    <th>Key Fields / Files</th>
+                    <th>Review</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <ng-container *ngFor="let kv of a.sections | keyvalue">
+                    <tr *ngIf="!hideSection($any(kv).key)">
+                      <!-- SECTION NAME -->
+                      <td class="cell-window">
+                        <div class="name">{{ $any(kv).key | titlecase }}</div>
+                        <div class="sub">
+                          {{ describeSection($any(kv).key) }}
+                        </div>
+                      </td>
+
+                      <!-- STATUS -->
+                      <td>
+                        <span
+                          class="chip xs"
+                          [ngClass]="secChipClass($any(kv.value)?.status)"
+                        >
+                          {{ $any(kv.value)?.status || "EMPTY" }}
+                        </span>
+                      </td>
+
+                      <!-- KEY FIELDS / FILES -->
+                      <td>
+                        <ng-container [ngSwitch]="kv.key">
+                          <!-- PERSONAL -->
+                          <div *ngSwitchCase="'personal'">
+                            <div class="sub">
+                              {{ $any(kv.value)?.full_name }} •
+                              {{ $any(kv.value)?.identity_number }}
+                            </div>
+                            <ng-container
+                              *ngIf="$any(kv.value)?.id_document as f"
+                            >
+                              <a [href]="f.url" target="_blank">ID Document</a>
+                            </ng-container>
+                          </div>
+
+                          <!-- QUALIFICATIONS / MEMBERSHIPS -->
+                          <div *ngSwitchCase="'qualifications_memberships'">
+                            <div class="sub">
+                              Qualification:
+                              {{ $any(kv.value)?.qualification_choice || "—" }}
+                            </div>
+                            <ng-container
+                              *ngIf="$any(kv.value)?.qualification_file as f"
+                            >
+                              <a [href]="f.url" target="_blank"
+                                >Qualification File</a
+                              >
+                            </ng-container>
+                            <ng-container
+                              *ngIf="
+                                $any(kv.value)
+                                  ?.membership_confirmation_file as mf
+                              "
+                            >
+                              &nbsp;•&nbsp;<a [href]="mf.url" target="_blank"
+                                >Membership Proof</a
+                              >
+                            </ng-container>
+                          </div>
+
+                          <!-- TAX / BOND / BANK -->
+                          <div *ngSwitchCase="'tax_bond_bank'">
+                            <div class="sub">
+                              Declaration:
+                              {{
+                                $any(kv.value)?.declaration_agreed
+                                  ? "Yes"
+                                  : "No"
+                              }}
+                            </div>
+                            <ng-container
+                              *ngIf="$any(kv.value)?.tax_clearance as f"
+                            >
+                              <a [href]="f.url" target="_blank"
+                                >Tax Clearance</a
+                              >
+                            </ng-container>
+                            <ng-container
+                              *ngIf="$any(kv.value)?.bond_facility as b"
+                            >
+                              &nbsp;•&nbsp;<a [href]="b.url" target="_blank"
+                                >Bond Facility</a
+                              >
+                            </ng-container>
+                            <ng-container
+                              *ngIf="
+                                $any(kv.value)?.bank_account_documentation as d
+                              "
+                            >
+                              &nbsp;•&nbsp;<a [href]="d.url" target="_blank"
+                                >Bank Docs</a
+                              >
+                            </ng-container>
+                          </div>
+
+                          <!-- Default -->
+                          <div *ngSwitchDefault><div class="sub">—</div></div>
+                        </ng-container>
+                      </td>
+
+                      <!-- REVIEW COLUMN (unchanged from your latest) -->
+                      <td class="review-cell">
+                        <ng-container [ngSwitch]="kv.key">
+                          <!-- PERSONAL -->
+                          <div *ngSwitchCase="'personal'" class="rg">
+                            <div class="muted">
+                              No inputs. Use header details.
+                            </div>
+                          </div>
+
+                          <!-- QUALIFICATIONS/MEMBERSHIPS -->
+                          <div
+                            *ngSwitchCase="'qualifications_memberships'"
+                            class="rg"
+                          >
+                            <label class="lbl"
+                              >Verified Qualification Type</label
+                            >
+                            <input
+                              class="inp xs"
+                              [disabled]="inputsDisabled(a)"
+                              placeholder="e.g., LLB / BProc / BCom / SARIPA"
+                              [ngModel]="
+                                reviewForm.value.qualifications_memberships
+                                  ?.verified_qualification
+                              "
+                              (ngModelChange)="
+                                reviewForm.controls.qualifications_memberships.patchValue(
+                                  { verified_qualification: $event }
+                                )
+                              "
+                            />
+                            <label class="lbl">Professional Membership?</label>
+                            <select
+                              class="sel xs"
+                              [disabled]="inputsDisabled(a)"
+                              [ngModel]="
+                                reviewForm.value.qualifications_memberships
+                                  ?.has_professional_membership
+                              "
+                              (ngModelChange)="
+                                reviewForm.controls.qualifications_memberships.patchValue(
+                                  { has_professional_membership: $event }
+                                )
+                              "
+                            >
+                              <option [ngValue]="''">—</option>
+                              <option [ngValue]="'yes'">Yes</option>
+                              <option [ngValue]="'no'">No</option>
+                            </select>
+
+                            <label class="lbl"
+                              >Letter of Good Standing (valid until)</label
+                            >
+                            <input
+                              class="inp xs"
+                               [disabled]="inputsDisabled(a)"
+                              type="date"
+                              [ngModel]="
+                                reviewForm.value.qualifications_memberships
+                                  ?.logs_valid_until
+                              "
+                              (ngModelChange)="
+                                reviewForm.controls.qualifications_memberships.patchValue(
+                                  { logs_valid_until: $event }
+                                )
+                              "
+                            />
+
+                            <label class="lbl">Centre</label>
+                            <input
+                              class="inp xs"
+                             [disabled]="inputsDisabled(a)"
+                              placeholder="e.g., CPT / PTA / JHB"
+                              [ngModel]="
+                                reviewForm.value.qualifications_memberships
+                                  ?.centre
+                              "
+                              (ngModelChange)="
+                                reviewForm.controls.qualifications_memberships.patchValue(
+                                  { centre: $event }
+                                )
+                              "
+                            />
+                          </div>
+
+                          <!-- TAX/BOND/BANK -->
+                          <div *ngSwitchCase="'tax_bond_bank'" class="rg">
+                            <div class="grid2">
+                              <div>
+                                <label class="lbl">Tax (valid/expiry)</label>
+                                <input
+                                  class="inp xs"
+                                  [disabled]="inputsDisabled(a)"
+                                  type="date"
+                                  [ngModel]="
+                                    reviewForm.value.tax_bond_bank
+                                      ?.tax_clearance_valid_until
+                                  "
+                                  (ngModelChange)="
+                                    reviewForm.controls.tax_bond_bank.patchValue(
+                                      {
+                                        tax_clearance_valid_until: $event,
+                                      }
+                                    )
+                                  "
+                                />
+                              </div>
+                              <div>
+                                <label class="lbl">Bond Facility</label>
+                                <input
+                                  class="inp xs"
+                                  [disabled]="inputsDisabled(a)"
+                                  type="date"
+                                  [ngModel]="
+                                    reviewForm.value.tax_bond_bank
+                                      ?.bond_facility_valid_until
+                                  "
+                                  (ngModelChange)="
+                                    reviewForm.controls.tax_bond_bank.patchValue(
+                                      {
+                                        bond_facility_valid_until: $event,
+                                      }
+                                    )
+                                  "
+                                />
+                              </div>
+                            </div>
+
+                            <div class="grid2">
+                              <div>
+                                <label class="lbl">Personal Banking?</label>
+                                <select
+                                  class="sel xs"
+                                 [disabled]="inputsDisabled(a)"
+                                  [ngModel]="
+                                    reviewForm.value.tax_bond_bank
+                                      ?.has_personal_bank
+                                  "
+                                  (ngModelChange)="
+                                    reviewForm.controls.tax_bond_bank.patchValue(
+                                      {
+                                        has_personal_bank: $event,
+                                      }
+                                    )
+                                  "
+                                >
+                                  <option [ngValue]="''">—</option>
+                                  <option [ngValue]="'yes'">Yes</option>
+                                  <option [ngValue]="'no'">No</option>
+                                </select>
+                              </div>
+                              <div>
+                                <label class="lbl">Business Banking?</label>
+                                <select
+                                  class="sel xs"
+                                 [disabled]="inputsDisabled(a)"
+                                  [ngModel]="
+                                    reviewForm.value.tax_bond_bank
+                                      ?.has_business_bank
+                                  "
+                                  (ngModelChange)="
+                                    reviewForm.controls.tax_bond_bank.patchValue(
+                                      {
+                                        has_business_bank: $event,
+                                      }
+                                    )
+                                  "
+                                >
+                                  <option [ngValue]="''">—</option>
+                                  <option [ngValue]="'yes'">Yes</option>
+                                  <option [ngValue]="'no'">No</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <label class="lbl">Comment</label>
+                            <input
+                              class="inp xs"
+                              [disabled]="inputsDisabled(a)"
+                              placeholder="Notes…"
+                              [ngModel]="
+                                reviewForm.value.tax_bond_bank?.comment
+                              "
+                              (ngModelChange)="
+                                reviewForm.controls.tax_bond_bank.patchValue({
+                                  comment: $event,
+                                })
+                              "
+                            />
+                          </div>
+
+                          <!-- APPOINTMENTS/EMPLOYMENT -->
+                          <div
+                            *ngSwitchCase="'appointments_employment'"
+                            class="rg"
+                          >
+                            <label class="lbl"
+                              >Appointment Locations – Comment</label
+                            >
+                            <input
+                              class="inp xs"
+                              [disabled]="inputsDisabled(a)"
+                              placeholder="e.g., Excluding KIM…"
+                              [ngModel]="
+                                reviewForm.value.appointments_employment
+                                  ?.locations_comment
+                              "
+                              (ngModelChange)="
+                                reviewForm.controls.appointments_employment.patchValue(
+                                  { locations_comment: $event }
+                                )
+                              "
+                            />
+                          </div>
+
+                          <!-- Default: free comment -->
+                          <div *ngSwitchDefault class="rg">
+                            <label class="lbl">Comment</label>
+                            <input
+                              class="inp xs"
+                              [disabled]="inputsDisabled(a)"
+                              placeholder="Notes…"
+                              [ngModel]="miscComment(kv.key)"
+                              (ngModelChange)="setMiscComment(kv.key, $event)"
+                            />
+                          </div>
+                        </ng-container>
+                      </td>
+                    </tr>
+                  </ng-container>
+                </tbody>
+              </table>
+            </fieldset>
+          </div>
+
+          <!-- Sticky drawer actions -->
+          <footer class="drawer__actions">
+            <div class="drawer__actions__left">
+              <button class="btn ghost xs"  [disabled]="inputsDisabled(a)" (click)="openAddNoteDialog(a)">
+                Add Note
+              </button>
+
+              <button
+                class="btn ghost xs"
+                [disabled]="!canRecordExam(a)"
+                [attr.title]="
+                  canRecordExam(a)
+                    ? 'Record exam outcome'
+                    : 'Available after a decision (Approve/Reject)'
+                "
+                (click)="examOutcomeDialog(a)"
+              >
+                Exam Outcome
+              </button>
+            </div>
+
+            <div class="drawer__actions__right">
+              <button
+                class="btn outline xs"
+                (click)="saveReview()"
+                 [disabled]="inputsDisabled(a)"
+                title="Save the review notes/annex"
+              >
+                Save Review
+              </button>
+
+              <button
+                class="btn warn xs"
+                [disabled]="!canMarkUnderReview(a)"
+                [attr.title]="
+                  canMarkUnderReview(a)
+                    ? 'Mark Under Review'
+                    : reviewLockReason(a)
+                "
+                (click)="markUnderReviewDialog(a)"
+              >
+                Under Review
+              </button>
+
+              <button
+                class="btn xs"
+                [disabled]="!canDecide(a)"
+                [attr.title]="
+                  canDecide(a)
+                    ? 'Approve'
+                    : hasSavedEvidence(a)
+                      ? decisionLockReason(a)
+                      : 'Save Review at least once before deciding'
+                "
+                (click)="approveDialog(a)"
+              >
+                Approve
+              </button>
+
+              <button
+                class="btn danger outline xs"
+                [disabled]="!canDecide(a) || !hasSavedEvidence(a)"
+                [attr.title]="
+                  !canDecide(a)
+                    ? decisionLockReason(a)
+                    : !hasSavedEvidence(a)
+                      ? 'Save Review at least once before deciding'
+                      : 'Reject'
+                "
+                (click)="rejectDialog(a)"
+              >
+                Reject
+              </button>
+            </div>
+          </footer>
+        </div>
+      </ng-container>
+    </ng-container>
+  </aside>
+
+  <!-- Main content -->
+  <main>
+    <!-- Header -->
+    <header class="hdr">
+      <div class="hdr__title">
+        <h2>Applications Review</h2>
+        <div class="hdr__meta">
+          <span class="pill">
+            Showing <strong>{{ limit() * (page() - 1) + 1 }}</strong
+            >–<strong>{{ Math.min(limit() * page(), total()) }}</strong> of
+            <strong>{{ total() }}</strong>
+          </span>
+          <span class="sep">•</span>
+          <span class="muted">Page {{ page() }} / {{ pageCount() }}</span>
+        </div>
+      </div>
+      <div class="hdr__actions">
+        <button class="btn ghost" (click)="fetch()" [disabled]="loading()">
+          <span class="material-icons">refresh</span
+          ><span class="hide-sm">Refresh</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- Filters -->
+    <div class="filters">
+      <div class="field field--search">
+        <span class="material-icons">search</span>
+        <input
+          class="inp"
+          placeholder="Name / Employer"
+          [ngModel]="filters.value.q"
+          (ngModelChange)="
+            filters.controls.q.setValue($event); page.set(1); fetch()
+          "
+        />
+        <button
+          class="clear"
+          *ngIf="filters.value.q"
+          (click)="filters.controls.q.setValue(''); page.set(1); fetch()"
+          title="Clear"
+        >
+          <span class="material-icons">close</span>
+        </button>
+      </div>
+
+      <div class="field">
+        <label>Status</label>
+        <select
+          class="sel"
+          [ngModel]="filters.value.status"
+          (ngModelChange)="
+            filters.controls.status.setValue($event); page.set(1); fetch()
+          "
+        >
+          <option value="">All</option>
+          <option value="SUBMITTED">SUBMITTED</option>
+          <option value="UNDER_REVIEW">UNDER_REVIEW</option>
+          <option value="APPROVED">APPROVED</option>
+          <option value="REJECTED">REJECTED</option>
+          <option value="LICENSED">LICENSED</option>
+          <option value="EXAM_FAILED">EXAM_FAILED</option>
+          <option value="DRAFT">DRAFT</option>
+          <option value="LOCKED">LOCKED</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label>Window ID</label>
+        <input
+          class="inp"
+          [ngModel]="filters.value.windowId"
+          (ngModelChange)="
+            filters.controls.windowId.setValue($event); page.set(1); fetch()
+          "
+        />
+      </div>
+
+      <div class="field">
+        <label>Date From</label>
+        <input
+          class="inp"
+          type="date"
+          [ngModel]="filters.value.dateFrom"
+          (ngModelChange)="
+            filters.controls.dateFrom.setValue($event); page.set(1); fetch()
+          "
+        />
+      </div>
+
+      <div class="field">
+        <label>Date To</label>
+        <input
+          class="inp"
+          type="date"
+          [ngModel]="filters.value.dateTo"
+          (ngModelChange)="
+            filters.controls.dateTo.setValue($event); page.set(1); fetch()
+          "
+        />
+      </div>
+
+      <button class="btn" (click)="applyFilters()">Apply</button>
+      <button class="btn outline" (click)="clearFilters()">Clear</button>
+    </div>
+
+    <!-- Table -->
+    <div class="card corp petit">
+      <div class="table-wrap">
+        <table class="corp-table" aria-label="Applications">
+          <colgroup>
+            <col style="width: 34%" />
+            <col style="width: 18%" />
+            <col style="width: 18%" />
+            <col style="width: 18%" />
+            <col style="width: 12%" />
+          </colgroup>
+
+          <thead>
+            <tr>
+              <th scope="col">Applicant</th>
+              <th scope="col">
+                <button class="th-btn" (click)="sortBy('status')">
+                  Status
+                  <span class="sort" [class.active]="sortField() === 'status'">
+                    <span
+                      class="material-icons"
+                      [class.rot]="sortDir() === 'asc'"
+                      >south</span
+                    >
+                  </span>
+                </button>
+              </th>
+              <th scope="col">
+                <button class="th-btn" (click)="sortBy('submitted_at')">
+                  Submitted
+                  <span
+                    class="sort"
+                    [class.active]="sortField() === 'submitted_at'"
+                  >
+                    <span
+                      class="material-icons"
+                      [class.rot]="sortDir() === 'asc'"
+                      >south</span
+                    >
+                  </span>
+                </button>
+              </th>
+              <th scope="col">
+                <button class="th-btn" (click)="sortBy('decided_at')">
+                  Decided
+                  <span
+                    class="sort"
+                    [class.active]="sortField() === 'decided_at'"
+                  >
+                    <span
+                      class="material-icons"
+                      [class.rot]="sortDir() === 'asc'"
+                      >south</span
+                    >
+                  </span>
+                </button>
+              </th>
+              <th scope="col" class="text-right">Actions</th>
+            </tr>
+          </thead>
+
+          <!-- Loading skeleton -->
+          <tbody *ngIf="loading(); else bodySwitch">
+            <tr *ngFor="let s of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10]">
+              <td colspan="7"><div class="skeleton"></div></td>
+            </tr>
+          </tbody>
+
+          <ng-template #bodySwitch>
+            <tbody *ngIf="data().length; else emptyState">
+              <tr
+                *ngFor="let row of data(); trackBy: trackById"
+                (dblclick)="openDetails(row)"
+              >
+                <td class="cell-window">
+                  <div class="name">
+                    {{ row.sections?.personal?.full_name || "—" }}
+                  </div>
+                  <div class="sub">
+                    {{ row.sections?.employment_trading?.employer_name || "" }}
+                  </div>
+                </td>
+                <td>
+                  <span
+                    class="badge xs"
+                    [ngClass]="tableStatusBadge(row.status)"
+                  >
+                    <span
+                      class="dot"
+                      [ngClass]="tableStatusDot(row.status)"
+                    ></span>
+                    {{ row.status }}
+                  </span>
+                  <span class="chip xs pend" *ngIf="row.is_locked">LOCKED</span>
+                </td>
+                <td class="date">{{ row.submitted_at | date: "short" }}</td>
+                <td class="date">
+                  {{ row.decided_at ? (row.decided_at | date: "short") : "—" }}
+                </td>
+                <td class="text-right">
+                  <div class="acts">
+                    <!-- Open details: always enabled -->
+                    <button
+                      class="icon-btn"
+                      title="Open details"
+                      (click)="openDetails(row)"
+                    >
+                      <span class="material-icons">open_in_new</span>
+                    </button>
+
+                    <!-- Under Review -->
+                    <span
+                      [title]="
+                        canMarkUnderReview(row)
+                          ? 'Mark Under Review'
+                          : reviewLockReason(row)
+                      "
+                    >
+                      <button
+                        class="icon-btn"
+                        [disabled]="!canMarkUnderReview(row)"
+                        (click)="markUnderReviewDialog(row)"
+                      >
+                        <span class="material-icons">assignment_turned_in</span>
+                      </button>
+                    </span>
+
+                    <!-- Approve -->
+                    <span
+                      [title]="
+                        canDecide(row) ? 'Approve' : decisionLockReason(row)
+                      "
+                    >
+                      <button
+                        class="icon-btn"
+                        [disabled]="!canDecide(row)"
+                        (click)="approveDialog(row)"
+                      >
+                        <span class="material-icons">thumb_up</span>
+                      </button>
+                    </span>
+
+                    <!-- Reject -->
+                    <span
+                      [title]="
+                        canDecide(row) ? 'Reject' : decisionLockReason(row)
+                      "
+                    >
+                      <button
+                        class="icon-btn"
+                        [disabled]="!canDecide(row)"
+                        (click)="rejectDialog(row)"
+                      >
+                        <span class="material-icons">thumb_down</span>
+                      </button>
+                    </span>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+
+            <!-- Empty state -->
+            <ng-template #emptyState>
+              <tbody>
+                <tr>
+                  <td colspan="7">
+                    <div class="empty">
+                      <span class="empty__icon material-icons"
+                        >inventory_2</span
+                      >
+                      <div>No applications found.</div>
+                    </div>
+                  </td>
+                </tr>
+              </tbody>
+            </ng-template>
+          </ng-template>
+        </table>
+      </div>
+
+      <!-- Pager -->
+      <footer class="pager">
+        <div class="pager__left">
+          <span class="muted">Page {{ page() }} / {{ pageCount() }}</span>
+        </div>
+        <div class="pager__right">
+          <label class="muted small">Rows:</label>
+          <select
+            class="sel size"
+            [ngModel]="limit()"
+            (ngModelChange)="onPageSize($event)"
+          >
+            <option [ngValue]="10">10</option>
+            <option [ngValue]="20">20</option>
+            <option [ngValue]="50">50</option>
+            <option [ngValue]="100">100</option>
+          </select>
+          <button
+            class="btn outline"
+            (click)="changePage(-1)"
+            [disabled]="page() <= 1"
+          >
+            Prev
+          </button>
+          <button
+            class="btn outline"
+            (click)="changePage(1)"
+            [disabled]="page() >= pageCount()"
+          >
+            Next
+          </button>
+          <button
+            class="btn outline"
+            (click)="exportCSV()"
+            title="Export current page"
+          >
+            <span class="material-icons">download</span
+            ><span class="hide-sm">Export</span>
+          </button>
+        </div>
+      </footer>
+    </div>
+  </main>
+</div>

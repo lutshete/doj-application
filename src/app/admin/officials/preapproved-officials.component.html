@@ -1,0 +1,251 @@
+<!-- Header -->
+<header class="hdr">
+  <div class="hdr__title">
+    <h2>Pre-Approved Officials</h2>
+    <div class="hdr__meta" aria-live="polite">
+      <span class="pill">
+        Showing <strong>{{ range().start }}</strong>–<strong>{{ range().end }}</strong>
+        of <strong>{{ total() }}</strong>
+      </span>
+      <span class="sep">•</span>
+      <span class="muted">Page {{ page() }} / {{ pageCount() }}</span>
+    </div>
+  </div>
+
+  <div class="hdr__actions">
+    <button type="button" class="btn ghost" title="Refresh" (click)="load()">
+      <span class="material-icons">refresh</span><span class="hide-sm">Refresh</span>
+    </button>
+    <button type="button" class="btn outline" title="Reset filters" (click)="resetFilters()">
+      <span class="material-icons">filter_alt_off</span><span class="hide-sm">Reset</span>
+    </button>
+  </div>
+</header>
+
+<!-- Filters -->
+<div class="filters">
+  <div class="field field--search">
+    <span class="material-icons" aria-hidden="true">search</span>
+    <input
+      class="inp"
+      placeholder="Search email or notes"
+      [ngModel]="q()"
+      (ngModelChange)="q.set($event); page.set(1);"
+      (keyup.enter)="load()"
+      aria-label="Search email or notes"
+    />
+    <button
+      type="button"
+      class="clear"
+      *ngIf="q()"
+      (click)="q.set(''); page.set(1); load()"
+      title="Clear search"
+      aria-label="Clear search"
+    >
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+
+  <div class="field">
+    <label for="f-role">Role</label>
+    <select
+      id="f-role"
+      class="sel"
+      [ngModel]="role()"
+      (ngModelChange)="role.set($event); page.set(1); render()"
+      aria-label="Filter by role"
+    >
+      <option value="">All</option>
+      <option value="OFFICIAL">Official</option>
+      <option value="CHIEF_MASTER">Chief Master</option>
+    </select>
+  </div>
+
+  <!-- spacer cells to align like Users layout -->
+  <div></div>
+  <div></div>
+</div>
+
+<!-- Two columns: Add/Edit form + List -->
+<div class="two-cols">
+  <!-- Add / Edit card -->
+  <div class="card corp petit">
+    <div style="padding:12px">
+      <h3 class="card-title">{{ form?._id ? 'Edit pre-approval' : 'Add pre-approval' }}</h3>
+
+      <div class="field">
+        <label for="p-email">Email</label>
+        <input id="p-email" class="inp" type="email" [(ngModel)]="form.email" placeholder="official@example.gov.za" />
+      </div>
+
+      <div class="field">
+        <label for="p-role">Role</label>
+        <select id="p-role" class="sel" [(ngModel)]="form.role">
+          <option value="OFFICIAL">OFFICIAL</option>
+          <option value="CHIEF_MASTER">CHIEF_MASTER</option>
+        </select>
+      </div>
+
+      <div class="field">
+        <label for="p-notes">Notes</label>
+        <textarea id="p-notes" class="inp" rows="3" [(ngModel)]="form.notes" placeholder="Optional context…"></textarea>
+      </div>
+
+      <div style="display:flex; gap:8px; margin-top:10px">
+        <button type="button" class="btn" (click)="save()">
+          <span class="material-icons">save</span>{{ form._id ? 'Update' : 'Add' }}
+        </button>
+        <button type="button" class="btn outline" (click)="cancel()">
+          <span class="material-icons">close</span>Cancel
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- List card -->
+  <div class="card corp petit">
+    <div class="table-wrap">
+      <table class="corp-table" aria-label="Pre-approved officials">
+        <colgroup>
+          <col style="width: 32%" />
+          <col style="width: 16%" />
+          <col style="width: 32%" />
+          <col style="width: 16%" />
+          <col style="width: 4%" />
+        </colgroup>
+
+        <thead>
+          <tr>
+            <th scope="col" [attr.aria-sort]="sort()==='email' ? (dir()==='asc'?'ascending':'descending') : 'none'">
+              <button type="button" class="th-btn" (click)="sortBy('email')" aria-label="Sort by email">
+                Email
+                <span class="sort" [class.active]="sort()==='email'">
+                  <span class="material-icons" [class.rot]="dir()==='asc'">south</span>
+                </span>
+              </button>
+            </th>
+
+            <th scope="col" [attr.aria-sort]="sort()==='role' ? (dir()==='asc'?'ascending':'descending') : 'none'">
+              <button type="button" class="th-btn" (click)="sortBy('role')" aria-label="Sort by role">
+                Role
+                <span class="sort" [class.active]="sort()==='role'">
+                  <span class="material-icons" [class.rot]="dir()==='asc'">south</span>
+                </span>
+              </button>
+            </th>
+
+            <th scope="col" [attr.aria-sort]="sort()==='notes' ? (dir()==='asc'?'ascending':'descending') : 'none'">
+              <button type="button" class="th-btn" (click)="sortBy('notes')" aria-label="Sort by notes">
+                Notes
+                <span class="sort" [class.active]="sort()==='notes'">
+                  <span class="material-icons" [class.rot]="dir()==='asc'">south</span>
+                </span>
+              </button>
+            </th>
+
+            <th scope="col" [attr.aria-sort]="sort()==='createdAt' ? (dir()==='asc'?'ascending':'descending') : 'none'">
+              <button type="button" class="th-btn" (click)="sortBy('createdAt')" aria-label="Sort by created date">
+                Created
+                <span class="sort" [class.active]="sort()==='createdAt'">
+                  <span class="material-icons" [class.rot]="dir()==='asc'">south</span>
+                </span>
+              </button>
+            </th>
+
+            <th scope="col" class="text-right">Actions</th>
+          </tr>
+        </thead>
+
+        <!-- Loading skeleton -->
+        <tbody *ngIf="loading(); else bodySwitch">
+          <tr *ngFor="let s of skeletonRows">
+            <td colspan="5"><div class="skeleton"></div></td>
+          </tr>
+        </tbody>
+
+        <ng-template #bodySwitch>
+          <!-- rows -->
+          <tbody *ngIf="rows.length; else emptyState">
+            <tr *ngFor="let r of rows; trackBy: trackById">
+              <!-- EMAIL -->
+              <td>
+                <div class="cell-email">
+                  <span class="truncate" [title]="r.email">{{ r.email }}</span>
+                  <button type="button" class="icon-btn subtle" title="Copy email" aria-label="Copy email" (click)="copy(r.email)">
+                    <span class="material-icons">content_copy</span>
+                  </button>
+                </div>
+              </td>
+
+              <!-- ROLE -->
+              <td><span class="chip xs" [ngClass]="r.role">{{ r.role }}</span></td>
+
+              <!-- NOTES -->
+              <td><span class="truncate" [title]="r.notes">{{ r.notes || '—' }}</span></td>
+
+              <!-- CREATED -->
+              <td>
+                {{ r.createdAt ? (r.createdAt | date:'dd MMM yyyy, HH:mm':'Africa/Johannesburg') : '—' }}
+              </td>
+
+              <!-- ACTIONS -->
+              <td class="text-right">
+                <div class="acts">
+                  <button type="button" class="icon-btn ico blue" title="Edit" (click)="edit(r)">
+                    <span class="material-icons">edit</span>
+                  </button>
+                  <button type="button" class="icon-btn ico red" title="Delete" (click)="remove(r._id)">
+                    <span class="material-icons">delete</span>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+
+          <!-- Empty state -->
+          <ng-template #emptyState>
+            <tbody>
+              <tr>
+                <td colspan="5">
+                  <div class="empty">
+                    <span class="material-icons empty__icon">group_off</span>
+                    <div class="empty__title">No pre-approved officials</div>
+                    <div class="empty__text muted">Try adjusting filters or add a new entry.</div>
+                    <button type="button" class="btn outline" (click)="resetFilters()">
+                      <span class="material-icons">filter_alt_off</span>
+                      Reset filters
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </ng-template>
+        </ng-template>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Pager -->
+<footer class="pager">
+  <div class="pager__left">
+    <span class="muted">Page {{ page() }} / {{ pageCount() }}</span>
+  </div>
+  <div class="pager__right">
+    <label class="muted small" for="rows">Rows:</label>
+    <select
+      id="rows"
+      class="sel size"
+      [ngModel]="limit()"
+      (ngModelChange)="limit.set($event); page.set(1); render()"
+      aria-label="Rows per page"
+    >
+      <option [ngValue]="10">10</option>
+      <option [ngValue]="20">20</option>
+      <option [ngValue]="50">50</option>
+      <option [ngValue]="100">100</option>
+    </select>
+    <button type="button" class="btn outline" (click)="changePage(-1)" [disabled]="page() <= 1">Prev</button>
+    <button type="button" class="btn outline" (click)="changePage(1)" [disabled]="page() >= pageCount()">Next</button>
+  </div>
+</footer>
