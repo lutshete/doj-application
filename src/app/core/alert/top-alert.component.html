@@ -1,0 +1,37 @@
+<!-- components/top-alert/top-alert.component.html -->
+<div class="topalert-wrap">
+  <div
+    *ngFor="let a of svc.alerts(); trackBy: trackById"
+    class="topalert"
+    [class.toast]="(a.ui || 'toast') === 'toast'"
+    [class.banner]="a.ui === 'banner'"
+    [class.ok]="a.type==='ok'"
+    [class.warn]="a.type==='warn'"
+    [class.bad]="a.type==='bad'"
+    [class.brand]="a.type==='brand'"
+    [class.error]="a.type==='error'"
+    [class.info]="a.type==='info'"
+    [attr.role]="role(a)"
+  >
+    <div class="topalert__icon" aria-hidden="true">
+      <span class="material-icons">{{ icon(a) }}</span>
+    </div>
+
+    <div class="topalert__body">
+      <div class="topalert__msg" [innerText]="a.message"></div>
+      <div class="topalert__acts" *ngIf="a.actions?.length">
+        <a *ngFor="let act of a.actions; let i = index" href="#" (click)="onAction(a, i, $event)">{{ act.label }}</a>
+      </div>
+    </div>
+
+    <button
+      *ngIf="a.dismissible !== false"
+      class="topalert__close"
+      (click)="svc.dismiss(a.id)"
+      aria-label="Dismiss alert"
+      title="Dismiss"
+    >
+      <span class="material-icons">close</span>
+    </button>
+  </div>
+</div>

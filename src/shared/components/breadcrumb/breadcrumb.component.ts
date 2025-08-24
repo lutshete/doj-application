@@ -1,26 +1,20 @@
-// Angular Import
+// breadcrumb.component.ts
 import { Component, Input } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { NavigationEnd, Router, RouterModule, Event } from '@angular/router';
 import { Title } from '@angular/platform-browser';
 
-// project import
-
-
-// icons
 import { IconModule, IconService } from '@ant-design/icons-angular';
 import { GlobalOutline, NodeExpandOutline } from '@ant-design/icons-angular/icons';
 import { NavigationItem, NavigationItems } from 'src/app/admin-layout/navigation/navigation';
 
-interface titleType {
-  // eslint-disable-next-line
-  url: any;
+interface TitleCrumb {
+  url: string | false;
   title: string;
   breadcrumbs: unknown;
-  type: string;
-  link?: string | undefined;
-  description?: string | undefined;
-  path?: string | undefined;
+  type: 'item' | 'collapse' | 'group';
+  description?: string;
+  path?: string;
 }
 
 @Component({
@@ -31,71 +25,76 @@ interface titleType {
   styleUrls: ['./breadcrumb.component.scss']
 })
 export class BreadcrumbComponent {
-  // public props
-  @Input() type: string;
+  @Input() type: string = 'theme1';
   @Input() dashboard = true;
   @Input() Component = false;
 
-  navigations: NavigationItem[];
-  ComponentNavigations: NavigationItem[];
-  breadcrumbList: Array<string> = [];
-  navigationList!: titleType[];
-  componentList!: titleType[];
+  navigations: NavigationItem[] = NavigationItems;
+  navigationList: TitleCrumb[] = [];
 
-  // constructor
   constructor(
-    private route: Router,
+    private router: Router,
     private titleService: Title,
     private iconService: IconService
   ) {
-    this.navigations = NavigationItems;
-    this.type = 'theme1';
-    this.setBreadcrumb();
-    this.iconService.addIcon(...[GlobalOutline, NodeExpandOutline]);
-  }
+    this.iconService.addIcon(GlobalOutline, NodeExpandOutline);
+    // Build once for the initial URL
+    this.rebuild(this.router.url);
 
-  // public method
-  setBreadcrumb() {
-    this.route.events.subscribe((router: Event) => {
-      if (router instanceof NavigationEnd) {
-        const activeLink = router.url;
-        const breadcrumbList = this.filterNavigation(this.navigations, activeLink);
-        this.navigationList = breadcrumbList;
-        const title = breadcrumbList[breadcrumbList.length - 1]?.title || 'Welcome';
-        this.titleService.setTitle(title + ' | DOJ Liquidator');
+    // Rebuild on navigation
+    this.router.events.subscribe((evt: Event) => {
+      if (evt instanceof NavigationEnd) {
+        const url = evt.urlAfterRedirects || evt.url || '';
+        this.rebuild(url);
       }
     });
   }
 
-  filterNavigation(navItems: NavigationItem[], activeLink: string): titleType[] {
+  private rebuild(activeUrl: string) {
+    const crumbs = this.filterNavigation(this.navigations, activeUrl);
+    this.navigationList = crumbs;
+
+    const title = crumbs[crumbs.length - 1]?.title || 'Welcome';
+    this.titleService.setTitle(`${title} | DOJ Liquidator`);
+  }
+
+  private filterNavigation(navItems: NavigationItem[], activeUrl: string): TitleCrumb[] {
     for (const navItem of navItems) {
-      if (navItem.type === 'item' && 'url' in navItem && navItem.url === activeLink) {
+      // Resolve the item URL we compare against
+      const itemUrl = (navItem.url ?? navItem.path ?? '') as string;
+
+      // Leaf item matching: exact when item.exactMatch, else prefix match
+      const isItemMatch =
+        navItem.type === 'item' &&
+        itemUrl &&
+        (navItem.exactMatch ? activeUrl === itemUrl : activeUrl.startsWith(itemUrl));
+
+      if (isItemMatch) {
         return [
           {
-            url: 'url' in navItem ? navItem.url : false,
+            url: itemUrl || false,
             title: navItem.title,
-            link: navItem.link,
             description: navItem.description,
             path: navItem.path,
-            breadcrumbs: 'breadcrumbs' in navItem ? navItem.breadcrumbs : true,
+            breadcrumbs: navItem.breadcrumbs ?? true,
             type: navItem.type
           }
         ];
       }
-      if ((navItem.type === 'group' || navItem.type === 'collapse') && 'children' in navItem) {
-        // eslint-disable-next-line
-        const breadcrumbList = this.filterNavigation(navItem.children!, activeLink);
-        if (breadcrumbList.length > 0) {
-          breadcrumbList.unshift({
-            url: 'url' in navItem ? navItem.url : false,
+
+      // Descend into groups/collapses
+      if ((navItem.type === 'group' || navItem.type === 'collapse') && navItem.children?.length) {
+        const childTrail = this.filterNavigation(navItem.children, activeUrl);
+        if (childTrail.length) {
+          childTrail.unshift({
+            url: itemUrl || false,
             title: navItem.title,
-            link: navItem.link,
-            path: navItem.path,
             description: navItem.description,
-            breadcrumbs: 'breadcrumbs' in navItem ? navItem.breadcrumbs : true,
+            path: navItem.path,
+            breadcrumbs: navItem.breadcrumbs ?? true,
             type: navItem.type
           });
-          return breadcrumbList;
+          return childTrail;
         }
       }
     }

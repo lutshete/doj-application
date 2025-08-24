@@ -1,0 +1,13 @@
+.card{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:#fff;padding:16px;border-radius:10px}
+.card.green{background:linear-gradient(135deg,#22c55e,#16a34a)}
+.card.amber{background:linear-gradient(135deg,#f59e0b,#d97706)}
+.card.red{background:linear-gradient(135deg,#ef4444,#b91c1c)}
+.card .title{font-size:12px;opacity:.9}
+.card .value{font-size:28px;font-weight:700}
+.panel{background:#fff;border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.06);padding:16px}
+.panel-title{font-weight:600;margin-bottom:8px}
+.table{border:1px solid #e5e7eb;border-radius:8px;overflow:hidden}
+.thead{background:#f8fafc;padding:8px 12px;font-weight:600}
+.tbody .row{padding:8px 12px;border-top:1px solid #eef2f7}
+.btn{background:#F47F0C;color:#fff;padding:8px 14px;border-radius:8px;font-weight:600}
+.muted{color:#6b7280}

@@ -7,7 +7,7 @@ import { AuthService } from 'src/app/services/auth.service';
 @Component({
   selector: 'app-register',
   templateUrl: './register.component.html',
-  styleUrls: ['./register.component.scss']
+  styleUrls: ['./register.component.scss'],
 })
 export default class RegisterComponent {
   signUpForm!: FormGroup;
@@ -23,7 +23,7 @@ export default class RegisterComponent {
     private fb: FormBuilder,
     private auth: AuthService,
     private dialog: MatDialog,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
   ) {}
 
   ngOnInit(): void {
@@ -33,9 +33,9 @@ export default class RegisterComponent {
         lastName: ['', [Validators.required, Validators.minLength(2)]],
         emailAddress: ['', [Validators.required, Validators.email]],
         password: ['', [Validators.required, Validators.minLength(8)]],
-        confirmPassword: ['', Validators.required]
+        confirmPassword: ['', Validators.required],
       },
-      { validators: this.passwordMatchValidator }
+      { validators: this.passwordMatchValidator },
     );
 
     this.signUpForm.valueChanges.subscribe(() => this.cdr.detectChanges());
@@ -49,11 +49,18 @@ export default class RegisterComponent {
 
   emailIsJustice(): boolean {
     const email = this.signUpForm.get('emailAddress')?.value || '';
-    return typeof email === 'string' && email.toLowerCase().endsWith('@justice.gov.za');
+    return (
+      typeof email === 'string' &&
+      email.toLowerCase().endsWith('@justice.gov.za')
+    );
   }
 
-  togglePasswordVisibility() { this.showPassword = !this.showPassword; }
-  toggleConfirmPasswordVisibility() { this.showConfirmPassword = !this.showConfirmPassword; }
+  togglePasswordVisibility() {
+    this.showPassword = !this.showPassword;
+  }
+  toggleConfirmPasswordVisibility() {
+    this.showConfirmPassword = !this.showConfirmPassword;
+  }
 
   onSubmit() {
     if (this.signUpForm.invalid) {
@@ -65,32 +72,36 @@ export default class RegisterComponent {
       firstName: this.f.firstName.value,
       lastName: this.f.lastName.value,
       email: this.f.emailAddress.value,
-      password: this.f.password.value
+      password: this.f.password.value,
       // NOTE: role is not sent; backend derives it from email domain
     };
 
     this.auth.register(payload).subscribe({
       next: (res) => {
-        this.showAlert(res?.message || 'Registered. Check your email for the OTP.', 'success');
+        this.showAlert(
+          res?.message || 'Registered. Check your email for the OTP.',
+          'success',
+        );
         // open OTP dialog for email verification
         setTimeout(() => {
           this.closeAlert();
           this.dialog.open(OtpComponent, {
-            width: '420px',
+            panelClass: 'dlg--flush',
             disableClose: true,
+            maxWidth: '520px',
+            width: 'auto',
             data: {
               email: this.f.emailAddress.value,
-              onVerified: () => {
-                // optional: navigate to login, or auto-login prompt
-              }
-            }
+              status: 'pending', // optional: auto-resends on open
+              testCode: res?.code || undefined 
+            },
           });
         }, 800);
       },
       error: (err) => {
         const msg = err?.error?.message || 'Registration failed.';
         this.showAlert(msg, 'danger');
-      }
+      },
     });
   }
 
@@ -111,5 +122,7 @@ export default class RegisterComponent {
     this.cdr.detectChanges();
   }
 
-  get f() { return this.signUpForm.controls; }
+  get f() {
+    return this.signUpForm.controls;
+  }
 }

@@ -1,0 +1,38 @@
+<h2 class="mb-4">Overview</h2>
+<div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+  <div class="card"> <div class="title">Total Users</div><div class="value">{{stats.totalUsers}}</div></div>
+  <div class="card green"><div class="title">Admin Officials</div><div class="value">{{stats.adminOfficials}}</div></div>
+  <div class="card amber"><div class="title">Liquidators</div><div class="value">{{stats.liquidators}}</div></div>
+  <div class="card red"><div class="title">Chief Masters</div><div class="value">{{stats.chiefs}}</div></div>
+</div>
+
+<div class="grid lg:grid-cols-2 gap-4 mt-6">
+  <div class="panel">
+    <div class="panel-title">Officials Pending Approval</div>
+    <div class="panel-value text-2xl">{{stats.officialsPending}}</div>
+    <a routerLink="/admin/users" class="btn mt-3 w-auto">Review Officials</a>
+  </div>
+
+  <div class="panel">
+    <div class="panel-title">Licenses</div>
+    <div class="flex gap-6">
+      <div><div class="muted">Active</div><div class="text-xl">{{stats.activeLicenses}}</div></div>
+      <div><div class="muted">Pending Activation</div><div class="text-xl">{{stats.pendingLicenses}}</div></div>
+    </div>
+    <a routerLink="/admin/licenses" class="btn mt-3 w-auto">Go to Licenses</a>
+  </div>
+</div>
+
+<div class="panel mt-6">
+  <div class="panel-title">Application Windows</div>
+  <div class="table">
+    <div class="thead grid grid-cols-2"><div>Opening</div><div>Closing</div></div>
+    <div class="tbody">
+      <div class="row grid grid-cols-2" *ngFor="let w of windows">
+        <div>{{ w.openingDate | date:'dd MMM yyyy' }}</div>
+        <div>{{ w.closingDate | date:'dd MMM yyyy' }}</div>
+      </div>
+    </div>
+  </div>
+  <a routerLink="/admin/windows" class="btn mt-3 w-auto">Manage Windows</a>
+</div>

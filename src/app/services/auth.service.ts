@@ -88,6 +88,7 @@ export class AuthService {
 
   /** Save/remove token and derive user */
   setSessionToken(token: string | null) {
+    console.log(token)
     if (token) localStorage.setItem(TOKEN_KEY, token);
     else localStorage.removeItem(TOKEN_KEY);
     this._token$.next(token);
@@ -268,4 +269,6 @@ export class AuthService {
       return null;
     }
   }
+
+  
 }

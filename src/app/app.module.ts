@@ -25,6 +25,21 @@ import { MeetingResponseComponent } from './components/meeting-response/meeting-
 import { AffidavitRenewalComponent } from './components/renewal/affidavit-renewal.component';
 import { AuthInterceptorService } from './services/auth-interceptor.service';
 import { AdminRenewalReviewComponent } from './components/admin-renewal/admin-renewal-review.component';
+import { DashboardComponent } from './admin/dashboard/dashboard.component';
+import { PreapprovedOfficialsComponent } from './admin/officials/preapproved-officials.component';
+import { WindowsComponent } from './admin/windows/windows.component';
+import { MeetingEditorDialog } from './admin/windows/_dialog/meeting-editor.dialog';
+import { WindowEditorDialog } from './admin/windows/_dialog/window-editor.dialog';
+import { QuorumPanelComponent } from './admin/windows/quorum-panel.component';
+import { UsersComponent } from './admin/users/users.component';
+import { ApproveDeclineDialog } from './admin/users/_dialog/approve-decline.dialog';
+import { UserAuditDrawer } from './admin/users/user-audit.drawer';
+import { AdminShellComponent } from './admin/admin-shell.component';
+import { LiquidatorReviewComponent } from './components/liquidator-review/liquidator-review.component';
+import { TopAlertComponent } from './core/alert/top-alert.component';
+import { TopAlertService } from './services/top-alert.service';
+import { ToastTrayComponent } from './core/alert/toast-tray.component';
+import { ExamInvitesRegisterComponent } from './admin/exam-invites/exam-invites-register.component';
 
 
 @NgModule({
@@ -42,7 +57,21 @@ import { AdminRenewalReviewComponent } from './components/admin-renewal/admin-re
     AdminPanelComponent,
     MeetingResponseComponent,
     AffidavitRenewalComponent,
-    AdminRenewalReviewComponent
+    AdminRenewalReviewComponent,
+    DashboardComponent,
+    PreapprovedOfficialsComponent,
+    WindowsComponent,
+    MeetingEditorDialog,
+    WindowEditorDialog,
+    QuorumPanelComponent,
+    UsersComponent,
+    ApproveDeclineDialog,
+    UserAuditDrawer,
+    AdminShellComponent,
+    LiquidatorReviewComponent,
+    TopAlertComponent, 
+    ToastTrayComponent,
+    ExamInvitesRegisterComponent
   ],
   imports: [
     BrowserModule,
@@ -53,9 +82,10 @@ import { AdminRenewalReviewComponent } from './components/admin-renewal/admin-re
     IncomeOverviewChartComponent,
     AnalyticsChartComponent,
     SalesReportChartComponent,
-    AdminComponent
+    AdminComponent,
+    
 ],
-  providers: [AuthService,  { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true },],
+  providers: [AuthService,  { provide: HTTP_INTERCEPTORS, useClass: AuthInterceptorService, multi: true }, TopAlertService],
   bootstrap: [AppComponent]
 })
 export class AppModule { }
