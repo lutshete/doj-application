@@ -1,262 +1,255 @@
-input[type="text"] {
-    outline: 0 ;
-    border-width: 0 0 2px ;
-    border-color: black ;
-    width: 100% ;
-  }
-   
-  input[type="text"]:focus {
-    border-color: #fff ;
-    outline: 1px dotted #000 ;
-  }
+/* ========== Spacing helpers you already had ========== */
+.under-space {
+  margin-top: 20px;
+}
+.indent {
+  padding-left: 40px;
+}
 
-  .under-space{
-    margin-top:20px;
-  }
+/* Optional wrapper (kept, but made flexible) */
+.a4 {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 300px;
+  max-width: 1100px;
+}
+.btn1 {
+  margin-right: 20px;
+}
 
-  .indent{ 
-    padding-left:40px;
-  }
-
-  .a4{
- display: flex;
- align-items: center;
- justify-content: center;
-    min-width: 300px;
-    max-width: 1100px;
-  }
-
-  .btn1{
-    margin-right:20px;
-  }
-
-//   .input-container {
-//     position: relative;
-//     display: inline-block;
-//   }
-  
-//   .input-container::after {
-//     content: 'I';
-//     position: absolute;
-//     top: 50%;
-//     right: 100%;
-//     transform: translateY(-50%);
-//     margin-left: 10px; /* Adjust this to control the space between the input and the text */
-//     color: #333; /* Customize text color */
-//   }
-
-
+/* ========== Form container ========== */
 .form-container {
+  width: 100%;
   max-width: 900px;
-  margin: auto;
+  margin: 0 auto;
   background-color: #fff;
-  padding: 20px;
+  padding: 16px;
   border-radius: 8px;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+@media (max-width: 575.98px) {
+  .form-container {
+    padding: 12px;
+  }
 }
 
 h2 {
   text-align: center;
-  color: #F47F0C; /* Updated color for the title */
+  color: #f47f0c;
+}
+
+.section-title {
+  font-size: 1.2rem;
+  margin-top: 25px;
+  border-bottom: 2px solid #f47f0c;
+  line-height: 1.3;
+  word-break: break-word;
+}
+@media (max-width: 575.98px) {
+  .section-title {
+    font-size: 1rem;
+  }
 }
 
 label {
-  font-weight: bold;
+  font-weight: 700;
   display: block;
   margin-top: 15px;
-  color: #F47F0C; /* Updated color for labels */
+  color: #f47f0c;
 }
 
+/* ========== Inputs (unified, mobile-friendly) ========== */
 input[type="text"],
 input[type="email"],
 input[type="number"],
 textarea {
   width: 100%;
-  padding: 10px;
+  padding: 10px 12px;
   margin-top: 5px;
-  border: 1px solid #ccc; /* Change this to a darker shade if desired */
-  border-radius: 4px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 16px; /* prevents iOS zoom */
 }
-
+input[type="text"]:focus,
+input[type="email"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+  border-color: #f47f0c;
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(244, 127, 12, 0.15);
+}
 input[type="checkbox"] {
   margin-right: 10px;
 }
 
+/* ========== Checkbox / Radio groups ========== */
 .checkbox-group,
 .radio-group {
   display: flex;
   flex-wrap: wrap;
+  gap: 8px 16px;
 }
-
-.checkbox-group label,
-.radio-group label {
-  margin-right: 20px;
-  margin-top: 10px;
-  color: #F47F0C; /* Updated color for checkbox and radio labels */
-}
-
-.checkbox-group {
-  display: flex;
-  flex-direction: column; /* Stack checkboxes vertically */
-}
-
-.checkbox-item {
-  display: flex; /* Use flexbox for alignment */
-  align-items: center; /* Center items vertically */
-  margin-bottom: 10px; /* Space between checkbox items */
-}
-
-.section-title {
-  font-size: 1.2em;
-  margin-top: 25px;
-  border-bottom: 2px solid #F47F0C; /* Updated border color */
-}
-
-.section-content {
-  margin-top: 10px;
-}
-
-.form-footer {
-  text-align: center;
-  margin-top: 20px;
-}
-
-button {
-  background-color: #F47F0C; /* Primary button color */
-  color: white;
-  padding: 10px 20px;
-  border: none;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-button:hover {
-  background-color: #218838; /* Change this to a darker shade if desired */
-}
-
-@media (max-width: 768px) {
+@media (max-width: 575.98px) {
   .checkbox-group,
   .radio-group {
     flex-direction: column;
+    gap: 8px;
   }
 }
-
-.form-check .form-check-input.input-primary:checked {
-  border-color: #F47F0C !important;
-  background-color: #F47F0C !important; 
+.checkbox-group {
+  flex-direction: column;
+} /* stack by default */
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.checkbox-group label,
+.radio-group label {
+  margin-top: 8px;
+  color: #f47f0c;
 }
 
-.form-check-input[type=checkbox] {
+/* Bootstrap form-check polish */
+.form-check .form-check-input.input-primary:checked {
+  border-color: #f47f0c !important;
+  background-color: #f47f0c !important;
+}
+.form-check-input[type="checkbox"] {
   border-radius: 0.25em;
   border: 1px solid #000 !important;
 }
-
 .form-check-input:checked {
-  background-color: #F47F0C !important;
-  border-color: #F47F0C !important;
+  background-color: #f47f0c !important;
+  border-color: #f47f0c !important;
 }
-
-.form-check-input[type=radio] {
+.form-check-input[type="radio"] {
   border-radius: 0%;
   border: 1px solid #000 !important;
 }
-/* Modal container */
-.modal {
-  display: none; /* Hidden by default */
-  position: fixed; /* Stay in place */
- // z-index: 1050; /* Sit on top */
-  left: 0;
-  top: 0;
-  width: 100%; /* Full width */
-  height: 100%; /* Full height */
-  background-color: rgba(0, 0, 0, 0.5); /* Black with opacity */
-  overflow: auto; /* Enable scroll if needed */
-}
 
-
-/* Modal content */
-.modal-content {
-  background-color: white;
-  margin: 5% auto; /* Center modal */
-  padding: 20px;
- // width: 80%;
-  max-height: 80vh; /* Limit modal height */
-  overflow-y: auto; /* Scroll inside the modal */
-  border-radius: 8px;
-}
-
-/* Close button */
-.close {
-  color: #aaa;
-  float: right;
-  font-size: 28px;
-  font-weight: bold;
-}
-
-.close:hover,
-.close:focus {
-  color: black;
+/* ========== Buttons (unified) ========== */
+button {
+  appearance: none;
+  background-color: #f47f0c; /* primary */
+  color: #fff;
+  padding: 12px 18px;
+  min-height: 44px;
+  border: 0;
+  border-radius: 10px;
+  font-size: 16px;
+  line-height: 1;
+  font-weight: 600;
   cursor: pointer;
+  box-shadow: 0 2px 8px rgba(244, 127, 12, 0.25);
+  transition:
+    transform 0.02s ease,
+    box-shadow 0.2s ease,
+    background-color 0.2s ease,
+    opacity 0.2s ease;
+}
+button:hover {
+  box-shadow: 0 4px 12px rgba(244, 127, 12, 0.35);
+}
+button:active {
+  transform: translateY(1px);
+}
+button:disabled,
+button[disabled] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  box-shadow: none;
 }
 
-
-
-
-.link-button {
-  background: none;
-  border: none;
-  color: black;
-  text-decoration: underline;
-  cursor: pointer;
-  font: inherit; /* Inherits font properties from surrounding text */
+/* Button layout inside your .section rows */
+.section .row {
+  row-gap: 10px;
+}
+.section .row [class*="col-"] > button {
+  width: 100%;
 }
 
-.link-button:hover {
-  background: none;
-  border: none;
-  color: #218838;
-  text-decoration: underline;
-  cursor: pointer;
+/* Treat first button in multi-button rows as “Back” (outlined) */
+.section .row [class*="col-"]:first-child > button {
+  background: #fff;
+  color: #f47f0c;
+  border: 2px solid #f47f0c;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
-/* Card container */
-/* Card container */
+.section .row [class*="col-"]:first-child > button:hover {
+  background: rgba(244, 127, 12, 0.08);
+}
+
+/* Final-submit emphasis (small visual bump) */
+.section h3.section-title + form .row .col-4:last-child > button,
+.section h3.section-title + form .row .col-12:last-child > button {
+  box-shadow: 0 3px 14px rgba(244, 127, 12, 0.35);
+}
+
+/* Harmonize Bootstrap .btn variants if used */
+.btn {
+  border-radius: 10px !important;
+  min-height: 44px;
+  font-weight: 600;
+}
+.btn-primary {
+  background-color: #f47f0c !important;
+  border-color: #f47f0c !important;
+  box-shadow: 0 2px 8px rgba(244, 127, 12, 0.25);
+}
+.btn-primary:hover {
+  box-shadow: 0 4px 12px rgba(244, 127, 12, 0.35) !important;
+}
+.btn-outline-primary {
+  color: #f47f0c !important;
+  border-color: #f47f0c !important;
+}
+
+/* ========== Progress card/rail ========== */
 .progress-card {
-  background-color: white;
-  padding: 30px;
+  background-color: #fff;
+  padding: 24px;
   border-radius: 16px;
   box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
-  width: 450px;
+  width: 100%;
+  max-width: 480px;
+  margin: 0 auto;
   transition: transform 0.3s ease;
 }
 .progress-card:hover {
-  transform: translateY(-5px); /* Hover animation for the card */
+  transform: translateY(-3px);
+}
+@media (max-width: 767.98px) {
+  .progress-card {
+    max-width: 100%;
+    padding: 16px;
+  }
 }
 
-/* Progress container */
 .progress-container {
   display: flex;
   flex-direction: column;
   position: relative;
 }
 .progress-container::before {
-  content: '';
+  content: "";
   position: absolute;
   top: 0;
   left: 25px;
   width: 2px;
   height: 100%;
-  border-left: 2px dotted #ccc; /* Permanent dotted line */
+  border-left: 2px dotted #ccc;
   z-index: -1;
 }
 
-/* Individual step */
 .progress-step {
   display: flex;
   position: relative;
   cursor: pointer;
   width: 100%;
-  margin-bottom: 10px; /* Reduced space between steps */
-  padding: 10px 0; /* Reduced padding for a more compact look */
+  margin-bottom: 10px;
+  padding: 10px 0;
 }
 .progress-step-wrapper {
   display: flex;
@@ -265,45 +258,46 @@ button:hover {
   border: 2px solid transparent;
   background-color: #fff;
   width: 100%;
-  padding: 12px; /* Slightly adjusted padding */
-  height: 50px; /* Reduced height to fit the new spacing */
+  padding: 12px;
+  height: 50px;
   box-sizing: border-box;
   border-radius: 8px;
-  transition: background-color 0.3s, border-color 0.3s, box-shadow 0.3s;
+  transition:
+    background-color 0.3s,
+    border-color 0.3s,
+    box-shadow 0.3s;
 }
 .progress-step-wrapper:hover {
   background-color: #f9f9f9;
-  border-color: #F47F0C;
-  box-shadow: 0 4px 8px rgba(244, 127, 12, 0.2); /* Subtle shadow on hover */
+  border-color: #f47f0c;
+  box-shadow: 0 4px 8px rgba(244, 127, 12, 0.2);
 }
-
-/* Circle (Step number) */
 .progress-step .circle {
-  width: 30px; /* Reduced circle size for consistency */
+  width: 30px;
   height: 30px;
   border-radius: 50%;
   background-color: #ddd;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-weight: bold;
-  color: white;
-  margin-right: 12px; /* Adjusted margin */
+  font-weight: 700;
+  color: #fff;
+  margin-right: 12px;
   flex-shrink: 0;
   font-size: 14px;
-  transition: background-color 0.3s, transform 0.3s;
+  transition:
+    background-color 0.3s,
+    transform 0.3s;
 }
 .progress-step.active .circle {
-  background-color: #F47F0C;
-  transform: scale(1.1); /* Slight enlargement for active step */
+  background-color: #f47f0c;
+  transform: scale(1.1);
 }
 .progress-step:hover .circle {
   background-color: #ffa500;
 }
-
-/* Text styling */
 .progress-step .text {
-  font-size: 13px; /* Reduced font size */
+  font-size: 13px;
   color: #333;
   flex-grow: 1;
   white-space: nowrap;
@@ -312,10 +306,8 @@ button:hover {
   transition: color 0.3s;
 }
 .progress-step:hover .text {
-  color: #F47F0C;
+  color: #f47f0c;
 }
-
-/* Color for completed and upcoming steps */
 .progress-step.active ~ .progress-step .circle {
   background-color: #ccc;
 }
@@ -325,8 +317,6 @@ button:hover {
 .progress-step:last-child {
   margin-bottom: 0;
 }
-
-/* Link for steps */
 .progress-step a {
   text-decoration: none;
   color: inherit;
@@ -337,88 +327,86 @@ button:hover {
 
 .active-text {
   font-weight: 800;
-  color: #F47F0C !important;
+  color: #f47f0c !important;
 }
-
 .edit-text {
   font-weight: 800;
-  color: #DC3545 !important;
+  color: #dc3545 !important;
 }
-
 .valid-text {
   font-weight: 800;
-  color: #28A745 !important;
+  color: #28a745 !important;
 }
-
 .active-circle {
-  background-color: #F47F0C !important;
+  background-color: #f47f0c !important;
 }
-
 .edit-active-circle {
-  background-color: #DC3545 !important;
+  background-color: #dc3545 !important;
+}
+.valid-active-circle {
+  background-color: #28a745 !important;
 }
 
-.valid-active-circle  {
-  background-color: #28A745 !important;
-  
+.active-step .circle {
+  border: 3px solid #ff4500;
+  transform: scale(1.1);
+  box-shadow: 0 0 10px #ff4500;
+}
+.active-step .text {
+  font-weight: 700;
+  color: #ff4500;
 }
 
-
-
-
+/* ========== Errors / Alerts ========== */
 .error {
   color: red;
   font-size: 0.9em;
   margin-top: 5px;
 }
 
-/* Responsive Styles */
+/* ========== Responsive tweaks ========== */
 @media (max-width: 768px) {
   .row {
     flex-direction: column;
   }
-
-  .col-8, .col-4 {
+  .col-8,
+  .col-4 {
     width: 100%;
   }
-
-  .form-container, .progress-card {
+  .form-container,
+  .progress-card {
     padding: 15px;
   }
-
-  .progress-card {
-    width: 100%;
-  }
-
   button {
-    padding: 8px 16px;
-    font-size: 14px;
+    padding: 10px 16px;
+    font-size: 15px;
   }
 }
-
 @media (max-width: 576px) {
-  .form-container, .progress-card {
+  .form-container,
+  .progress-card {
     padding: 10px;
   }
-
-  h2, h3 {
+  h2,
+  h3 {
     font-size: 18px;
   }
-
   .progress-step .text {
     font-size: 12px;
   }
 }
 
+/* Hide progress card on very small screens if desired */
 @media (max-width: 768px) {
   .progress-card {
     display: none;
   }
 }
 
-/* Large screens (Desktops and large laptops) */
+/* Large screens */
 @media (min-width: 1200px) {
-  .form-container, .progress-card {
+  .form-container,
+  .progress-card {
     max-width: 1100px;
     padding: 30px;
   }
@@ -426,10 +414,10 @@ button:hover {
     font-size: 16px;
   }
 }
-
-/* Medium screens (Standard laptops, around 15-inch screens) */
+/* Standard laptops */
 @media (min-width: 992px) and (max-width: 1199px) {
-  .form-container, .progress-card {
+  .form-container,
+  .progress-card {
     max-width: 900px;
     padding: 25px;
   }
@@ -437,10 +425,10 @@ button:hover {
     font-size: 15px;
   }
 }
-
-/* Small laptops and large tablets */
+/* Small laptops / big tablets */
 @media (min-width: 768px) and (max-width: 991px) {
-  .form-container, .progress-card {
+  .form-container,
+  .progress-card {
     max-width: 700px;
     padding: 20px;
   }
@@ -448,14 +436,8 @@ button:hover {
     font-size: 14px;
   }
 }
-
-/* Small screens (Tablets and smaller laptops) */
+/* Phones / small tablets */
 @media (max-width: 767px) {
-  /* Hide the progress card on very small screens */
-  .progress-card {
-    display: none;
-  }
-  
   .form-container {
     padding: 15px;
     width: 100%;
@@ -465,54 +447,71 @@ button:hover {
   }
 }
 
+/* ========== Trading partners row + action icons ========== */
 .partner-entry {
   display: flex;
   align-items: center;
   margin-bottom: 10px;
 }
-
 .partner-entry div {
   flex: 1;
   margin-right: 10px;
 }
 
+/* Round FAB-style icon buttons */
 .icon-button {
-  background: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
   border: none;
-  cursor: pointer;
-  font-size: 20px;
   padding: 0;
-  margin-right: 5px;
+  margin-right: 6px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition:
+    transform 0.05s ease,
+    box-shadow 0.2s ease,
+    opacity 0.2s ease;
+  color: #fff;
 }
-
-
+.icon-button i {
+  color: #fff;
+  font-size: 18px;
+  line-height: 1;
+}
 .add-button {
-  color: green;
+  background: #2e9e43;
 }
-
 .remove-button {
-  color: red;
+  background: #e23b2e;
 }
-
 .icon-button:hover {
-  color: inherit;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+.icon-button:active {
+  transform: translateY(1px);
+}
+.partner-entry .icon-button {
+  margin-top: 6px;
 }
 
+/* ========== Attention banners ========== */
 .attention-grabber {
-  animation: pulse 1.5s infinite; /* Subtle pulsing effect */
-  font-size: 1.2rem; /* Slightly larger text for emphasis */
-  font-weight: bold; /* Make it bolder for visibility */
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2); /* Add a subtle shadow */
+  animation: pulse 1.5s infinite;
+  font-size: 1.2rem;
+  font-weight: 700;
+  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.2);
 }
-
 @keyframes pulse {
   0% {
     transform: scale(1);
     opacity: 1;
   }
   50% {
-    transform: scale(1.05); /* Slight zoom effect */
-    opacity: 0.8; /* Slight dimming effect */
+    transform: scale(1.05);
+    opacity: 0.8;
   }
   100% {
     transform: scale(1);
@@ -520,76 +519,63 @@ button:hover {
   }
 }
 
-
-.active-step .circle {
-  border: 3px solid #ff4500;
-  transform: scale(1.1);
-  box-shadow: 0 0 10px #ff4500;
-}
-
-.active-step .text {
-  font-weight: bold;
-  color: #ff4500;
-}
-
-
-/* Full-screen loading overlay */
+/* ========== Loading overlay ========== */
 .loading-overlay {
   position: fixed;
   top: 0;
   left: 0;
   width: 100%;
   height: 100%;
-  backdrop-filter: blur(8px); /* Soft blur effect */
-  background: rgba(0, 0, 0, 0.3); /* Transparent dark background */
+  backdrop-filter: blur(8px);
+  background: rgba(0, 0, 0, 0.3);
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 1000;
 }
-
-/* Centered loader container */
 .loader-container {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
 }
-
-/* Elegant spinner */
 .spinner {
   width: 60px;
   height: 60px;
   border: 6px solid rgba(255, 255, 255, 0.3);
-  border-top: 6px solid #F47F0C; /* Primary color */
+  border-top: 6px solid #f47f0c;
   border-radius: 50%;
   animation: spin 1.2s linear infinite;
-  box-shadow: 0px 0px 12px rgb(201, 103, 4);
+  box-shadow: 0 0 12px rgb(201, 103, 4);
 }
-
-/* Fade in-out text animation */
 .loading-text {
-  color: white;
+  color: #fff;
   font-size: 18px;
   margin-top: 15px;
   font-weight: 500;
   animation: fadeText 1.5s ease-in-out infinite;
 }
-
-/* Spinner rotation */
 @keyframes spin {
-  0% { transform: rotate(0deg); }
-  100% { transform: rotate(360deg); }
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
-
-/* Fade-in and out text effect */
 @keyframes fadeText {
-  0% { opacity: 1; }
-  50% { opacity: 0.5; }
-  100% { opacity: 1; }
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+  100% {
+    opacity: 1;
+  }
 }
 
-
+/* ========== Placeholder / requirements cards ========== */
 .placeholder-container {
   display: flex;
   justify-content: center;
@@ -597,93 +583,80 @@ button:hover {
   text-align: center;
   padding: 20px;
 }
-
 .placeholder-card {
   background: #f8f9fa;
   padding: 25px 35px;
   border-radius: 10px;
-  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
   max-width: 550px;
-  border-left: 6px solid #F47F0C;
+  border-left: 6px solid #f47f0c;
   transition: all 0.3s ease-in-out;
 }
-
 .placeholder-title {
   font-size: 22px;
-  font-weight: bold;
-  color: #F47F0C;
+  font-weight: 700;
+  color: #f47f0c;
   margin-bottom: 10px;
 }
-
 .placeholder-text {
   font-size: 16px;
   color: #444;
   line-height: 1.6;
 }
-
 .next-opening {
   font-size: 18px;
-  font-weight: bold;
+  font-weight: 700;
   color: #dc3545;
   margin: 15px 0;
 }
-
 .placeholder-info {
   font-size: 15px;
   color: #555;
 }
-
 .placeholder-link {
   display: inline-block;
   font-size: 14px;
-  color: #F47F0C;
+  color: #f47f0c;
   text-decoration: none;
-  font-weight: bold;
+  font-weight: 700;
 }
-
 .placeholder-link:hover {
   text-decoration: underline;
 }
-
 
 .requirements-card {
   background: #f8f9fa;
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   max-width: 550px;
-  border-left: 6px solid #F47F0C;
+  border-left: 6px solid #f47f0c;
 }
-
 .requirements-text {
   font-size: 16px;
   color: #444;
   line-height: 1.6;
 }
-
 .requirements-list {
   padding-left: 20px;
 }
-
 .requirements-list li {
   font-size: 14px;
   color: #333;
   margin-bottom: 5px;
 }
-
 .countdown-container {
   text-align: center;
   font-size: 16px;
-  font-weight: bold;
+  font-weight: 700;
   color: #dc3545;
   margin-top: 10px;
 }
-
 .countdown-timer {
   display: block;
   font-size: 18px;
   color: #115093;
-  font-weight: bold;
+  font-weight: 700;
 }
 
 .prepare-section h5,
@@ -691,39 +664,58 @@ button:hover {
 .contact-info h5 {
   margin-top: 15px;
   font-size: 17px;
-  font-weight: bold;
+  font-weight: 700;
   color: #115093;
 }
-
 .email-subscription input {
   width: 100%;
   padding: 8px;
   border-radius: 5px;
   border: 1px solid #ccc;
 }
-
 .email-subscription button {
   width: 100%;
 }
 
-.placeholder-link {
-  font-size: 14px;
-  color: #007bff;
-  text-decoration: none;
-  font-weight: bold;
+/* ========== Terms link as a button ========== */
+.link-button {
+  background: none;
+  border: none;
+  color: #000;
+  text-decoration: underline;
+  cursor: pointer;
+  font: inherit;
 }
-
-.placeholder-link:hover {
+.link-button:hover {
+  color: #218838;
   text-decoration: underline;
 }
 
+/* ========== Modal (constrain dialog/content only) ========== */
+.modal-dialog {
+  max-width: 95vw;
+  margin: 1.25rem auto;
+}
+.modal-content {
+  max-height: 85vh;
+  overflow: auto;
+}
 
-
-
-
-
-
-
-
-
-
+/* ========== Optional: sticky mobile action bar ========== */
+@media (max-width: 767.98px) {
+  .mobile-action-bar {
+    position: sticky;
+    bottom: 0;
+    z-index: 999;
+    display: flex;
+    gap: 10px;
+    padding: 10px;
+    background: #fff;
+    border-top: 1px solid #eee;
+  }
+  .mobile-action-bar button {
+    flex: 1 1 auto;
+    padding: 12px;
+    font-size: 16px;
+  }
+}
